@@ -1,6 +1,6 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      main.cpp
+ *  File Name:      tcp.cpp
  *  Author:         Tomas Dolak
  *  Date:           21.02.2024
  *  Description:    Implements Communication With Chat Server Thru TCP Protocol.
@@ -9,7 +9,7 @@
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           main.cpp
+ *  @file           tcp.cpp
  *  @author         Tomas Dolak
  *  @date           21.02.2024
  *  @brief          Implements Communication With Chat Server Thru TCP Protocol.
@@ -25,6 +25,8 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <unistd.h>
+#include <cstdio> 
+#include "tcp_messages.cpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -74,6 +76,10 @@ public:
         return sock != NOT_CONNECTED;
     }
 
+    /**
+     * @brief Connects The Client To The Server
+     * @return True If The Connection Was Successful, False Otherwise
+     */
     bool connectServer()
     {
         if (isConnected())
@@ -107,4 +113,75 @@ public:
         // Connection Was Successful
         return true;
     }
-}
+
+
+    int runTcpClient()
+    {
+
+        if (!connectServer())
+        {
+            return NOT_CONNECTED;
+        }
+
+        // Two-Way Handshake
+
+        bool sendAuth = false;
+        const int BUFSIZE = 1024;
+        char buf[BUFSIZE];
+        int RetValue = -1;
+
+        while (fgets(buf, BUFSIZE, stdin)) {
+            // Check If Loaded Message Includes if "\r\n"
+            if (strstr(buf, "\r\n")) {
+                // Vytvoření obsahu zprávy jako std::vector<char>
+                std::vector<char> contentStdIn(buf, buf + strlen(buf));
+
+                //TODO: Create New Instance -> Should Be Deleted After Use
+                TcpMessages::Message_t messageContent;
+                messageContent.type = TcpMessages::UNKNOWN_MSG_TYPE;    // Default Message Type
+                messageContent.content = contentStdIn;                       // Content Of The Message -> Content of Buffer
+                TcpMessages tcpMessage(TcpMessages::UNKNOWN_MSG_TYPE, messageContent);
+
+                RetValue = tcpMessage.checkMessage();
+                if (RetValue == 0) {
+                    
+                    if ((int)TcpMessages::AUTH_COMMAND == tcpMessage.msg.type)
+                    {
+                        // Sent To Server Authentication Message
+                        tcpMessage.SendAuthMessage(sock);
+                        sendAuth = true;
+                    }
+
+                    if ((int)TcpMessages::BYE == tcpMessage.msg.type)
+                    {
+                        // Sent To Server Bye Message
+                        tcpMessage.SentByeMessage(sock,buf);
+                        break;
+                    }
+                    
+                }
+
+
+            }
+        return 0;
+        }
+    }
+};
+
+
+
+// NOTES:
+/* Melo by fungovat odesilani zpravy AUTH 
+ */
+/* Potreba dodelat -> Momentalne se pracuje se dvemi buffery je treba pouzit jen jeden
+ *   -> pouziva se char Buf[1024] a <vector> Content -> Nejlepsi bude pouzivat Pouze Content a kdyz budes potrebovat tak si to prekonvertujes na Buf "ale jakoby pouze virtualne"
+ */
+/* Co je potreba dodelat?
+ * - Osetrit chyby pri odesilani zprav
+ * - Osetrit chyby pri prijimani zprav
+ * - Dopracovat odesilani vsech moznych zprav v TCP 
+ * - Rozpracovat a dodelat UDP
+ * - Testovat Testovat
+ */
+
+
