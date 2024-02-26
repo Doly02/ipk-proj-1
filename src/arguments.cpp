@@ -1,18 +1,18 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      tcp_messages.cpp
+ *  File Name:      arguments.cpp
  *  Author:         Tomas Dolak
- *  Date:           21.02.2024
- *  Description:    Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  Date:           26.02.2024
+ *  Description:    Implements Handling Program Arguments.
  *
  * ****************************/
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           tcp_messages.cpp
+ *  @file           arguments.cpp
  *  @author         Tomas Dolak
- *  @date           21.02.2024
- *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  @date           26.02.2024
+ *  @brief          Implements Handling Program Arguments.
  * ****************************/
 
 
