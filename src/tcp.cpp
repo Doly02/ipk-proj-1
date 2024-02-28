@@ -54,8 +54,7 @@ public:
      * Constructor Initialize Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
      */
-    TcpClient(std::string addr, int port) : serverAddress(addr), port(port), sock(NOT_CONNECTED) {}
-
+    TcpClient(std::string addr, int port) : sock(NOT_CONNECTED), serverAddress(addr), port(port) {}
     /**
      * @brief Destructor of TcpClient Class 
      * 
@@ -67,6 +66,10 @@ public:
         if (isConnected()) {
             close(sock);
         }
+    }
+
+    void updateServerAddress(const std::string& newAddress) {
+        serverAddress = newAddress;
     }
     /**
      * @brief Determine If The Client Is Connected To The Server
@@ -100,6 +103,7 @@ public:
 
         if (inet_pton(AF_INET, serverAddress.c_str(), &server.sin_addr) <= 0)
         {
+            printf("SRV ADDR: %s\n", serverAddress.c_str());
             std::cerr << "Invalid Address: " << serverAddress << std::endl;
             return false;
         }
@@ -126,45 +130,107 @@ public:
         // Two-Way Handshake
 
         bool sendAuth = false;
+        bool checkReply = false;
+        int bytesRx = 0;
         const int BUFSIZE = 1024;
         char buf[BUFSIZE];
         int RetValue = -1;
 
         while (fgets(buf, BUFSIZE, stdin)) {
-            // Check If Loaded Message Includes if "\r\n"
-            if (strstr(buf, "\r\n")) {
-                // Vytvoření obsahu zprávy jako std::vector<char>
-                std::vector<char> contentStdIn(buf, buf + strlen(buf));
 
-                //TODO: Create New Instance -> Should Be Deleted After Use
-                TcpMessages::Message_t messageContent;
-                messageContent.type = TcpMessages::UNKNOWN_MSG_TYPE;    // Default Message Type
-                messageContent.content = contentStdIn;                       // Content Of The Message -> Content of Buffer
-                TcpMessages tcpMessage(TcpMessages::UNKNOWN_MSG_TYPE, messageContent);
+            size_t len = strlen(buf);
+#if defined (_WIN64) || defined (_WIN32) 
+            if (len > 1 && buffer[len - 2] == '\r' && buffer[len - 1] == '\n') {    // Windows
+                buffer[len - 2] = '\0';
+            }
+#else
+            if (buf[len - 1] == '\n') {                                             // Unix
+                buf[len - 1] = '\0';
+            }
+#endif
+            // Vytvoření obsahu zprávy jako std::vector<char>
+            std::vector<char> contentStdIn(buf, buf + strlen(buf));
 
-                RetValue = tcpMessage.checkMessage();
-                if (RetValue == 0) {
-                    
-                    if ((int)TcpMessages::AUTH_COMMAND == tcpMessage.msg.type)
-                    {
-                        // Sent To Server Authentication Message
-                        tcpMessage.SendAuthMessage(sock);
-                        sendAuth = true;
-                    }
+            //TODO: Create New Instance -> Should Be Deleted After Use
+            TcpMessages tcpMessage;     
+            tcpMessage.readAndStoreContent(buf);                       // Content Of The Message -> Content of Buffer
 
-                    if ((int)TcpMessages::BYE == tcpMessage.msg.type)
-                    {
-                        // Sent To Server Bye Message
-                        tcpMessage.SentByeMessage(sock,buf);
-                        break;
-                    }
+            RetValue = tcpMessage.checkMessage();
+            if (RetValue == 0) {
+
+                if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
+                {
+                    // Sent To Server Authentication Message
+                    printf("Sending AUTH Message: %s\n", buf);
+                    tcpMessage.SendAuthMessage(sock);
+                    sendAuth = true;
+                    checkReply = true;
                     
                 }
 
+                if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type)
+                {
+                    // Sent To Server Join Message
+                    tcpMessage.SendJoinMessage(sock);
+                }
 
+                if ((int)TcpMessages::BYE == tcpMessage.msg.type)
+                {
+                    // Sent To Server Bye Message
+                    tcpMessage.SentByeMessage(sock,buf);
+                }
+                // TODO: Missing Some Message Types
+                if ((int)TcpMessages::MSG == tcpMessage.msg.type)
+                {
+                    // Sent User's Message To Server
+                    tcpMessage.SentUsersMessage(sock); 
+                }
+
+                // Clear The Content Of The Buffer
+                memset(buf, 0, sizeof(buf));
+
+
+                bytesRx = recv(sock, buf, BUFSIZE, 0);
+                if (bytesRx < 0) 
+                {
+                    std::perror("ERROR: recvfrom");
+                }
+                else {
+                    std::cout << buf;
+                }
+
+                if (strcmp(buf, "BYE\r\n") == 0) {
+                    printf("%s", buf);
+                    tcpMessage.SentByeMessage(sock,buf); // Should Send BYE Message Back To Server
+                    exit(0);
+                }
+                // Check If Is Alles Gute
+                if (true == checkReply)
+                {
+                    // Store The Content Of The Buffer Into Internal Vector
+                    tcpMessage.readAndStoreContent(buf);       
+                    // Check If The Message Is REPLY
+                    int retVal = tcpMessage.handleReply();
+                    if (retVal == 0)
+                    {
+                        std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
+                        std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
+                        //printf("%s: %s", displayNameOutside.c_str(), content.c_str());
+                        printf("REPLY OK\n");
+                        
+                        checkReply = false;
+                    }
+                    else{
+                        std::cerr << "Error: " << strerror(errno) << std::endl;
+                        return -1;
+                    }
+                }
+                // Print The Content Of The Buffer
+                //printf("%s", buf);
             }
-        return 0;
+            
         }
+        return 0;
     }
 };
 
