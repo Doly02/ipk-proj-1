@@ -262,4 +262,79 @@ class TcpMessages
         return retVal;   
     }
 
+    /**
+    * @brief Sends Authentication Message.
+    * @param client_socket Client Socket
+    * @return None
+    */
+    void SendAuthMessage(int client_socket)
+    {
+        std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end()) + "\r\n";
+        ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
+        if (bytesTx < 0) {
+            std::perror("ERROR: sendto");
+        }
+    }
+
+    /**
+     * @brief Sends 'Join' Message
+     * @param client_socket Client Socket
+     * 
+     * Sends 'Join' Message
+     * @return None
+    */
+    void SendJoinMessage(int client_socket)
+    {
+        std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
+        ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
+        if (bytesTx < 0) {
+            std::perror("ERROR: sendto");
+        }
+    }
+
+    /**
+     * @brief Sends 'Rename' Message
+     * @param client_socket Client Socket
+     * 
+     * Sends 'Rename' Message
+     * @return None
+    */
+    void SendRenameMessage(int client_socket)
+    {
+        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
+        ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
+        if (bytesTx < 0) {
+            std::perror("ERROR: sendto");
+        }
+    }
+
+    /**
+     * @brief Sends 'Bye' Message
+     * @param clientSocket Client Socket
+     * @param buffer Buffer
+     * 
+     * Sends 'Bye' Message
+     * @return None
+    */
+    void SentByeMessage(int clientSocket, const char* buffer)
+    {
+        ssize_t bytesTx = send(clientSocket, buffer, strlen(buffer), 0);
+        if (bytesTx < 0)
+            perror("ERROR in sendto");
+    }
+    
+    /**
+     * @brief Sends User's Message To Server
+     * @param clientSocket Client Socket
+     * 
+     * Sends User's Message To Server
+     * @return None
+    */
+    void SentUsersMessage(int clientSocket)
+    {
+        std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end()) + "\r\n";
+        ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
+        if (bytesTx < 0)
+            perror("ERROR in sendto");
+    }
 };
