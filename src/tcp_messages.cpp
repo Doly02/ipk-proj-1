@@ -395,4 +395,29 @@ class TcpMessages
         }    
     }
 
+    /**
+     * @brief Handles Reply From Server
+     * 
+     * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
+    */
+    int handleReply()
+    {
+        if (msg.content.size() >= 5 && msg.content[0] == 'R' && msg.content[1] == 'E' && msg.content[2] == 'P' 
+        && msg.content[3] == 'L' && msg.content[4] == 'Y') {
+            // delete first 5 characters + 1 space
+            msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
+            
+        }
+        if (compareVectorAndString(msg.content, "OK")) {
+            return 0;
+        }
+        else if (compareVectorAndString(msg.content, "NOK")) {
+            return -1;
+        }
+        else {
+            return -2;
+        }
+        
+    }
+
 };
