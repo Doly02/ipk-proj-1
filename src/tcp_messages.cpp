@@ -159,13 +159,6 @@ class TcpMessages
         msg.content.push_back('\n');
     }
 
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) {
-        std::string vecAsString(vec.begin(), vec.end());
-        return vecAsString == str;
-    }
-
-
-
     /**
      * @brief Identifies Message Type & Parse Message Parts
      * 
@@ -278,7 +271,7 @@ class TcpMessages
 
         }
         // Otherwise Message Is Already Stored In The Content    
-        else  if (compareVectorAndString(msg.content, "BYE")) {
+        else  if (compareVectorAndString(msg.content, "BYE\r\n")) {
             msg.type = BYE;
 
         }
@@ -298,7 +291,7 @@ class TcpMessages
     */
     void SendAuthMessage(int client_socket)
     {
-        std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end()) + "\r\n";
+        std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -314,7 +307,7 @@ class TcpMessages
     */
     void SendJoinMessage(int client_socket)
     {
-        std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
+        std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -330,7 +323,7 @@ class TcpMessages
     */
     void SendRenameMessage(int client_socket)
     {
-        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
+        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -345,9 +338,11 @@ class TcpMessages
      * Sends 'Bye' Message
      * @return None
     */
-    void SentByeMessage(int clientSocket, const char* buffer)
+    void SentByeMessage(int clientSocket)
     {
-        ssize_t bytesTx = send(clientSocket, buffer, strlen(buffer), 0);
+        printf("Sending Bye Message\n");
+        std::string msgToSend = std::string(msg.content.begin(), msg.content.end()); //TODO:  "\r\n" WARNING!
+        ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
     }
@@ -361,7 +356,7 @@ class TcpMessages
     */
     void SentUsersMessage(int clientSocket)
     {
-        std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end()) + "\r\n";
+        std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end());
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
