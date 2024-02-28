@@ -41,7 +41,7 @@
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-class TcpClient
+class TcpClient : Client
 {
 private:
     int sock;                 //!<  File Descriptor of The Socket Used For Communication
@@ -136,8 +136,8 @@ public:
         const int BUFSIZE = 1536;  
         char buf[BUFSIZE];
         int RetValue = -1;
-        TcpMessages tcpMessageIncoming; 
-        TcpMessages tcpMessageOutcoming;     
+        TcpMessages tcpMessage; 
+
         /* Code */
         if (!connectServer())
         {
@@ -152,9 +152,6 @@ public:
 
         while (true) 
         {
-
-            TcpMessages tcpMessage;     
-            tcpMessage.readAndStoreContent(buf);  
 
             FD_ZERO(&readfds);
             FD_SET(sock, &readfds);
@@ -176,9 +173,9 @@ public:
             // Check Socket's Activity
             if (FD_ISSET(sock, &readfds)) 
             {
-                tcpMessageOutcoming.readAndStoreContent(buf);  
                 // Receive A Packet From Server
                 int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
+                tcpMessage.readAndStoreContent(buf);  
                 if (bytesRx > 0) 
                 {
                     buf[bytesRx] = '\0'; //TODO: Check If This Is Right ("\r\n")
@@ -187,20 +184,20 @@ public:
                     if (strcmp(buf, "BYE\r\n") == 0) 
                     {
                         printf("%s", buf);
-                        tcpMessageOutcoming.SentByeMessage(sock); // Should Send BYE Message Back To Server TODO: Do I Have To Send It Back?
+                        tcpMessage.SentByeMessage(sock); // Should Send BYE Message Back To Server TODO: Do I Have To Send It Back?
                         exit(0);
                     }
                     // Check If Is Alles Gute
                     if (true == checkReply)
                     {
                         // Store The Content Of The Buffer Into Internal Vector
-                        tcpMessageOutcoming.readAndStoreContent(buf);       
+                        tcpMessage.readAndStoreContent(buf);       
                         // Check If The Message Is REPLY
-                        int retVal = tcpMessageOutcoming.handleReply();
+                        int retVal = tcpMessage.handleReply();
                         if (retVal == 0)
                         {
-                            std::string displayNameOutside(tcpMessageOutcoming.msg.displayNameOutside.begin(), tcpMessageOutcoming.msg.displayNameOutside.end());
-                            std::string content(tcpMessageOutcoming.msg.content.begin(), tcpMessageOutcoming.msg.content.end());
+                            std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
+                            std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
                             //printf("%s: %s", displayNameOutside.c_str(), content.c_str());
                             printf("REPLY OK\n");
                             
@@ -212,10 +209,14 @@ public:
                             return -1;
                         }
                     }
-
-                    // Print The Content Of The Buffer
-                    //printf("%s", buf);
-
+                    else
+                    {
+                        // Print The Content Of The Buffer
+                        std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
+                        std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
+                        printf("%s: %s", displayNameOutside.c_str(), content.c_str());
+                    }
+                    
                     // Clear The Buffer After All
                     memset(buf, 0, sizeof(buf));
                 } 
@@ -252,38 +253,38 @@ public:
 #endif
 
                         
-                    tcpMessageIncoming.readAndStoreContent(buf);    // Store Content To Vector
-                    RetValue = tcpMessageIncoming.checkMessage();   // Check Message
+                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector
+                    RetValue = tcpMessage.checkMessage();   // Check Message
                     if (RetValue == 0) 
                     {
 
-                        if ((int)TcpMessages::COMMAND_AUTH == tcpMessageIncoming.msg.type && !sendAuth)
+                        if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
                         {
                             // Sent To Server Authentication Message
                             printf("Sending AUTH Message: %s\n", buf);
-                            tcpMessageIncoming.SendAuthMessage(sock);
+                            tcpMessage.SendAuthMessage(sock);
                             sendAuth = true;
                             checkReply = true;
                             
                         }
         
-                        if ((int)TcpMessages::COMMAND_JOIN == tcpMessageIncoming.msg.type)
+                        if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type)
                         {
                             // Sent To Server Join Message
-                            tcpMessageIncoming.SendJoinMessage(sock);
+                            tcpMessage.SendJoinMessage(sock);
                         }
 
-                        if ((int)TcpMessages::BYE == tcpMessageIncoming.msg.type)
+                        if ((int)TcpMessages::BYE == tcpMessage.msg.type)
                         {
                             // Sent To Server Bye Message
-                            tcpMessageIncoming.SentByeMessage(sock);
+                            tcpMessage.SentByeMessage(sock);
                             break;
                         }
                         // TODO: Missing Some Message Types
-                        if ((int)TcpMessages::MSG == tcpMessageIncoming.msg.type)
+                        if ((int)TcpMessages::MSG == tcpMessage.msg.type)
                         {
                             // Sent User's Message To Server
-                            tcpMessageIncoming.SentUsersMessage(sock); 
+                            tcpMessage.SentUsersMessage(sock); 
                             memset(buf, 0, sizeof(buf));
                         }
 
