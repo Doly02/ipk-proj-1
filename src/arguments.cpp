@@ -34,12 +34,12 @@ public:
     /*      Arguments             */
     std::string transferProtocol;               //!< Transfer Protocol Used For Communication (1 - TCP, 2 - UDP)
     std::string hostName;                       //!< Host Name of The Server
-    struct in_addr ipAddress;                   //!< Structure For IP Address of The Server
+    std::string ipAddress;                   //!< Structure For IP Address of The Server
     uint16_t port                   = 4567u;    //!< Port Number on Which The Server Is Listening
     uint16_t confirmTimeOutUDP      = 250u;     //!< Time Out For UDP Protocol
     uint8_t confirmRetriesUDP       = 3u;       //!< Number of Retries For UDP Protocol
 
-    arguments(int argc, const char* argv[]) {
+    arguments(int argc, char* argv[]) {
         processArguments(argc, argv);
     }
 
@@ -70,7 +70,7 @@ public:
     }
 
 
-    void processArguments(int argc, const char* argv[]) {
+    void processArguments(int argc, char* argv[]) {
         if(false == parseArguments(argc, argv))
         {
             std::cerr << "Invalid Arguments" << std::endl;
@@ -89,71 +89,51 @@ public:
      * Parses Arguments From Command Line.
      * @return Arguments Are Not Valid,  Exits With Error Code 1, Otherwise Returns 0.
     */
-    bool parseArguments(int argc, const char* argv[]) {
-        for (uint8_t i = 1; i < argc; i++) {
-            std::string flag(argv[i]);
-            if(i + 1 < argc)
-            {
-                /* Transfer Protocol    */
-                if ("-t" == flag)
-                {
-                    transferProtocol = argv[i + 1];
-                }
-                /* Host Name            */
-                else if ("-s" == flag)
-                {
-                    hostName = argv[i + 1];
-                }
-                /* Port                 */
-                else if ("-p" == flag)
-                {
-                    // Transfer String To Number
-                    port = static_cast<uint16_t>(std::stoi(argv[i + 1]));
-                }
-                /* Confirmation Timeout */
-                else if ("-d" == flag)
-                {
-                    confirmTimeOutUDP = static_cast<uint16_t>(std::stoi(argv[i + 1]));
-                }
-                /* Confirmation Retries */
-                else if ("-r" == flag)
-                {
-                    confirmRetriesUDP = static_cast<uint8_t>(std::stoi(argv[i + 1]));
-                }
-                /* Help                 */
-                else if ("-h" == flag)
-                {
-                    printHelp();
-                    exit(0);
-                }
+    bool parseArguments(int argc, char* argv[]) {
+    for (int i = 1; i < argc; i++) { // Změna typu na int pro kompatibilitu s argc
+        std::string flag(argv[i]);
 
+        if ("-h" == flag) {
+            printHelp();
+            exit(0);
+        } else if (i + 1 < argc) { // Opravená podmínka pro zpracování argumentů
+            if ("-t" == flag) {
+                transferProtocol = argv[++i]; // Přeskočení na hodnotu flagu
+            } else if ("-s" == flag) {
+                hostName = argv[++i];
+            } else if ("-p" == flag) {
+                port = static_cast<uint16_t>(std::stoi(argv[++i]));
+            } else if ("-d" == flag) {
+                confirmTimeOutUDP = static_cast<uint16_t>(std::stoi(argv[++i]));
+            } else if ("-r" == flag) {
+                confirmRetriesUDP = static_cast<uint8_t>(std::stoi(argv[++i]));
+            } else {
+                std::cerr << "Unknown flag: " << flag << std::endl;
+                return false; // Vrátí false, pokud narazí na neznámý flag
             }
-            else
-            {
-                if ("-h" == flag)
-                {
-                    printHelp();
-                    exit(0);
-                }
-                else
-                {
-                    // TODO: Update Please Error Message
-                    std::cerr << "Invalid Arguments" << std::endl;
-                    exit(1);
-                }
-            }
+        } else {
+            std::cerr << "Missing value for flag: " << flag << std::endl;
+            return false; // Vrátí false, pokud flag nemá hodnotu
         }
-        return true;
     }
+    return true; // Všechny argumenty byly zpracovány úspěšně
+}
 
+private:
+
+    /**
+     * @brief Resolves Host Name
+     * 
+     * Resolves Host Name To IP Address
+    */
     void resolveHostName()
     {
         if (isIpAddress(hostName))
         {
             // Transfer IP Address From String To 'in_addr' Structure
             inet_pton(AF_INET, hostName.c_str(), &ipAddress);
-        }
-        else 
+            ipAddress = hostName;
+        } else 
         {
             // Transfer Host Name To IP Address
             struct hostent *host;
@@ -163,12 +143,14 @@ public:
                 std::cerr << "Host Not Found" << std::endl;
                 exit(1);    //TODO: Error Code CHECK!
             }
-            // Copy First IP Address To ipAddress Structure
-            memcpy(&ipAddress, host->h_addr_list[0], sizeof(ipAddress));
+            // Convert the First IP Address to String
+            char ipStr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, host->h_addr_list[0], ipStr, sizeof(ipStr));
+            ipAddress = ipStr;
+            printf("IP Address: %s\n", ipAddress.c_str());
         }
     }
 
-private:
     /**
      * @brief Checks If The String Is IP Address
      * @param potentialAddress String With Potential IP Address
@@ -179,8 +161,7 @@ private:
     bool isIpAddress(std::string& potentialAddress)
     {
         struct sockaddr_in sa;
-        int result = inet_pton(AF_INET, potentialAddress.c_str(), &(sa.sin_addr));
-        return (result != 0);
+        return inet_pton(AF_INET, potentialAddress.c_str(), &(sa.sin_addr)) != 0;
     }
 
 };
