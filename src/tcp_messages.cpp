@@ -138,6 +138,35 @@ class TcpMessages
 
 
     /**
+     * @brief Stores Chars From Buffer To Message Content
+     * @param buffer Buffer
+     *
+     * Stores Chars From Buffer To Message Content
+     * @return None
+     */
+    void readAndStoreContent(const char* buffer)
+    {
+        // Clear The Message Content
+        msg.content.clear();
+        // Find The Lenght Of Buffer
+        size_t len = std::strlen(buffer);
+
+        for (size_t i = 0; i < len; i++)
+        {
+            msg.content.push_back(buffer[i]);
+        }
+        msg.content.push_back('\r');
+        msg.content.push_back('\n');
+    }
+
+    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) {
+        std::string vecAsString(vec.begin(), vec.end());
+        return vecAsString == str;
+    }
+
+
+
+    /**
      * @brief Identifies Message Type & Parse Message Parts
      * 
      * 
