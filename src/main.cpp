@@ -24,6 +24,9 @@
 #include <string>
 #include <vector>
 #include <cstring>
+
+#include "arguments.cpp"
+#include "tcp.cpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -33,3 +36,27 @@
 /************************************************/
 /*                  Main                        */
 /************************************************/
+int main(int argc, char *argv[])
+{
+    try {
+        int retVal = -1;
+        arguments args(argc, argv); // Parse Arguments
+
+        if ("tcp" == args.transferProtocol)
+        {
+            TcpClient client(args.ipAddress, args.port);
+            client.updateServerAddress(args.ipAddress);   
+            retVal = client.runTcpClient();
+            return retVal;   
+        }
+        else if ("udp" == args.transferProtocol)
+        {
+            return 0;
+        }
+    }
+    catch (const std::exception &e)
+    {
+        std::cerr << e.what() << std::endl;
+        return 1;
+    }
+}
