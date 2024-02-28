@@ -96,5 +96,31 @@ class TcpMessages
      */
     ~TcpMessages() {}
 
+    /**
+     * @brief Check If The Message Components Are Valid (ID, Display Name, Content, Secret Length)
+     * 
+     * 
+     * @return 0 If The Message Is Valid, Otherwise Returns -1, -2, -3, -4
+     */
+    int checkLength()
+    {
+        if (msg.channelID.size() > LENGHT_ID)
+        {
+            return -1;
+        }
+        if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
+        {
+            return -2;
+        }
+        if (msg.content.size() > LENGHT_CONTENT)
+        {
+            return -3;
+        }
+        if (msg.secret.size() > LENGHT_SECRET)
+        {
+            return -4;
+        }
+        return 0;
+    }
 
 };
