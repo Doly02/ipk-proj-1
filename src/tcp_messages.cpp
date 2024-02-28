@@ -71,6 +71,7 @@ class TcpMessages
         std::vector<char> displayName;
         std::vector<char> channelID;
         std::vector<char> displayNameOutside;
+        bool shouldReply;
     };
     
 
@@ -78,7 +79,8 @@ class TcpMessages
     Message_t msg;
 
     TcpMessages() : msgType(UNKNOWN_MSG_TYPE) {
-        // Zde můžete inicializovat výchozí hodnoty, pokud je to potřeba
+        // Initialize Attributes
+        msg.shouldReply = false;
     }
     /**
      * @brief Constructor of TcpMessages Class 
@@ -231,8 +233,7 @@ class TcpMessages
 #endif
             // Process Display Name
             index = 0; // Reset index if you're using it to iterate through the remaining content
-            msg.displayName.clear(); // Ensure displayName is empty before filling
-            while (index < msg.content.size()) {
+            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r') {
                 msg.displayName.push_back(msg.content[index]);   
                 index++;
             }
@@ -291,11 +292,12 @@ class TcpMessages
     */
     void SendAuthMessage(int client_socket)
     {
-        std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end());
+        std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end()) + "\r\n";
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
         }
+        msg.shouldReply = true;
     }
 
     /**
@@ -307,11 +309,12 @@ class TcpMessages
     */
     void SendJoinMessage(int client_socket)
     {
-        std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end());
+        std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
         }
+        msg.shouldReply = true;
     }
 
     /**
@@ -323,7 +326,7 @@ class TcpMessages
     */
     void SendRenameMessage(int client_socket)
     {
-        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end());
+        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -406,7 +409,7 @@ class TcpMessages
                 msg.content.erase(msg.content.begin(), msg.content.begin() + 3); 
                 
                 // Myslenka: Ocistil jsem kompletne prijatou zpravu od IN a mezery, takze ted bych mel mit cistou zpravu
-                if (msg.content.size() > 1400) // Potreba uz je jen zkotrolovat zda prijata zprava ma mensi nez max povolenou delku
+                if (msg.content.size() > LENGHT_CONTENT) // Potreba uz je jen zkotrolovat zda prijata zprava ma mensi nez max povolenou delku
                 {
                     exit(1); //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
                 
@@ -432,10 +435,11 @@ class TcpMessages
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
             
         }
-        if (compareVectorAndString(msg.content, "OK")) {
+        if (compareVectorAndString(msg.content, "OK\r\n")) {
+            msg.shouldReply = false;
             return 0;
         }
-        else if (compareVectorAndString(msg.content, "NOK")) {
+        else if (compareVectorAndString(msg.content, "NOK\r\n")) {
             return -1;
         }
         else {
