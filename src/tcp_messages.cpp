@@ -337,4 +337,62 @@ class TcpMessages
         if (bytesTx < 0)
             perror("ERROR in sendto");
     }
+
+
+    /**
+     * @brief Parse Messages From Incoming Packet
+     * 
+     * 
+     * @return None, Exits If Something Goes Wrong
+    */
+    void parseMessage()
+    {
+        // Convert Vector To String
+        std::string contentStr(msg.content.begin(), msg.content.end());
+        // Check if Content Is a Message 
+        std::regex msgFromRegex("^MSG FROM");
+        std::regex msgInRegex("^IN");
+
+        // Pattern Check 
+        if (std::regex_search(contentStr, msgFromRegex)) 
+        {
+            size_t prefixLength = std::string("MSG FROM").length();
+            msg.content.erase(msg.content.begin(), msg.content.begin() + prefixLength + 1); 
+            
+            size_t index = 0;
+            while (index < msg.content.size() && msg.content[index] != ' ')
+            {
+                // Append Display Name From Another User That Has Send The Message To Local Client
+                msg.displayNameOutside.push_back(msg.content[index]);   
+                index++;
+            }
+            if (index < msg.content.size()) {  
+                // Clear The Display Name Characters And Space 
+                msg.content.erase(msg.content.begin(), msg.content.begin() + index + 1);
+            }
+            else
+            {
+                exit(1);
+                    //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
+            }
+            std::string contentStrContinue(msg.content.begin(), msg.content.end());
+            if (std::regex_search(contentStrContinue, msgInRegex)) 
+            {
+                // Delete First 3 Characters (IN + Space)
+                msg.content.erase(msg.content.begin(), msg.content.begin() + 3); 
+                
+                // Myslenka: Ocistil jsem kompletne prijatou zpravu od IN a mezery, takze ted bych mel mit cistou zpravu
+                if (msg.content.size() > 1400) // Potreba uz je jen zkotrolovat zda prijata zprava ma mensi nez max povolenou delku
+                {
+                    exit(1); //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
+                
+                }
+            }
+            else
+            {
+                exit(1); //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
+            }
+        }    
+    }
+
 };
