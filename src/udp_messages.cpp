@@ -125,6 +125,69 @@ public:
         return serialized;
     }
 
-    
+    /**
+     * @brief Deserialize Byte Array To Message
+     * @param serialized Byte Array
+     * 
+     * Deserialize Byte Array To Message
+     * @return Message
+    */
+    UdpMessages::UdpMessage deserializeMessage(const std::vector<uint8_t>& serializedMsg) {
+        UdpMessages::UdpMessage message;
+        int retVal = 0;
+        if (3 < serializedMsg.size())
+        {
+            throw std::runtime_error("Invalid Message Length");
+        }
+
+        // Store Packet Into The UDP Message Struct
+        message.type = serializedMsg[0];
+        if (CONFIRM != message.type)
+            message.messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+        else
+            message.refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+
+        size_t offset = 3;
+
+        switch (message.type)
+        {
+            case CONFIRM:
+                break;
+            case REPLY:
+                if (serializedMsg.size() < offset + 3)
+                {
+                    throw std::runtime_error("Invalid Message Length");
+                }
+                message.result = serializedMsg[offset++];
+                message.refMessageID = static_cast<uint16_t>(serializedMsg[offset++]) | (static_cast<uint16_t>(serializedMsg[offset++]) << 8);
+                while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
+                {
+                    message.msgContent.content.push_back(static_cast<char>(serializedMsg[offset++]));
+                }
+                break;
+            case AUTH: /* Should Not Be Sended To Client */
+            case JOIN: /* Should Not Be Sended To Client */
+                printf("Invalid Message Type\n"); //TODO:
+                break;
+            case MSG: 
+            case ERR:
+                /* DISPLAY NAME */
+                while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
+                {
+                    message.msgContent.displayNameOutside.push_back(static_cast<char>(serializedMsg[offset++]));
+                }
+                /* MESSAGE CONTENT */
+                while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
+                {
+                    message.msgContent.content.push_back(static_cast<char>(serializedMsg[offset++]));
+                }
+                break;
+            case BYE:
+                break;
+        
+        }
+
+        return message;
+    }
 };
 
