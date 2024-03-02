@@ -127,6 +127,10 @@ class TcpMessages
         {
             return -2;
         }
+        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
+        {
+            return -2;
+        }
         if (msg.content.size() > LENGHT_CONTENT)
         {
             return -3;
@@ -155,10 +159,13 @@ class TcpMessages
 
         for (size_t i = 0; i < len; i++)
         {
-            msg.content.push_back(buffer[i]);
+            if (buffer[i] != '\r' && buffer[i] != '\n')
+            {
+                msg.content.push_back(buffer[i]);
+            }
         }
-        msg.content.push_back('\r');
-        msg.content.push_back('\n');
+        msg.content.push_back('\r'); //TODO: Check If It's Needed
+        msg.content.push_back('\n'); //TODO: Check If It's Needed
     }
 
     /**
@@ -277,7 +284,6 @@ class TcpMessages
 
         }
         else {
-            printf("MSG\n");
             msg.type = MSG;
 
         }
@@ -343,7 +349,6 @@ class TcpMessages
     */
     void SentByeMessage(int clientSocket)
     {
-        printf("Sending Bye Message\n");
         std::string msgToSend = std::string(msg.content.begin(), msg.content.end()); //TODO:  "\r\n" WARNING!
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
@@ -374,54 +379,55 @@ class TcpMessages
     */
     void parseMessage()
     {
-        // Convert Vector To String
-        std::string contentStr(msg.content.begin(), msg.content.end());
-        // Check if Content Is a Message 
-        std::regex msgFromRegex("^MSG FROM");
-        std::regex msgInRegex("^IN");
+    msg.displayNameOutside.clear();
+    // Convert Vector To String
+    std::string contentStr(msg.content.begin(), msg.content.end());
+    std::regex msgInRegex("^IS");
 
-        // Pattern Check 
-        if (std::regex_search(contentStr, msgFromRegex)) 
+        // Check if Content Is a Message 
+        if (std::regex_search(contentStr, std::regex("^MSG FROM"))) 
         {
             size_t prefixLength = std::string("MSG FROM").length();
             msg.content.erase(msg.content.begin(), msg.content.begin() + prefixLength + 1); 
             
             size_t index = 0;
-            while (index < msg.content.size() && msg.content[index] != ' ')
+            // Loop until the substring starting at the current index does not start with "IN"
+            // and ensure we're not at the last character
+            while (index < msg.content.size() - 1)
             {
-                // Append Display Name From Another User That Has Send The Message To Local Client
-                msg.displayNameOutside.push_back(msg.content[index]);   
+                // Convert current substring to string for regex search
+                std::string currentSubStr(msg.content.begin() + index, msg.content.end());
+                if (std::regex_search(currentSubStr, msgInRegex)) {
+                    break; // Exit the loop if "IN" is found at the beginning of the current substring
+                }
+                
+                msg.displayNameOutside.push_back(msg.content[index]);
                 index++;
             }
-            if (index < msg.content.size()) {  
-                // Clear The Display Name Characters And Space 
-                msg.content.erase(msg.content.begin(), msg.content.begin() + index + 1);
+
+            // Check and Remove the Last Character if Needed (It's a Space)
+            if (!msg.displayNameOutside.empty()) {
+                msg.displayNameOutside.pop_back();
             }
-            else
+
+            /* Process The Content */
+            int isPlusSpace = 3;                                                    // 1. Get Rid of "IS "
+            msg.content.erase(msg.content.begin(), msg.content.begin() + index + isPlusSpace);
+
+
+            std::string messageContent(msg.content.begin(), msg.content.end());     // 2. Get Rid of "\r\n"
+            if (msg.content.size() > 2 || messageContent == "\r\n") {
+                msg.content.resize(msg.content.size() - 2);
+            }
+            else 
             {
                 exit(1);
-                    //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
             }
-            std::string contentStrContinue(msg.content.begin(), msg.content.end());
-            if (std::regex_search(contentStrContinue, msgInRegex)) 
-            {
-                // Delete First 3 Characters (IN + Space)
-                msg.content.erase(msg.content.begin(), msg.content.begin() + 3); 
-                
-                // Myslenka: Ocistil jsem kompletne prijatou zpravu od IN a mezery, takze ted bych mel mit cistou zpravu
-                if (msg.content.size() > LENGHT_CONTENT) // Potreba uz je jen zkotrolovat zda prijata zprava ma mensi nez max povolenou delku
-                {
-                    exit(1); //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
-                
-                }
-            }
-            else
-            {
-                exit(1); //TODO: Look At That, I dont Know, I Completely Forgot Error Handling!
-            }
-        }    
-    }
 
+            // Check The Message And User Name Length
+            checkLength();
+        }
+    }
     /**
      * @brief Handles Reply From Server
      * 

@@ -32,6 +32,7 @@
 #include <unistd.h>
 #include <vector>
 #include "tcp_messages.cpp"
+#include "client.cpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -43,11 +44,6 @@
 /************************************************/
 class TcpClient : Client
 {
-private:
-    int sock;                 //!<  File Descriptor of The Socket Used For Communication
-    std::string serverAddress;  //!< IP Address of The Server
-    int port;                   //!< Port Number on Which The Server Is Listening
-    struct sockaddr_in server;  //!< Structure Containing Server's Address Information
 
 public:
     static constexpr int NOT_CONNECTED = -1;
@@ -59,7 +55,8 @@ public:
      * Constructor Initialize Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
      */
-    TcpClient(std::string addr, int port) : sock(NOT_CONNECTED), serverAddress(addr), port(port) {}
+    TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {}
+
     /**
      * @brief Destructor of TcpClient Class 
      * 
@@ -73,56 +70,7 @@ public:
         }
     }
 
-    void updateServerAddress(const std::string& newAddress) {
-        serverAddress = newAddress;
-    }
-    /**
-     * @brief Determine If The Client Is Connected To The Server
-     * @return True If The Client Is Connected, False Otherwise
-     */
-    bool isConnected() {
-        return sock != NOT_CONNECTED;
-    }
-
-    /**
-     * @brief Connects The Client To The Server
-     * @return True If The Connection Was Successful, False Otherwise
-     */
-    bool connectServer()
-    {
-        if (isConnected())
-        {
-            return true;
-        }
-
-        sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (NOT_CONNECTED == sock)
-        {
-            std::cerr << "Not Possible To Create Socket: " << strerror(errno) << std::endl;
-            return false;
-        }
-
-        // Set Server's Address Information
-        server.sin_family = AF_INET;
-        server.sin_port = htons(port);
-
-        if (inet_pton(AF_INET, serverAddress.c_str(), &server.sin_addr) <= 0)
-        {
-            printf("SRV ADDR: %s\n", serverAddress.c_str());
-            std::cerr << "Invalid Address: " << serverAddress << std::endl;
-            return false;
-        }
-
-        if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
-        {
-            std::cerr << "Connection Failed: " << strerror(errno) << std::endl;
-            return false;
-        }
-
-        // Connection Was Successful
-        return true;
-    }
-
+    
 
     int runTcpClient()
     {
@@ -131,15 +79,16 @@ public:
         fd_set readfds;
         int max_sd;
         struct timeval tv;
-        bool sendAuth = false;
+        bool sendAuth = false;              // Indicates If The AUTH Message Was Sent
         bool checkReply = false;
+        bool authConfirmed = false;         // Authentication Was Confirmed
         const int BUFSIZE = 1536;  
         char buf[BUFSIZE];
         int RetValue = -1;
         TcpMessages tcpMessage; 
 
         /* Code */
-        if (!connectServer())
+        if (!Client::isConnected())
         {
             return NOT_CONNECTED;
         }
@@ -159,8 +108,8 @@ public:
             max_sd = sock > STDIN_FILENO ? sock : STDIN_FILENO;
 
             // Set Timeout
-            tv.tv_sec = 1;
-            tv.tv_usec = 0;
+            tv.tv_sec = 0;
+            tv.tv_usec = 50;
 
             // Waiting For An Activity
             int activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
@@ -173,13 +122,15 @@ public:
             // Check Socket's Activity
             if (FD_ISSET(sock, &readfds)) 
             {
+                memset(buf, 0, sizeof(buf));
                 // Receive A Packet From Server
                 int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
-                tcpMessage.readAndStoreContent(buf);  
                 if (bytesRx > 0) 
                 {
-                    buf[bytesRx] = '\0'; //TODO: Check If This Is Right ("\r\n")
-
+                    //buf[bytesRx]    = '\0'; //TODO: Check If This Is Right ("\r\n")
+                    buf[BUFSIZE-1]  = '\0';
+                    tcpMessage.readAndStoreContent(buf);  
+                    
                     /* Print The Message To STDOUT */
                     if (strcmp(buf, "BYE\r\n") == 0) 
                     {
@@ -191,14 +142,13 @@ public:
                     if (true == checkReply)
                     {
                         // Store The Content Of The Buffer Into Internal Vector
-                        tcpMessage.readAndStoreContent(buf);       
+                        // tcpMessage.readAndStoreContent(buf);       
                         // Check If The Message Is REPLY
                         int retVal = tcpMessage.handleReply();
                         if (retVal == 0)
                         {
                             std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
                             std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
-                            //printf("%s: %s", displayNameOutside.c_str(), content.c_str());
                             printf("REPLY OK\n");
                             
                             checkReply = false;
@@ -212,9 +162,13 @@ public:
                     else
                     {
                         // Print The Content Of The Buffer
+                        tcpMessage.parseMessage();
                         std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
                         std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
-                        printf("%s: %s", displayNameOutside.c_str(), content.c_str());
+                        if (!displayNameOutside.empty() && !content.empty())
+                        {
+                            printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
+                        }
                     }
                     
                     // Clear The Buffer After All
@@ -234,6 +188,7 @@ public:
             // Check Activity On STDIN
             if (FD_ISSET(STDIN_FILENO, &readfds)) 
             {
+                memset(buf, 0, sizeof(buf));
                 // Wait For User's Input
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
@@ -244,6 +199,7 @@ public:
                     if (len > 1 && buffer[len - 2] == '\r' && buffer[len - 1] == '\n') 
                     {    // Windows
                         buffer[len - 2] = '\0';
+                        buffer[len - 1] = '\0';
                     }
 #else
                     if (buf[len - 1] == '\n') 
@@ -252,8 +208,8 @@ public:
                     }
 #endif
 
-                        
                     tcpMessage.readAndStoreContent(buf);    // Store Content To Vector
+                    printf("Sending: %s\n", buf);                        
                     RetValue = tcpMessage.checkMessage();   // Check Message
                     if (RetValue == 0) 
                     {
@@ -268,13 +224,13 @@ public:
                             
                         }
         
-                        if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type)
+                        if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
                             // Sent To Server Join Message
                             tcpMessage.SendJoinMessage(sock);
                         }
 
-                        if ((int)TcpMessages::BYE == tcpMessage.msg.type)
+                        if ((int)TcpMessages::BYE == tcpMessage.msg.type )
                         {
                             // Sent To Server Bye Message
                             tcpMessage.SentByeMessage(sock);
