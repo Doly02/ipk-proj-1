@@ -44,8 +44,7 @@ int main(int argc, char *argv[])
 
         if ("tcp" == args.transferProtocol)
         {
-            TcpClient client(args.ipAddress, args.port);
-            client.updateServerAddress(args.ipAddress);   
+            TcpClient client(args.ipAddress, args.port, Client::TCP);
             retVal = client.runTcpClient();
             return retVal;   
         }
