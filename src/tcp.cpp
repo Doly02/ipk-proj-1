@@ -42,62 +42,114 @@
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-class TcpClient : Client
-{
+
+class TcpClient : public Client {
+private:
+    fd_set readfds;
+    int max_sd;
+    struct timeval tv;
+    bool sendAuth = false;
+    bool checkReply = false;
+    bool authConfirmed = false;
+    const int BUFSIZE = 1536;
+    char buf[1536];
+    TcpMessages tcpMessage;
 
 public:
-    static constexpr int NOT_CONNECTED = -1;
-    /**
-     * @brief Constructor of TcpClient Class 
-     * @param addr Server's Address 
-     * @param port Server's Port
-     *
-     * Constructor Initialize Client With Server's Address And Port.
-     * Default State of Socket Is Set To NOT_CONNECTED.
-     */
-    TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {}
+    TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {
+        // Constructor
+    }
 
-    /**
-     * @brief Destructor of TcpClient Class 
-     * 
-     * Constructor Initialize Client With Server's Address And Port.
-     * Default State of Socket Is Set To NOT_CONNECTED.
-     */
-    ~TcpClient() 
+    ~TcpClient() {
+        // Destructor
+    }
+
+    void checkAuthentication() 
     {
-        if (isConnected()) {
-            close(sock);
+        int RetValue = 0;
+        while (!authConfirmed) {
+            // Get User's Authentication Message
+            if (!sendAuth) {
+                if (fgets(buf, BUFSIZE, stdin) != NULL) 
+                {
+                    size_t len = strlen(buf);
+                    if (buf[len - 1] == '\n') {
+                        buf[len - 1] = '\0';
+                    }
+                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
+                    RetValue = tcpMessage.checkMessage();   // Check Message
+                    if (RetValue == 0) 
+                    {
+                        if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
+                        {
+                            // Sent To Server Authentication Message
+                            printf("Sending AUTH Message: %s\n", buf);
+                            tcpMessage.SendAuthMessage(sock);
+                            sendAuth = true;
+                            checkReply = true;
+                        }
+                    }
+                }
+            }
+
+            FD_ZERO(&readfds);
+            FD_SET(sock, &readfds);
+            max_sd = sock;
+
+            // Set Timeout
+            tv.tv_sec = 1;
+            tv.tv_usec = 0;
+
+            // Waiting For An Activity
+            int activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
+            if ((activity < 0) && (errno != EINTR)) {
+                exit(1);
+            }
+
+            if (FD_ISSET(sock, &readfds)) {
+                memset(buf, 0, BUFSIZE);
+                int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
+                if (bytesRx > 0) {
+                    buf[BUFSIZE - 1] = '\0';
+                    tcpMessage.readAndStoreContent(buf);
+
+                    if (checkReply) {
+                        int retVal = tcpMessage.handleReply();
+                        if (retVal == 0) {
+                            authConfirmed = true;
+                            checkReply = false;
+                            break;
+                        } else {
+                            // Reply Failed -> Exit
+                            exit(TcpMessages::AUTH_FAILED); //TODO: Budes se uz muset podivat na ty navratove hodnoty, je v tom border
+                        }
+                    }
+                } else if (bytesRx == 0) {
+                    break; // Server closed the connection
+                } else {
+                    std::cerr << "recv failed" << std::endl;
+                }
+            }
         }
     }
 
-    
 
     int runTcpClient()
     {
-
-        /* Variables */
-        fd_set readfds;
-        int max_sd;
-        struct timeval tv;
-        bool sendAuth = false;              // Indicates If The AUTH Message Was Sent
-        bool checkReply = false;
-        bool authConfirmed = false;         // Authentication Was Confirmed
-        const int BUFSIZE = 1536;  
-        char buf[BUFSIZE];
-        int RetValue = -1;
-        TcpMessages tcpMessage; 
-
+        int RetValue = 0;
         /* Code */
         if (!Client::isConnected())
         {
             return NOT_CONNECTED;
         }
 
-
         // Set Socket To Non-blocking Mode
         fcntl(sock, F_SETFL, O_NONBLOCK);
         // Set Standard Input To Non-blocking Mode
         fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+        // First Handle Authentication
+        checkAuthentication();
+
 
         while (true) 
         {
@@ -208,28 +260,16 @@ public:
                     }
 #endif
 
-                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector
-                    printf("Sending: %s\n", buf);                        
+                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
                     RetValue = tcpMessage.checkMessage();   // Check Message
                     if (RetValue == 0) 
                     {
-
-                        if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
-                        {
-                            // Sent To Server Authentication Message
-                            printf("Sending AUTH Message: %s\n", buf);
-                            tcpMessage.SendAuthMessage(sock);
-                            sendAuth = true;
-                            checkReply = true;
-                            
-                        }
-        
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
                             // Sent To Server Join Message
                             tcpMessage.SendJoinMessage(sock);
+                            checkReply = true;
                         }
-
                         if ((int)TcpMessages::BYE == tcpMessage.msg.type )
                         {
                             // Sent To Server Bye Message

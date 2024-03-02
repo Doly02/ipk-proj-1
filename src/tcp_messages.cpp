@@ -30,6 +30,9 @@
 class TcpMessages 
 {
     public:
+    static constexpr int SUCCESS                = 0;
+    static constexpr int AUTH_FAILED            = -1;
+    static constexpr int JOIN_FAILED            = -2;
     static constexpr int LENGHT_ID              = 20;
     static constexpr int LENGHT_SECRET          = 20;
     static constexpr int LENGHT_CONTENT         = 1400;
@@ -435,21 +438,31 @@ class TcpMessages
     */
     int handleReply()
     {
+
+
         if (msg.content.size() >= 5 && msg.content[0] == 'R' && msg.content[1] == 'E' && msg.content[2] == 'P' 
         && msg.content[3] == 'L' && msg.content[4] == 'Y') {
             // delete first 5 characters + 1 space
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
             
         }
-        if (compareVectorAndString(msg.content, "OK\r\n")) {
+        if (compareVectorAndString(msg.content, "OK IS Auth success.\r\n")) {
             msg.shouldReply = false;
-            return 0;
+            return SUCCESS;
         }
-        else if (compareVectorAndString(msg.content, "NOK\r\n")) {
-            return -1;
+        else if (compareVectorAndString(msg.content, "OK IS Join success.\r\n")) {
+            return SUCCESS;
         }
-        else {
-            return -2;
+        else 
+        {
+            // Compare With Error Message Template
+            std::string content(msg.content.begin(), msg.content.end());
+            std::regex errorRegex("ˆNOK IS ");   
+            if (std::regex_search(content,errorRegex))  
+            {
+                return AUTH_FAILED;
+            }
+            
         }
         
     }
