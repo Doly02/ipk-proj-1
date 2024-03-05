@@ -27,6 +27,7 @@
 
 #include "arguments.cpp"
 #include "tcp.cpp"
+#include "udp.cpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -50,7 +51,9 @@ int main(int argc, char *argv[])
         }
         else if ("udp" == args.transferProtocol)
         {
-            return 0;
+            UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
+            retVal = client.runUdpClient();
+            return retVal;
         }
     }
     catch (const std::exception &e)

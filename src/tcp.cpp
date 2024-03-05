@@ -244,7 +244,6 @@ public:
                 // Wait For User's Input
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
-                    //printf("STDIN\n");
                     size_t len = strlen(buf);
 
 #if defined (_WIN64) || defined (_WIN32) 
@@ -270,7 +269,8 @@ public:
                             tcpMessage.SendJoinMessage(sock);
                             checkReply = true;
                         }
-                        if ((int)TcpMessages::BYE == tcpMessage.msg.type )
+
+                        if ((int)TcpMessages::COMMAND_BYE == tcpMessage.msg.type )
                         {
                             // Sent To Server Bye Message
                             tcpMessage.SentByeMessage(sock);

@@ -24,6 +24,7 @@
 #include <unistd.h>     // For close
 #include <unordered_set>
 #include <chrono>
+#include <thread>
 #include "base_messages.cpp"
 /************************************************/
 /*                  Constants                   */
@@ -31,29 +32,26 @@
 class UdpMessages : public BaseMessages {
 private:
     static constexpr int8_t NULL_BYTE   = 0x00;
-    static constexpr int8_t CONFIRM     = 0x00;
-    static constexpr int8_t REPLY       = 0x01;
-    static constexpr int8_t AUTH        = 0x02;
-    static constexpr int8_t JOIN        = 0x03;
-    static constexpr int8_t MSG         = 0x04;
-    static constexpr int8_t ERR         = 0xFE;
-    static constexpr int8_t BYE         = 0xFF;
+
 
 public:
-    struct UdpMessage
-    {
-        uint8_t type;           //!< Type of The Message
-        uint16_t messageID;     //!< ID of The Message
-        uint16_t refMessageID;  //!< ID of The Referenced Message
-        uint8_t result;     //!< Result of The Message
-        Message_t msgContent;      //!< Content of The Message
-    };
+    static constexpr int    OUT_OF_TIMEOUT = 0x77;
+
+    //MessageType_t type;           //!< Type of The Message
+    uint16_t messageID;     //!< ID of The Message
+    uint16_t refMessageID;  //!< ID of The Referenced Message
+    uint8_t result;     //!< Result of The Message
+    uint16_t internalMsgId;
+    //Message_t msgContent;      //!< Content of The Message
 
     UdpMessages() : BaseMessages() {}
 
-    UdpMessages(MessageType_t type, const Message_t& content) : BaseMessages(type, content) {}
-
-
+    UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
+    {
+        refMessageID = 0;
+        result = 0;
+        messageID = 0;
+    }
 
     void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
         // Serialize The Message Content To UDP Message 
@@ -71,59 +69,64 @@ public:
      * Serialize The Message To Byte Array
      * @return Byte Array
     */
-    std::vector<uint8_t> serializeMessage(const UdpMessage& message) {
+    std::vector<uint8_t> serializeMessage() {
         std::vector<uint8_t> serialized;
 
         /*  MESSAGE TYPE */
-        serialized.push_back(message.type);
+        serialized.push_back(msgType);
         /*  MESSAGE ID   */
-        serialized.push_back(message.messageID & 0xFF);
-        serialized.push_back((message.messageID >> 8) & 0xFF);
+        serialized.push_back(messageID & 0xFF);
+        serialized.push_back((messageID >> 8) & 0xFF);
 
-        switch (message.type)
+        switch (msgType)
         {
             
             case REPLY:
                 /*  RESULT      */
-                serialized.push_back(message.result);
+                serialized.push_back(result);
                 /*  REF. MESSAGE ID */
-                serialized.push_back(message.refMessageID & 0xFF);
-                serialized.push_back((message.refMessageID >> 8) & 0xFF);
+                serialized.push_back(refMessageID & 0xFF);
+                serialized.push_back((refMessageID >> 8) & 0xFF);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, message.msgContent.content);
+                appendContent(serialized, msg.content);
                 break;
-            case AUTH:
+            case COMMAND_AUTH:
                 /*  USERNAME        */
-                appendContent(serialized, message.msgContent.login);
+                appendContent(serialized, msg.login);
                 /*  DISPLAY NAME    */
-                appendContent(serialized, message.msgContent.displayName);
+                appendContent(serialized, msg.displayName);
                 /*  SECRET          */
-                appendContent(serialized, message.msgContent.secret);
+                appendContent(serialized, msg.secret);
                 break;
-            case JOIN:
+            case COMMAND_JOIN:
                 /*  CHANNEL ID      */
-                appendContent(serialized, message.msgContent.channelID);
+                appendContent(serialized, msg.channelID);
                 /*  DISPLAY NAME    */
-                appendContent(serialized, message.msgContent.displayName);
+                appendContent(serialized, msg.displayName);
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
-                appendContent(serialized, message.msgContent.displayName);
+                appendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, message.msgContent.content);
+                appendContent(serialized, msg.content);
                 break;
-            case ERR:
+            case ERROR:
                 /*  DISPLAY NAME    */
-                appendContent(serialized, message.msgContent.displayName);
+                appendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, message.msgContent.content);
+                appendContent(serialized, msg.content);
                 break;
-            case BYE:
+            case COMMAND_BYE:
                 /* MSG TYPE & IN ALREADY THERE */
                 break;
+            case CONFIRM:
+                break;
+            case UNKNOWN_MSG_TYPE:
+                exit(1);
         }
         return serialized;
     }
+
 
     /**
      * @brief Deserialize Byte Array To Message
@@ -132,24 +135,23 @@ public:
      * Deserialize Byte Array To Message
      * @return Message
     */
-    UdpMessages::UdpMessage deserializeMessage(const std::vector<uint8_t>& serializedMsg) {
-        UdpMessages::UdpMessage message;
-        int retVal = 0;
-        if (3 < serializedMsg.size())
+    void deserializeMessage(const std::vector<char>& serializedMsg)
+    {
+        if (serializedMsg.size() < 3)
         {
             throw std::runtime_error("Invalid Message Length");
         }
 
         // Store Packet Into The UDP Message Struct
-        message.type = serializedMsg[0];
-        if (CONFIRM != message.type)
-            message.messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+        msgType = (BaseMessages::MessageType_t)serializedMsg[0];
+        if (CONFIRM != msgType)
+            messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
         else
-            message.refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+            refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
 
         size_t offset = 3;
 
-        switch (message.type)
+        switch (msgType)
         {
             case CONFIRM:
                 break;
@@ -158,36 +160,196 @@ public:
                 {
                     throw std::runtime_error("Invalid Message Length");
                 }
-                message.result = serializedMsg[offset++];
-                message.refMessageID = static_cast<uint16_t>(serializedMsg[offset++]) | (static_cast<uint16_t>(serializedMsg[offset++]) << 8);
+                result = serializedMsg[offset++];
+                refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset]) << 8);
+                offset++;
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
                 {
-                    message.msgContent.content.push_back(static_cast<char>(serializedMsg[offset++]));
+                    msg.content.push_back(static_cast<char>(serializedMsg[offset]));
+                    offset++;
                 }
+                msg.type = REPLY;
                 break;
-            case AUTH: /* Should Not Be Sended To Client */
-            case JOIN: /* Should Not Be Sended To Client */
+            case COMMAND_AUTH: /* Should Not Be Sended To Client */
+            case COMMAND_JOIN: /* Should Not Be Sended To Client */
                 printf("Invalid Message Type\n"); //TODO:
                 break;
             case MSG: 
-            case ERR:
+            case ERROR:
                 /* DISPLAY NAME */
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
                 {
-                    message.msgContent.displayNameOutside.push_back(static_cast<char>(serializedMsg[offset++]));
+                    msg.displayNameOutside.push_back(static_cast<char>(serializedMsg[offset]));
+                    offset++;
                 }
                 /* MESSAGE CONTENT */
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
                 {
-                    message.msgContent.content.push_back(static_cast<char>(serializedMsg[offset++]));
+                    msg.content.push_back(static_cast<char>(serializedMsg[offset]));
+                    offset++;
                 }
                 break;
-            case BYE:
+            case COMMAND_BYE:
                 break;
+            case UNKNOWN_MSG_TYPE:  /* Unused */
+            default:
+                exit(1);
+            
         
+            msg.type = msgType;
         }
 
-        return message;
+    }
+
+    int RecvUdpMessage(int internalId)
+    {
+        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        cleanMessage();
+        deserializeMessage(serialized);
+        if (refMessageID == internalId && result == SUCCESS)
+        {
+            // Check With Global Message ID
+            if (refMessageID == messageID)
+            {
+                messageID++;
+                return SUCCESS;
+            }
+        }
+        return MSG_FAILED;
+    }
+
+    int RecvUdpMessageWTimeOut(int timeoutSeconds,int internalId) 
+    {
+        auto startTime = std::chrono::steady_clock::now();
+        int retValue = OUT_OF_TIMEOUT;
+        
+        while (true) {
+            retValue = RecvUdpMessage(internalId);
+            if (SUCCESS == retValue) {
+                // Everything Went Good
+                return SUCCESS;
+            }
+            else if (MSG_FAILED == retValue)
+            {
+                return retValue;
+            }
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+            if (elapsedSeconds >= timeoutSeconds) {
+                
+                return OUT_OF_TIMEOUT;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+
+    }
+
+    int handleUpdIncomingReply(int internalId)
+    {
+        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        cleanMessage();
+        deserializeMessage(serialized);
+        if (REPLY == msg.type)
+        {
+            // Check With Internal Message ID
+            if (refMessageID == internalId && result == SUCCESS)
+            {
+                // Check With Global Message ID
+                if (refMessageID == messageID)
+                {
+                    messageID++;
+                    return SUCCESS;
+                }
+            }
+        }
+        return AUTH_FAILED;
+
+    }
+
+    int revcReplyWithTimeOut(int timeoutSeconds,int internalId) 
+    {
+        auto startTime = std::chrono::steady_clock::now();
+        int retValue = OUT_OF_TIMEOUT;
+        while (true) {
+            retValue = handleUpdIncomingReply(internalId);
+            if (SUCCESS == retValue) {
+                // Everything Went Good
+                return SUCCESS;
+            }
+            else if (AUTH_FAILED == retValue)
+            {
+                return retValue;
+            }
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+            if (elapsedSeconds >= timeoutSeconds) {
+                
+                return OUT_OF_TIMEOUT;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+
+    void sendUdpAuthMessage(int sock)
+    {
+        std::vector<uint8_t> serialized = serializeMessage();
+        send(sock, serialized.data(), serialized.size(), 0);
+        
+    }
+    int handleUpdConfirm(int internalId)
+    {
+        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        cleanMessage();
+        deserializeMessage(serialized);
+        if (CONFIRM == msg.type)
+        {
+            // Check With Internal Message ID
+            if (refMessageID == internalId)
+            {
+                // Check With Global Message ID
+                if (refMessageID == messageID)
+                {
+                    messageID++;
+                    return SUCCESS;
+                }
+            }
+        }
+        return AUTH_FAILED;
+    }
+
+    int revcConfirmWTimeOut(int timeoutSeconds,int internalId) 
+    {
+        auto startTime = std::chrono::steady_clock::now();
+        int retValue = OUT_OF_TIMEOUT;
+        while (true) {
+            retValue = handleUpdConfirm(internalId);
+            if (SUCCESS == retValue) {
+                // Everything Went Good
+                return SUCCESS;
+            }
+            else if (AUTH_FAILED == retValue)
+            {
+                return retValue;
+            }
+            auto currentTime = std::chrono::steady_clock::now();
+            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
+            if (elapsedSeconds >= timeoutSeconds) {
+                
+                return OUT_OF_TIMEOUT;
+            }
+            std::this_thread::sleep_for(std::chrono::milliseconds(50));
+        }
+    }
+
+    void SendUdpMessage(int sock)
+    {
+        std::vector<uint8_t> serialized = serializeMessage();
+        ssize_t bytesTx = send(sock, serialized.data(), serialized.size(), 0);
+        if (bytesTx < 0) 
+        {
+            perror("sendto failed");
+        }
     }
 };
+
 

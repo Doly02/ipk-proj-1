@@ -15,6 +15,9 @@
  *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
  * ****************************/
 
+#ifndef BASE_MESSAGES_H
+#define BASE_MESSAGES_H
+
 #define DEBUG_MACRO 0
 /************************************************/
 /*                  Libraries                   */
@@ -33,6 +36,7 @@ class BaseMessages
     static constexpr int SUCCESS                = 0;
     static constexpr int AUTH_FAILED            = -1;
     static constexpr int JOIN_FAILED            = -2;
+    static constexpr int MSG_FAILED             = -3;
     static constexpr int LENGHT_ID              = 20;
     static constexpr int LENGHT_SECRET          = 20;
     static constexpr int LENGHT_CONTENT         = 1400;
@@ -46,20 +50,18 @@ class BaseMessages
         COMMAND_JOIN     = 0x03,     //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
         MSG              = 0x04,     //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
         ERROR            = 0xFE,     //!< Error - Template: ERROR FROM {DisplayName} IS {MessageContent}\r\n
-        COMMAND_MSG      = 0x11,     //!< Rename - Template: RENAME {NewDisplayName}\r\n
         COMMAND_BYE      = 0xFF,     //!< Disconnect - Template: BYE\r\n
         UNKNOWN_MSG_TYPE = 0x99,     //!< Unknown Message Type
-        BYE              = 0x12
 
     };
     enum InputType_t
     {
-        UNKNOWN,            //!< Unknown Input
-        AUTH_COMMAND,       //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
-        JOIN_COMMAND,       //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
-        RENAME_COMMAND,      //!< Rename - Template: RENAME {NewDisplayName}\r\n
+        INPUT_UNKNOWN,            //!< Unknown Input
+        INPUT_AUTH,       //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
+        INPUT_JOIN,       //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
+        INPUT_RENAME,      //!< Rename - Template: RENAME {NewDisplayName}\r\n
         INPUT_MSG,        //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
-        HELP_COMMAND        //!< Disconnect - Template: BYE\r\n
+        INPUT_HELP        //!< Disconnect - Template: BYE\r\n
     };
 
     struct Message_t
@@ -113,6 +115,17 @@ class BaseMessages
         return vecAsString == str;
     }
 
+
+    void cleanMessage()
+    {
+        msg.content.clear();
+        msg.login.clear();
+        msg.secret.clear();
+        msg.displayName.clear();
+        msg.channelID.clear();
+        msg.displayNameOutside.clear();
+        msg.shouldReply = false;
+    }
     /**
      * @brief Check If The Message Components Are Valid (ID, Display Name, Content, Secret Length)
      * 
@@ -179,40 +192,40 @@ class BaseMessages
     int checkMessage()
     {
         int retVal = -1;
-        InputType_t inputType = UNKNOWN;
+        InputType_t inputType = INPUT_UNKNOWN;
         if (msg.content.size() >= 5 && msg.content[0] == '/' && msg.content[1] == 'a' && msg.content[2] == 'u' 
         && msg.content[3] == 't' && msg.content[4] == 'h') {
             // delete first 5 characters + 1 space
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
-            inputType = AUTH_COMMAND;
+            inputType = INPUT_AUTH;
         }
         else if (msg.content.size() >= 4 && msg.content[0] == '/' && msg.content[1] == 'j' && msg.content[2] == 'o'
         && msg.content[3] == 'i' && msg.content[4] == 'n') {
             // delete first 5 characters + 1 space
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
-            inputType = JOIN_COMMAND;
+            inputType = INPUT_JOIN;
         }
         else if (msg.content.size() >= 4 && msg.content[0] == '/' && msg.content[1] == 'r' && msg.content[2] == 'e'
         && msg.content[3] == 'n' && msg.content[4] == 'a' && msg.content[5] == 'm' && msg.content[6] == 'e') {
             // delete first 7 characters + 1 space
             msg.content.erase(msg.content.begin(), msg.content.begin() + 8);
-            inputType = RENAME_COMMAND;
+            inputType = INPUT_RENAME;
         }
         else if (msg.content.size() >= 3 && msg.content[0] == '/' && msg.content[1] == 'h' && msg.content[2] == 'e'
         && msg.content[3] == 'l' && msg.content[4] == 'p') {
             // delete first 5 characters + 1 space
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
-            inputType = HELP_COMMAND;
+            inputType = INPUT_HELP;
         }
         else 
         {
             inputType = INPUT_MSG;
         }
 
-        if (inputType == UNKNOWN) {
+        if (inputType == INPUT_UNKNOWN) {
             return -1;
         }
-        else if (inputType == AUTH_COMMAND) {
+        else if (inputType == INPUT_AUTH) {
             size_t index = 0;
             // Process Username
             while (index < msg.content.size() && msg.content[index] != ' ')
@@ -252,10 +265,9 @@ class BaseMessages
             msg.type = COMMAND_AUTH;
 
         }
-        else if (inputType == JOIN_COMMAND) {
+        else if (inputType == INPUT_JOIN) {
             size_t index = 0;
             // Process Channel ID
-            // while (index < msg.content.size() && (msg.content[index] != EOF || msg.content[index] != '\n'))
             while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r') 
             {
                 msg.channelID.push_back(msg.content[index]);   
@@ -264,7 +276,7 @@ class BaseMessages
             msg.type = COMMAND_JOIN;
 
         }
-        else if (inputType == RENAME_COMMAND) {
+        else if (inputType == INPUT_MSG) {
             size_t index = 0;
             // Process New Display Name
             while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r')  // '\n' should not be in content
@@ -272,17 +284,27 @@ class BaseMessages
                 msg.displayName.push_back(msg.content[index]);   
                 index++;
             }
-            msg.type = COMMAND_MSG;
+            msg.type = MSG;
 
         }
-        else if (inputType == HELP_COMMAND) {
+        else if (inputType == INPUT_HELP) {
             //TODO: - Print Help Message
             msg.type = COMMAND_BYE;
 
         }
+        else if (inputType == INPUT_RENAME)
+        {
+            size_t index = 0;
+            // Process New Display Name
+            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r')  // '\n' should not be in content
+            {
+                msg.displayName.push_back(msg.displayName[index]);   
+                index++;
+            }
+        }
         // Otherwise Message Is Already Stored In The Content    
         else  if (compareVectorAndString(msg.content, "BYE\r\n")) {
-            msg.type = BYE;
+            msg.type = COMMAND_BYE;
 
         }
         else {
@@ -388,3 +410,6 @@ class BaseMessages
     }
 
 };
+
+
+#endif // BASE_MESSAGES_H
