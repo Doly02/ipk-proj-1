@@ -31,11 +31,11 @@
 /************************************************/
 class UdpMessages : public BaseMessages {
 private:
-    static constexpr int8_t NULL_BYTE   = 0x00;
-
+    static constexpr int8_t NULL_BYTE           = 0x00;
 
 public:
-    static constexpr int    OUT_OF_TIMEOUT = 0x77;
+    static constexpr int8_t CONFIRM_FAILED      = 0x55;
+    static constexpr int    OUT_OF_TIMEOUT      = 0x77;
 
     //MessageType_t type;           //!< Type of The Message
     uint16_t messageID;     //!< ID of The Message
@@ -218,33 +218,7 @@ public:
         return MSG_FAILED;
     }
 
-    int RecvUdpMessageWTimeOut(int timeoutSeconds,int internalId) 
-    {
-        auto startTime = std::chrono::steady_clock::now();
-        int retValue = OUT_OF_TIMEOUT;
-        
-        while (true) {
-            retValue = RecvUdpMessage(internalId);
-            if (SUCCESS == retValue) {
-                // Everything Went Good
-                return SUCCESS;
-            }
-            else if (MSG_FAILED == retValue)
-            {
-                return retValue;
-            }
-            auto currentTime = std::chrono::steady_clock::now();
-            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-            if (elapsedSeconds >= timeoutSeconds) {
-                
-                return OUT_OF_TIMEOUT;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
-
-    }
-
-    int handleUpdIncomingReply(int internalId)
+    int recvUpdIncomingReply(int internalId)
     {
         std::vector<char> serialized(msg.content.begin(), msg.content.end());
         cleanMessage();
@@ -266,29 +240,6 @@ public:
 
     }
 
-    int revcReplyWithTimeOut(int timeoutSeconds,int internalId) 
-    {
-        auto startTime = std::chrono::steady_clock::now();
-        int retValue = OUT_OF_TIMEOUT;
-        while (true) {
-            retValue = handleUpdIncomingReply(internalId);
-            if (SUCCESS == retValue) {
-                // Everything Went Good
-                return SUCCESS;
-            }
-            else if (AUTH_FAILED == retValue)
-            {
-                return retValue;
-            }
-            auto currentTime = std::chrono::steady_clock::now();
-            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-            if (elapsedSeconds >= timeoutSeconds) {
-                
-                return OUT_OF_TIMEOUT;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
-    }
 
     void sendUdpAuthMessage(int sock)
     {
@@ -296,7 +247,7 @@ public:
         send(sock, serialized.data(), serialized.size(), 0);
         
     }
-    int handleUpdConfirm(int internalId)
+    int recvUpdConfirm(int internalId)
     {
         std::vector<char> serialized(msg.content.begin(), msg.content.end());
         cleanMessage();
@@ -314,36 +265,28 @@ public:
                 }
             }
         }
-        return AUTH_FAILED;
-    }
-
-    int revcConfirmWTimeOut(int timeoutSeconds,int internalId) 
-    {
-        auto startTime = std::chrono::steady_clock::now();
-        int retValue = OUT_OF_TIMEOUT;
-        while (true) {
-            retValue = handleUpdConfirm(internalId);
-            if (SUCCESS == retValue) {
-                // Everything Went Good
-                return SUCCESS;
-            }
-            else if (AUTH_FAILED == retValue)
-            {
-                return retValue;
-            }
-            auto currentTime = std::chrono::steady_clock::now();
-            auto elapsedSeconds = std::chrono::duration_cast<std::chrono::seconds>(currentTime - startTime).count();
-            if (elapsedSeconds >= timeoutSeconds) {
-                
-                return OUT_OF_TIMEOUT;
-            }
-            std::this_thread::sleep_for(std::chrono::milliseconds(50));
-        }
+        return CONFIRM_FAILED;
     }
 
     void SendUdpMessage(int sock)
     {
         std::vector<uint8_t> serialized = serializeMessage();
+        ssize_t bytesTx = send(sock, serialized.data(), serialized.size(), 0);
+        if (bytesTx < 0) 
+        {
+            perror("sendto failed");
+        }
+    }
+
+    void SendUdpConfirm(int sock, int internalId)
+    {
+        std::vector<uint8_t> serialized;
+
+        /*  MESSAGE TYPE */
+        serialized.push_back(CONFIRM);
+        /*  MESSAGE ID   */
+        serialized.push_back(internalId & 0xFF);
+        serialized.push_back((internalId >> 8) & 0xFF);
         ssize_t bytesTx = send(sock, serialized.data(), serialized.size(), 0);
         if (bytesTx < 0) 
         {
