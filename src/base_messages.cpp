@@ -39,6 +39,7 @@ class BaseMessages
     static constexpr int JOIN_FAILED            = -2;
     static constexpr int MSG_FAILED             = -3;
     static constexpr int MSG_PARSE_FAILED       = -4;
+    static constexpr int FAIL                   = -5;
     static constexpr int LENGHT_ID              = 20;
     static constexpr int LENGHT_SECRET          = 128;
     static constexpr int LENGHT_CONTENT         = 1400;
@@ -197,35 +198,36 @@ class BaseMessages
     int checkMessage()
     {
         size_t idx = 0;
-        int retVal = -1;
+        int retVal = FAIL;
         InputType_t inputType = INPUT_UNKNOWN;
+        std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
 
-        if (msg.buffer.size() >= 5 && msg.buffer[0] == '/' && msg.buffer[1] == 'a' && msg.buffer[2] == 'u' 
-        && msg.buffer[3] == 't' && msg.buffer[4] == 'h') {
+        /*                  INPUT TYPE RECOGNITION LOGIC                                */
+        if (msg.buffer.size() >= 6 && std::regex_search(bufferStr, std::regex("^/auth"))) 
+        {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_AUTH;
         }
-        else if (msg.buffer.size() >= 4 && msg.buffer[0] == '/' && msg.buffer[1] == 'j' && msg.buffer[2] == 'o'
-        && msg.buffer[3] == 'i' && msg.buffer[4] == 'n') {
+        else if (msg.buffer.size() >= 6 && std::regex_search(bufferStr, std::regex("^/join"))) 
+        {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_JOIN;
         }
-        else if (msg.buffer.size() >= 4 && msg.buffer[0] == '/' && msg.buffer[1] == 'r' && msg.buffer[2] == 'e'
-        && msg.buffer[3] == 'n' && msg.buffer[4] == 'a' && msg.buffer[5] == 'm' && msg.buffer[6] == 'e') {
+        else if (msg.buffer.size() >= 7 && std::regex_search(bufferStr, std::regex("^/rename"))) 
+        {
             // delete first 7 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 8);
             inputType = INPUT_RENAME;
         }
-        else if (msg.buffer.size() >= 3 && msg.buffer[0] == '/' && msg.buffer[1] == 'h' && msg.buffer[2] == 'e'
-        && msg.buffer[3] == 'l' && msg.buffer[4] == 'p') {
+        else if (msg.buffer.size() >= 5 && std::regex_search(bufferStr, std::regex("^/help"))) 
+        {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_HELP;
         }
-        else if (msg.buffer.size() >= 3 && msg.buffer[0] == 'B' && msg.buffer[1] == 'Y' && msg.buffer[2] == 'E'
-        && msg.buffer[3] == '\r' && msg.buffer[4] == '\n') 
+        else if (msg.buffer.size() >= 5 && std::regex_search(bufferStr, std::regex("^BYE\r\n"))) 
         {
             msg.type = COMMAND_BYE;
             return SUCCESS;
@@ -235,10 +237,13 @@ class BaseMessages
             inputType = INPUT_MSG;
         }
 
-        if (inputType == INPUT_UNKNOWN) {
-            return -1;
+        /*      PROCES INPUT TYPE        */
+        if (inputType == INPUT_UNKNOWN) 
+        {
+            return FAIL;
         }
-        else if (inputType == INPUT_AUTH) {
+        else if (inputType == INPUT_AUTH) 
+        {
             idx = 0;
             // Clear The Message Contente That Will Be Stored
             msg.login.clear();
