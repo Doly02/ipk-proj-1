@@ -173,10 +173,6 @@ class BaseMessages
         // Clear The Message Content
         msg.buffer.clear();
 
-
-        //TODO: Debug HERE
-
-
         // Find The Lenght Of Buffer
         size_t len = strlen(buffer);
 
@@ -190,8 +186,6 @@ class BaseMessages
         msg.buffer.push_back('\r'); //TODO: Check If It's Needed
         msg.buffer.push_back('\n'); //TODO: Check If It's Needed
 
-
-        //TODO: DEBUG HERE -> REGEX
     }
 
     /**
@@ -202,8 +196,10 @@ class BaseMessages
      */
     int checkMessage()
     {
+        size_t idx = 0;
         int retVal = -1;
         InputType_t inputType = INPUT_UNKNOWN;
+
         if (msg.buffer.size() >= 5 && msg.buffer[0] == '/' && msg.buffer[1] == 'a' && msg.buffer[2] == 'u' 
         && msg.buffer[3] == 't' && msg.buffer[4] == 'h') {
             // delete first 5 characters + 1 space
@@ -243,7 +239,7 @@ class BaseMessages
             return -1;
         }
         else if (inputType == INPUT_AUTH) {
-            size_t idx = 0;
+            idx = 0;
             // Clear The Message Contente That Will Be Stored
             msg.login.clear();
             msg.secret.clear();
@@ -284,9 +280,9 @@ class BaseMessages
         }
         else if (inputType == INPUT_JOIN) 
         {
+            idx = 0;
             msg.channelID.clear();
-            size_t idx = 0;
-            printf("Join Message Recognised\n");
+            
             // Process Channel ID
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
@@ -303,7 +299,7 @@ class BaseMessages
         }
         else if (inputType == INPUT_RENAME)
         {
-            size_t idx = 0;
+            idx = 0;
             msg.displayName.clear();
             // Process New Display Name
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r')  // '\n' should not be in content
@@ -313,9 +309,9 @@ class BaseMessages
             }
         }
         // Otherwise Message Is Already Stored In The Content    
-        else  if (compareVectorAndString(msg.buffer, "BYE\r\n")) 
+        else if (compareVectorAndString(msg.buffer, "BYE\r\n")) 
         {
-            size_t idx = 0;
+            idx = 0;
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
                 msg.content.push_back(msg.buffer[idx]);   
@@ -327,7 +323,7 @@ class BaseMessages
         else 
         {
             msg.content.clear();
-            size_t idx = 0;
+            idx = 0;
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
                 msg.content.push_back(msg.buffer[idx]);   
@@ -337,8 +333,6 @@ class BaseMessages
 
         }
         retVal = checkLength();
-        std::string userDisplayName(msg.displayName.begin(),msg.displayName.end());
-        printf("Display Name Is: %s ",userDisplayName.c_str());
         return retVal;   
     }
 
@@ -352,6 +346,7 @@ class BaseMessages
     int parseMessage()
     {
         int retVal = 0;
+        size_t idx = 0;
 
         // Prepaire Attributes
         msg.content.clear();
@@ -368,7 +363,7 @@ class BaseMessages
             size_t prefixLength = std::string("MSG FROM").length();
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLength + 1); 
             
-            size_t idx = 0;
+            idx = 0;
             // Loop until the substring starting at the current idx does not start with "IN"
             // and ensure we're not at the last character
             while (idx < msg.buffer.size() - 1)
@@ -410,7 +405,7 @@ class BaseMessages
         }
         else if (std::regex_search(bufferStr, std::regex("^BYE\r\n")))
         {
-            size_t idx = 0;
+            idx = 0;
             while (idx < msg.buffer.size()) 
             {   
                 if (msg.buffer[idx] == '\n' || msg.buffer[idx] == '\r')
