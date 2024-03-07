@@ -34,12 +34,6 @@
 #include "tcp_messages.cpp"
 #include "client.cpp"
 /************************************************/
-/*                  Constants                   */
-/************************************************/
-
-
-
-/************************************************/
 /*                  CLASS                       */
 /************************************************/
 
@@ -114,9 +108,9 @@ public:
 
                     if (checkReply) {
                         int retVal = tcpMessage.handleReply();
-                        if (retVal == 0) 
+                        if (BaseMessages::SUCCESS == retVal) 
                         {
-                            printf("Handled Reply");
+                            printf("Handled Reply\n");
                             authConfirmed = true;
                             checkReply = false;
                             break;
@@ -140,7 +134,6 @@ public:
         int retVal = 0;
         bool joinSend = false;
         bool joinServerMsgSend = false;
-        bool debugJoin = false;
         int RetValue = 0;
         /* Code */
         if (!Client::isConnected())
@@ -188,38 +181,32 @@ public:
                     tcpMessage.readAndStoreContent(buf);  
                     
                     // Print Content For Debug Information 
-                    std::string contentFromServer(tcpMessage.msg.content.begin(),tcpMessage.msg.content.end());
-                    printf("Receive Message: %s\n", contentFromServer.c_str());
-
-                    /* Print The Message To STDOUT */
-                    if (strcmp(buf, "BYE\r\n") == 0) 
-                    {
-                        printf("%s", buf);
-                        tcpMessage.SentByeMessage(sock); // Should Send BYE Message Back To Server TODO: Do I Have To Send It Back?
-                        exit(0);
-                    }
-
+                    std::string bufferFromServer(tcpMessage.msg.buffer.begin(),tcpMessage.msg.buffer.end());
+                    printf("Receive Message: %s\n", bufferFromServer.c_str());
 
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
                     {
                         if (!joinServerMsgSend)
                         {
+                            printf("JOIN 1. PHASE\n");
                             retVal = tcpMessage.checkJoinReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
+                                printf("RETURN: %d\n",retVal);
                                 return retVal;
                             }
                         }
 
                         if (joinServerMsgSend)
                         {
+                            printf("JOIN 2. PHASE\n");
                             retVal = tcpMessage.handleReply();
                             if (BaseMessages::SUCCESS != retVal)
                                 return BaseMessages::JOIN_FAILED;
                             checkReply = false;
                             joinSend = false;
-                            debugJoin = true; 
+                            joinServerMsgSend = false;
                         }
                         joinServerMsgSend = true;
                     }
@@ -231,8 +218,6 @@ public:
                         retVal = tcpMessage.handleReply();
                         if (retVal == 0)
                         {
-                            std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
-                            std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
                             printf("REPLY OK\n");
                             
                             checkReply = false;
@@ -245,14 +230,11 @@ public:
                     }
                     else
                     {
+
                         // Print The Content Of The Buffer
-                        tcpMessage.parseMessage();
-                        std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
-                        std::string content(tcpMessage.msg.content.begin(), tcpMessage.msg.content.end());
-                        if (!displayNameOutside.empty() && !content.empty())
-                        {
-                            printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
-                        }
+                        retVal = tcpMessage.parseMessage();
+                        if (BaseMessages::SUCCESS == retVal)
+                            tcpMessage.PrintMessage();
                     }
                     
                     // Clear The Buffer After All
@@ -271,11 +253,7 @@ public:
                     }
                 }
             }
-            if (debugJoin)
-            {
-                printf("Back To Main\n");
-                debugJoin = false;
-            }
+
             // Check Activity On STDIN
             if (FD_ISSET(STDIN_FILENO, &readfds)) 
             {
@@ -306,16 +284,10 @@ public:
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
                             // Sent To Server Join Message
-                            printf("JOIN MESSAGE WILL BE SEND\n");
                             tcpMessage.SendJoinMessage(sock);
-                            printf("JOIN MESSAGE WILL WAS SEND\n");
                             joinSend = true;
+                            joinServerMsgSend = false;
                             checkReply = true;
-                        }
-                        if (debugJoin)
-                        {
-                            printf("Back To Main2\n");
-                            debugJoin = false;
                         }
                         if ((int)TcpMessages::COMMAND_BYE == tcpMessage.msg.type )
                         {

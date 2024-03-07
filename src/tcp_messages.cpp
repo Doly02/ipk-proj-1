@@ -49,8 +49,29 @@ public:
             std::perror("ERROR: sendto");
         }
         msg.shouldReply = true;
-        printf("Sended MSG: %s\n",msgToSend.c_str());
+        printf("Sended MSG: %s",msgToSend.c_str());
     }
+
+
+    /**
+     * @brief Checks If Incomming Message Includes Join Pattern.
+     * 
+     * @return Returns BaseMessages::SUCCESS If Everything Went Well Otherwise Returns BaseMessages::JOIN_FAILED
+    */
+    int checkJoinReply() {
+        const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
+        const std::string prefix = "^MSG FROM Server IS ";
+        const std::string prefixForLenght = "MSG FROM Server IS ";
+        if (std::regex_search(joinServerMsg, std::regex(prefix))) {
+            if (msg.buffer.size() >= prefixForLenght.length()) {
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixForLenght.length());
+                return BaseMessages::SUCCESS;
+            }
+        }
+        //TODO: Return Issue
+        return BaseMessages::JOIN_FAILED;
+    }
+
 
     /**
      * @brief Sends 'Join' Message
@@ -68,23 +89,6 @@ public:
             std::perror("ERROR: sendto");
         }
         msg.shouldReply = true;
-        printf("Sended MSG: %s\n",msgToSend.c_str());
-    }
-
-    /**
-     * @brief Sends 'Rename' Message
-     * @param client_socket Client Socket
-     * 
-     * Sends 'Rename' Message
-     * @return None
-    */
-    void SendRenameMessage(int client_socket)
-    {
-        std::string msgToSend = "RENAME " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
-        ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
-        if (bytesTx < 0) {
-            std::perror("ERROR: sendto");
-        }
         printf("Sended MSG: %s",msgToSend.c_str());
     }
 
@@ -102,7 +106,6 @@ public:
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
-        printf("Sended MSG: %s\n",msgToSend.c_str());
     }
     
     /**
@@ -114,28 +117,11 @@ public:
     */
     void SentUsersMessage(int clientSocket)
     {
-        std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end());
+        std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end()) + "\r\n";
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
-        printf("Sended MSG: %s\n",msgToSend.c_str());
+        printf("Sended MSG: %s",msgToSend.c_str());
     }
-
-    int checkJoinReply()
-    {
-        std::string joinServerMsg(msg.content.begin(),msg.content.end());
-        if (std::regex_search(joinServerMsg,std::regex("^MSG FROM Server IS")))
-        {
-            ssize_t lenOfMsgPrefix = strlen("MSG FROM Server IS ");
-            msg.content.erase(msg.content.begin(),msg.content.begin() + lenOfMsgPrefix);
-            return BaseMessages::SUCCESS;
-        }
-        else
-        {
-            //TODO: Return Issue
-            return BaseMessages::JOIN_FAILED;
-        }
-    }
-
 
 };
