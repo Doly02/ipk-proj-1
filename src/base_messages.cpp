@@ -23,6 +23,7 @@
 /*                  Libraries                   */
 /************************************************/
 #include <string>
+#include <cstring>
 #include <vector>
 #include <iostream>
 #include <regex>
@@ -38,7 +39,7 @@ class BaseMessages
     static constexpr int JOIN_FAILED            = -2;
     static constexpr int MSG_FAILED             = -3;
     static constexpr int LENGHT_ID              = 20;
-    static constexpr int LENGHT_SECRET          = 20;
+    static constexpr int LENGHT_SECRET          = 128;
     static constexpr int LENGHT_CONTENT         = 1400;
     static constexpr int LENGHT_DISPLAY_NAME    = 128;
     /* MESSAGE TYPES */
@@ -75,6 +76,7 @@ class BaseMessages
         std::vector<char> displayName;
         std::vector<char> channelID;
         std::vector<char> displayNameOutside;
+        std::vector<char> buffer;
         bool shouldReply;
     };
     
@@ -159,10 +161,10 @@ class BaseMessages
 
 
     /**
-     * @brief Stores Chars From Buffer To Message Content
+     * @brief Stores Chars From Buffer To Message Buffer
      * @param buffer Buffer
      *
-     * Stores Chars From Buffer To Message Content
+     * Stores Chars From Buffer To Message Buffer
      * @return None
      */
     void readAndStoreContent(const char* buffer)
@@ -170,7 +172,7 @@ class BaseMessages
         // Clear The Message Content
         msg.content.clear();
         // Find The Lenght Of Buffer
-        size_t len = std::strlen(buffer);
+        size_t len = strlen(buffer);
 
         for (size_t i = 0; i < len; i++)
         {
@@ -217,6 +219,12 @@ class BaseMessages
             msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
             inputType = INPUT_HELP;
         }
+        else if (msg.content.size() >= 3 && msg.content[0] == 'B' && msg.content[1] == 'Y' && msg.content[2] == 'E'
+        && msg.content[3] == '\r' && msg.content[4] == '\n') {
+            // delete first 5 characters + 1 space
+            msg.type = COMMAND_BYE;
+            return SUCCESS;
+        }
         else 
         {
             inputType = INPUT_MSG;
@@ -226,38 +234,40 @@ class BaseMessages
             return -1;
         }
         else if (inputType == INPUT_AUTH) {
-            size_t index = 0;
+            size_t idx = 0;
             // Process Username
-            while (index < msg.content.size() && msg.content[index] != ' ')
+            while (idx < msg.content.size() && msg.content[idx] != ' ')
             {
-                msg.login.push_back(msg.content[index]);   
-                index++;
+                msg.login.push_back(msg.content[idx]);   
+                idx++;
             }
-            if (index < msg.content.size()) {  
+            if (idx < msg.content.size()) {  
                 // Clear The Username And Space 
-                msg.content.erase(msg.content.begin(), msg.content.begin() + index + 1);
+                msg.content.erase(msg.content.begin(), msg.content.begin() + std::min(idx + 1, msg.content.size()));
             }    
 #if (DEBUG_MACRO == 1)      
             printf("Username: %s\n", std::string(msg.login.begin(), msg.login.end()).c_str());
 #endif
             // Process Secret
-            index = 0;
-            while (index < msg.content.size() && msg.content[index] != ' ') {
-                msg.secret.push_back(msg.content[index]);   
-                index++;
+            idx = 0;
+            while (idx < msg.content.size() && msg.content[idx] != ' ') {
+                msg.secret.push_back(msg.content[idx]);   
+                idx++;
             }
-            if (index < msg.content.size()) {  
+            if (idx < msg.content.size()) {  
                 // Clear The Secret And Space 
-                msg.content.erase(msg.content.begin(), msg.content.begin() + index + 1);
+                msg.content.erase(msg.content.begin(), msg.content.begin() + std::min(idx + 1, msg.content.size()));
             }
 #if (DEBUG_MACRO == 1)
             printf("Secret: %s\n", std::string(msg.secret.begin(), msg.secret.end()).c_str());
 #endif
             // Process Display Name
-            index = 0; // Reset index if you're using it to iterate through the remaining content
-            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r') {
-                msg.displayName.push_back(msg.content[index]);   
-                index++;
+            idx = 0; // Reset idx if you're using it to iterate through the remaining content
+            //while (idx < msg.content.size()) 
+            //{
+            while (idx < msg.content.size() && msg.content[idx] != '\n' && msg.content[idx] != '\r') {
+                msg.displayName.push_back(msg.content[idx]);   
+                idx++;
             }
 #if (DEBUG_MACRO == 1)
             printf("Display Name: %s\n", std::string(msg.displayName.begin(), msg.displayName.end()).c_str());
@@ -266,24 +276,18 @@ class BaseMessages
 
         }
         else if (inputType == INPUT_JOIN) {
-            size_t index = 0;
+            size_t idx = 0;
+            printf("Join Message Recognised\n");
             // Process Channel ID
-            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r') 
+            while (idx < msg.content.size() && msg.content[idx] != '\n' && msg.content[idx] != '\r') 
             {
-                msg.channelID.push_back(msg.content[index]);   
-                index++;
+                msg.channelID.push_back(msg.content[idx]);   
+                idx++;
             }
             msg.type = COMMAND_JOIN;
 
         }
         else if (inputType == INPUT_MSG) {
-            size_t index = 0;
-            // Process New Display Name
-            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r')  // '\n' should not be in content
-            {
-                msg.displayName.push_back(msg.content[index]);   
-                index++;
-            }
             msg.type = MSG;
 
         }
@@ -294,12 +298,12 @@ class BaseMessages
         }
         else if (inputType == INPUT_RENAME)
         {
-            size_t index = 0;
+            size_t idx = 0;
             // Process New Display Name
-            while (index < msg.content.size() && msg.content[index] != '\n' && msg.content[index] != '\r')  // '\n' should not be in content
+            while (idx < msg.content.size() && msg.content[idx] != '\n' && msg.content[idx] != '\r')  // '\n' should not be in content
             {
-                msg.displayName.push_back(msg.displayName[index]);   
-                index++;
+                msg.displayName.push_back(msg.displayName[idx]);   
+                idx++;
             }
         }
         // Otherwise Message Is Already Stored In The Content    
@@ -335,19 +339,19 @@ class BaseMessages
             size_t prefixLength = std::string("MSG FROM").length();
             msg.content.erase(msg.content.begin(), msg.content.begin() + prefixLength + 1); 
             
-            size_t index = 0;
-            // Loop until the substring starting at the current index does not start with "IN"
+            size_t idx = 0;
+            // Loop until the substring starting at the current idx does not start with "IN"
             // and ensure we're not at the last character
-            while (index < msg.content.size() - 1)
+            while (idx < msg.content.size() - 1)
             {
                 // Convert current substring to string for regex search
-                std::string currentSubStr(msg.content.begin() + index, msg.content.end());
+                std::string currentSubStr(msg.content.begin() + idx, msg.content.end());
                 if (std::regex_search(currentSubStr, msgInRegex)) {
                     break; // Exit the loop if "IN" is found at the beginning of the current substring
                 }
                 
-                msg.displayNameOutside.push_back(msg.content[index]);
-                index++;
+                msg.displayNameOutside.push_back(msg.content[idx]);
+                idx++;
             }
 
             // Check and Remove the Last Character if Needed (It's a Space)
@@ -357,7 +361,7 @@ class BaseMessages
 
             /* Process The Content */
             int isPlusSpace = 3;                                                    // 1. Get Rid of "IS "
-            msg.content.erase(msg.content.begin(), msg.content.begin() + index + isPlusSpace);
+            msg.content.erase(msg.content.begin(), msg.content.begin() + idx + isPlusSpace);
 
 
             std::string messageContent(msg.content.begin(), msg.content.end());     // 2. Get Rid of "\r\n"
@@ -380,19 +384,42 @@ class BaseMessages
     */
     int handleReply()
     {
+        /* Preparation  */
+        std::regex replyPrefix("^REPLY ");
+        std::string contentAsStr(msg.content.begin(), msg.content.end());
+        std::regex okReply("^OK ");
+        size_t prefixLenght = (size_t)strlen("REPLY ");
+        size_t okLenght = (size_t)strlen("OK ");
 
-
-        if (msg.content.size() >= 5 && msg.content[0] == 'R' && msg.content[1] == 'E' && msg.content[2] == 'P' 
-        && msg.content[3] == 'L' && msg.content[4] == 'Y') {
+        /* Execution    */
+        if (msg.content.size() >= prefixLenght && std::regex_search(contentAsStr,replyPrefix)) 
+        {
             // delete first 5 characters + 1 space
-            msg.content.erase(msg.content.begin(), msg.content.begin() + 6);
-            
+            msg.content.erase(msg.content.begin(), msg.content.begin() + prefixLenght);
+            // Update Local String
+            contentAsStr = std::string(msg.content.begin(), msg.content.begin());
         }
-        if (compareVectorAndString(msg.content, "OK IS Auth success.\r\n")) {
+
+        if (compareVectorAndString(msg.content, "OK IS Authentication successful.\r\n")) 
+        {
             msg.shouldReply = false;
+            printf(" SUCCESS\n");
             return SUCCESS;
         }
-        else if (compareVectorAndString(msg.content, "OK IS Join success.\r\n")) {
+        else if (std::regex_search(contentAsStr,okReply)) 
+        {
+            // Erase The Ok From The Message 
+            msg.content.erase(msg.content.begin(), msg.content.begin() + okLenght);
+            
+            /* Prepaire Message Content -> Get Rid of '\n\r' */  
+            contentAsStr = std::string(msg.content.begin(), msg.content.begin());
+            if (msg.content.size() > 2 || contentAsStr == "\r\n") {
+                msg.content.resize(msg.content.size() - 2);
+            }         
+
+            // Print Content 
+            contentAsStr = std::string(msg.content.begin(), msg.content.begin());
+            printf("Server: %s\n", contentAsStr.c_str());
             return SUCCESS;
         }
         else 
@@ -406,7 +433,7 @@ class BaseMessages
             }
             
         }
-        return JOIN_FAILED;
+        return SUCCESS;
     }
 
 };

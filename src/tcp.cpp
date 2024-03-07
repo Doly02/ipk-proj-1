@@ -83,7 +83,6 @@ public:
                         if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
                         {
                             // Sent To Server Authentication Message
-                            printf("Sending AUTH Message: %s\n", buf);
                             tcpMessage.SendAuthMessage(sock);
                             sendAuth = true;
                             checkReply = true;
@@ -115,7 +114,9 @@ public:
 
                     if (checkReply) {
                         int retVal = tcpMessage.handleReply();
-                        if (retVal == 0) {
+                        if (retVal == 0) 
+                        {
+                            printf("Handled Reply");
                             authConfirmed = true;
                             checkReply = false;
                             break;
@@ -136,6 +137,10 @@ public:
 
     int runTcpClient()
     {
+        int retVal = 0;
+        bool joinSend = false;
+        bool joinServerMsgSend = false;
+        bool debugJoin = false;
         int RetValue = 0;
         /* Code */
         if (!Client::isConnected())
@@ -153,7 +158,6 @@ public:
 
         while (true) 
         {
-
             FD_ZERO(&readfds);
             FD_SET(sock, &readfds);
             FD_SET(STDIN_FILENO, &readfds);
@@ -161,7 +165,7 @@ public:
 
             // Set Timeout
             tv.tv_sec = 0;
-            tv.tv_usec = 50;
+            tv.tv_usec = 500;
 
             // Waiting For An Activity
             int activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
@@ -183,6 +187,10 @@ public:
                     buf[BUFSIZE-1]  = '\0';
                     tcpMessage.readAndStoreContent(buf);  
                     
+                    // Print Content For Debug Information 
+                    std::string contentFromServer(tcpMessage.msg.content.begin(),tcpMessage.msg.content.end());
+                    printf("Receive Message: %s\n", contentFromServer.c_str());
+
                     /* Print The Message To STDOUT */
                     if (strcmp(buf, "BYE\r\n") == 0) 
                     {
@@ -190,13 +198,37 @@ public:
                         tcpMessage.SentByeMessage(sock); // Should Send BYE Message Back To Server TODO: Do I Have To Send It Back?
                         exit(0);
                     }
+
+
                     // Check If Is Alles Gute
-                    if (true == checkReply)
+                    if (true == checkReply && true == joinSend)
+                    {
+                        if (!joinServerMsgSend)
+                        {
+                            retVal = tcpMessage.checkJoinReply();
+                            if (BaseMessages::SUCCESS != retVal)
+                            {
+                                return retVal;
+                            }
+                        }
+
+                        if (joinServerMsgSend)
+                        {
+                            retVal = tcpMessage.handleReply();
+                            if (BaseMessages::SUCCESS != retVal)
+                                return BaseMessages::JOIN_FAILED;
+                            checkReply = false;
+                            joinSend = false;
+                            debugJoin = true; 
+                        }
+                        joinServerMsgSend = true;
+                    }
+                    else if (true == checkReply && false == joinSend) 
                     {
                         // Store The Content Of The Buffer Into Internal Vector
                         // tcpMessage.readAndStoreContent(buf);       
                         // Check If The Message Is REPLY
-                        int retVal = tcpMessage.handleReply();
+                        retVal = tcpMessage.handleReply();
                         if (retVal == 0)
                         {
                             std::string displayNameOutside(tcpMessage.msg.displayNameOutside.begin(), tcpMessage.msg.displayNameOutside.end());
@@ -233,10 +265,17 @@ public:
                 } 
                 else 
                 {
-                    std::cerr << "recv failed" << std::endl;
+                    if (errno != EAGAIN && errno != EWOULDBLOCK) 
+                    {
+                        std::cerr << "recv failed: " << strerror(errno) << std::endl;
+                    }
                 }
             }
-        
+            if (debugJoin)
+            {
+                printf("Back To Main\n");
+                debugJoin = false;
+            }
             // Check Activity On STDIN
             if (FD_ISSET(STDIN_FILENO, &readfds)) 
             {
@@ -259,6 +298,7 @@ public:
                     }
 #endif
 
+                    tcpMessage.msgType = TcpMessages::UNKNOWN_MSG_TYPE;
                     tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
                     RetValue = tcpMessage.checkMessage();   // Check Message
                     if (RetValue == 0) 
@@ -266,15 +306,22 @@ public:
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
                             // Sent To Server Join Message
+                            printf("JOIN MESSAGE WILL BE SEND\n");
                             tcpMessage.SendJoinMessage(sock);
+                            printf("JOIN MESSAGE WILL WAS SEND\n");
+                            joinSend = true;
                             checkReply = true;
                         }
-
+                        if (debugJoin)
+                        {
+                            printf("Back To Main2\n");
+                            debugJoin = false;
+                        }
                         if ((int)TcpMessages::COMMAND_BYE == tcpMessage.msg.type )
                         {
                             // Sent To Server Bye Message
                             tcpMessage.SentByeMessage(sock);
-                            break;
+                            exit(EXIT_SUCCESS);
                         }
                         // TODO: Missing Some Message Types
                         if ((int)TcpMessages::MSG == tcpMessage.msg.type)

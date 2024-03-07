@@ -64,7 +64,7 @@ public:
      *
      * Constructor Initialize Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
-     */
+\     */
     Client(const std::string& addr, int port, uint prot) 
         : serverAddress(addr), port(port), protocol(prot), sock(NOT_CONNECTED)
     {
@@ -106,7 +106,7 @@ public:
     /**
      * @brief Destructor of TcpClient Class 
      * 
-     * Constructor Initialize Client With Server's Address And Port.
+     * Constructor Of Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
      */
     virtual ~Client()

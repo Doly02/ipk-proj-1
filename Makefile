@@ -1,11 +1,13 @@
 # Program Name
 TARGET = client
+DEBUG_TARGET = client
 # Test Program Name
 TEST_TARGET = client_test
 # Compiler
 CC = clang++
 # Compiler Flags
 CFLAGS = -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
+DEBUG_CFLAGS = -fsanitize=address -g -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
 # Source Files
 SOURCES = src/client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp.cpp src/udp.cpp src/main.cpp
 # Test Source Files
@@ -48,3 +50,6 @@ $(TEST_TARGET): $(TEST_OBJECTS)
 # Pattern Rule For Assemble Test Object Files
 tests/%.o: tests/%.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
+
+debug: $(SOURCES)
+	$(CC) $(DEBUG_CFLAGS) -o $(DEBUG_TARGET) $^

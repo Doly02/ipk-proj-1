@@ -126,29 +126,34 @@ private:
      * 
      * Resolves Host Name To IP Address
     */
-    void resolveHostName()
-    {
-        if (isIpAddress(hostName))
-        {
-            // Transfer IP Address From String To 'in_addr' Structure
-            inet_pton(AF_INET, hostName.c_str(), &ipAddress);
-            ipAddress = hostName;
-        } else 
-        {
-            // Transfer Host Name To IP Address
-            struct hostent *host;
-            host = gethostbyname(hostName.c_str());
-            if (nullptr == host)
-            {
-                std::cerr << "Host Not Found" << std::endl;
-                exit(1);    //TODO: Error Code CHECK!
+    void resolveHostName() {
+        struct sockaddr_in sa;
+        if (isIpAddress(hostName)) {
+            // Korektní použití inet_pton
+            int result = inet_pton(AF_INET, hostName.c_str(), &(sa.sin_addr));
+            if(result != 1) {
+                std::cerr << "Invalid IP address format." << std::endl;
+                exit(1);
             }
-            // Convert the First IP Address to String
-            char ipStr[INET_ADDRSTRLEN];
-            inet_ntop(AF_INET, host->h_addr_list[0], ipStr, sizeof(ipStr));
-            ipAddress = ipStr;
-            printf("IP Address: %s\n", ipAddress.c_str());
-        }
+            // ipAddress již není potřeba převádět, hostName je již ve správném formátu
+            ipAddress = hostName;
+            } 
+            else 
+            {
+                // Transfer Host Name To IP Address
+                struct hostent *host;
+                host = gethostbyname(hostName.c_str());
+                if (nullptr == host)
+                {
+                    std::cerr << "Host Not Found" << std::endl;
+                    exit(1);    //TODO: Error Code CHECK!
+                }
+                // Convert the First IP Address to String
+                char ipStr[INET_ADDRSTRLEN];
+                inet_ntop(AF_INET, host->h_addr_list[0], ipStr, sizeof(ipStr));
+                ipAddress = ipStr;
+                printf("IP Address: %s\n", ipAddress.c_str());
+            }
     }
 
     /**
