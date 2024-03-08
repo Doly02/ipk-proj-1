@@ -60,7 +60,7 @@ public:
 
     void checkAuthentication() 
     {
-        int RetValue = 0;
+        int retVal = 0;
         while (!authConfirmed) {
             // Get User's Authentication Message
             if (!sendAuth) {
@@ -71,8 +71,8 @@ public:
                         buf[len - 1] = '\0';
                     }
                     tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
-                    RetValue = tcpMessage.checkMessage();   // Check Message
-                    if (RetValue == 0) 
+                    retVal = tcpMessage.checkMessage();   // Check Message
+                    if (0 == retVal) 
                     {
                         if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
                         {
@@ -106,17 +106,24 @@ public:
                     buf[BUFSIZE - 1] = '\0';
                     tcpMessage.readAndStoreContent(buf);
 
+                    /* Check If Error Was Send */
+                    retVal = tcpMessage.CheckIfErrorOrBye();
+                    if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
+                        exit(retVal);
+                    else if (BaseMessages::SERVER_SAYS_BYE == retVal)
+                        exit(0);
+
                     if (checkReply) {
-                        int retVal = tcpMessage.handleReply();
+                        retVal = tcpMessage.handleReply();
                         if (BaseMessages::SUCCESS == retVal) 
                         {
-                            printf("Handled Reply\n");
                             authConfirmed = true;
                             checkReply = false;
                             break;
-                        } else {
+                        } 
+                        else {
                             // Reply Failed -> Exit
-                            exit(TcpMessages::AUTH_FAILED); //TODO: Budes se uz muset podivat na ty navratove hodnoty, je v tom border
+                            exit(TcpMessages::AUTH_FAILED); 
                         }
                     }
                 } else if (bytesRx == 0) {
@@ -131,10 +138,12 @@ public:
 
     int runTcpClient()
     {
+        /* Variables */
         int retVal = 0;
         bool joinSend = false;
         bool joinServerMsgSend = false;
         int RetValue = 0;
+
         /* Code */
         if (!Client::isConnected())
         {
@@ -180,30 +189,33 @@ public:
                     buf[BUFSIZE-1]  = '\0';
                     tcpMessage.readAndStoreContent(buf);  
                     
-                    // Print Content For Debug Information 
-                    std::string bufferFromServer(tcpMessage.msg.buffer.begin(),tcpMessage.msg.buffer.end());
-                    printf("Receive Message: %s\n", bufferFromServer.c_str());
+                    /* Check If Error Was Send */
+                    retVal = tcpMessage.CheckIfErrorOrBye();
+                    if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
+                        return retVal;
 
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
                     {
                         if (!joinServerMsgSend)
                         {
-                            printf("JOIN 1. PHASE\n");
                             retVal = tcpMessage.checkJoinReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
-                                printf("RETURN: %d\n",retVal);
+                                tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
                             }
                         }
 
                         if (joinServerMsgSend)
                         {
-                            printf("JOIN 2. PHASE\n");
+
                             retVal = tcpMessage.handleReply();
                             if (BaseMessages::SUCCESS != retVal)
+                            {
+                                tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);
                                 return BaseMessages::JOIN_FAILED;
+                            }
                             checkReply = false;
                             joinSend = false;
                             joinServerMsgSend = false;
@@ -218,12 +230,11 @@ public:
                         retVal = tcpMessage.handleReply();
                         if (retVal == 0)
                         {
-                            printf("REPLY OK\n");
-                            
                             checkReply = false;
                         }
                         else
                         {
+                            tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
                             std::cerr << "Error: " << strerror(errno) << std::endl;
                             return -1;
                         }
@@ -302,7 +313,7 @@ public:
                             tcpMessage.SentUsersMessage(sock); 
                             memset(buf, 0, sizeof(buf));
                         }
-
+                        /// TODO: Missing ERRORMSG
                     }
                 }
             }
@@ -320,11 +331,15 @@ public:
  *   -> pouziva se char Buf[1024] a <vector> Content -> Nejlepsi bude pouzivat Pouze Content a kdyz budes potrebovat tak si to prekonvertujes na Buf "ale jakoby pouze virtualne"
  */
 /* Co je potreba dodelat?
- * - Osetrit chyby pri odesilani zprav
- * - Osetrit chyby pri prijimani zprav
- * - Dopracovat odesilani vsech moznych zprav v TCP 
- * - Rozpracovat a dodelat UDP
- * - Testovat Testovat
+ * - Osetrit chyby pri odesilani zprav                  -> SHOULD BE DONE
+ * - Osetrit chyby pri prijimani zprav                  -> ??? (Muze ti prijit ERROR, ktery rovnou posilas)
+ * - Dopracovat odesilani vsech moznych zprav v TCP     -> ???
+ * - Rozpracovat a dodelat UDP                          -> ???
+ * - Testovat Testovat                                  -> ???
+ * 
+ * TODO: Zbavit se vsech TODOs                          -> ???
+ * -> Co se ma dit pokud ti podruhe prijde autentifikace-> ???
+ * -> rozdelit CheckIfErrorOrBye
  */
 
 };

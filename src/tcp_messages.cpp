@@ -49,7 +49,6 @@ public:
             std::perror("ERROR: sendto");
         }
         msg.shouldReply = true;
-        printf("Sended MSG: %s",msgToSend.c_str());
     }
 
 
@@ -89,7 +88,6 @@ public:
             std::perror("ERROR: sendto");
         }
         msg.shouldReply = true;
-        printf("Sended MSG: %s",msgToSend.c_str());
     }
 
     /**
@@ -121,7 +119,84 @@ public:
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
-        printf("Sended MSG: %s",msgToSend.c_str());
+    }
+
+    int CheckIfErrorOrBye()
+    {
+        size_t idx = 0;
+    
+        /* HAS TO BE CLEANED -> WILL BE MODIFIED */
+        msg.displayNameOutside.clear();
+        msg.content.clear();
+
+        std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
+        if (msg.buffer.size() >= 9 && std::regex_search(bufferStr, std::regex("^ERR FROM ")))
+        {
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
+
+            /* PARSE NAME OF SENDER */
+            while (idx < msg.buffer.size() && msg.buffer[idx] != ' ')
+            {
+                msg.displayNameOutside.push_back(msg.buffer[idx]);   
+                idx++;
+            }
+
+            if (idx < msg.buffer.size()) 
+            {  
+                // Clear The Username And Space 
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
+            }  
+
+            if (!std::regex_search(bufferStr, std::regex("^IS ")))
+                return BaseMessages::MSG_PARSE_FAILED;
+
+            /* PARSE MESSAGE CONTENT */
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 3);
+
+            while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
+            {
+                msg.content.push_back(msg.buffer[idx]);   
+                idx++;
+            }
+            msgType = ERROR;
+
+            /* PRINT ERROR MESSAGE */
+            std::string sender(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
+            std::string msgContent(msg.content.begin(), msg.content.end());
+
+            printf("%s: %s\n",sender.c_str(),msgContent.c_str());
+
+            return BaseMessages::EXTERNAL_ERROR;            
+
+        }
+        else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
+        {
+            printf("BYE");
+            msgType = COMMAND_BYE;
+
+            return BaseMessages::SERVER_SAYS_BYE;
+        }
+        return BaseMessages::SUCCESS;
+    }
+
+
+    void SendErrorMessage(int clientSocket, MessageType_t type)
+    {
+        /* Variables */
+        std::string errContent;
+
+        /* Code */
+        if (BaseMessages::REPLY == type)
+            errContent = "Expected Reply";
+        else if (BaseMessages::CONFIRM == type)
+            errContent = "Expected Confirm";
+        else
+            errContent = "Unknown Error";
+
+        std::string msgToSend = "ERR FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " +  errContent + "\r\n";
+        ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
+        if (bytesTx < 0)
+            perror("ERROR in sendto");        
     }
 
 };

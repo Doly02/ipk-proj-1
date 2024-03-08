@@ -34,12 +34,14 @@
 class BaseMessages 
 {
     public:
+    static constexpr int SERVER_SAYS_BYE        = 1;
     static constexpr int SUCCESS                = 0;
     static constexpr int AUTH_FAILED            = -1;
     static constexpr int JOIN_FAILED            = -2;
     static constexpr int MSG_FAILED             = -3;
     static constexpr int MSG_PARSE_FAILED       = -4;
     static constexpr int FAIL                   = -5;
+    static constexpr int EXTERNAL_ERROR         = -6;
     static constexpr int LENGHT_ID              = 20;
     static constexpr int LENGHT_SECRET          = 128;
     static constexpr int LENGHT_CONTENT         = 1400;
@@ -59,10 +61,10 @@ class BaseMessages
     };
     enum InputType_t
     {
-        INPUT_UNKNOWN,            //!< Unknown Input
+        INPUT_UNKNOWN,    //!< Unknown Input
         INPUT_AUTH,       //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
         INPUT_JOIN,       //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
-        INPUT_RENAME,      //!< Rename - Template: RENAME {NewDisplayName}\r\n
+        INPUT_RENAME,     //!< Rename - Template: RENAME {NewDisplayName}\r\n
         INPUT_MSG,        //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
         INPUT_HELP        //!< Disconnect - Template: BYE\r\n
     };
@@ -359,7 +361,6 @@ class BaseMessages
 
         // Convert Vector To String
         std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
-        printf("BUF.CONTENT: %s",bufferStr.c_str());
         std::regex msgIsRegex("^IS");
 
         // Check if Content Is a Message 
@@ -401,7 +402,6 @@ class BaseMessages
                 idx++;
             }
             std::string realContent(msg.content.begin(),msg.content.end());
-            printf("MSG.CONTENT: %s\n", realContent.c_str());
 
             // Check The Message And User Name Length
             retVal = checkLength();
@@ -423,6 +423,8 @@ class BaseMessages
         }
         return MSG_PARSE_FAILED;
     }
+
+
     /**
      * @brief Handles Reply From Server
      * 
@@ -439,8 +441,6 @@ class BaseMessages
         std::string errorLenght     = "ERR FROM Server IS ";
         std::string prefixLenght    = "REPLY ";
         std::string okLenght        = "OK IS ";
-
-        printf("Servers Reply: %s",bufferAsStr.c_str());
 
         /* Execution    */
         if (msg.buffer.size() >= prefixLenght.length() && std::regex_search(bufferAsStr,replyPrefix)) 
@@ -462,31 +462,24 @@ class BaseMessages
         }
         else if (std::regex_search(bufferAsStr,okReply)) 
         {
-            printf("BEFORE OK REMOVED\n");
-
-
             // Erase The Ok From The Message 
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + okLenght.length());
-            printf("OK REMOVED\n");
             
             
             /* Prepaire Message buffer -> Get Rid of '\n\r' */  
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            printf("Internal(2): %s\n", bufferAsStr.c_str());
             if (msg.buffer.size() > 2 || bufferAsStr == "\r\n") {
                 msg.buffer.resize(msg.buffer.size() - 2);
             }         
             
-            printf("END PREFIX REMOVED\n");
-            
-            
             // Print buffer 
-            
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
             printf("Server: %s\n", bufferAsStr.c_str());
             
             return SUCCESS;
         }
+
+        /*  ERROR MESSAGE HANDLING  */
         else if (std::regex_search(bufferAsStr,errorPrefix))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
@@ -500,6 +493,7 @@ class BaseMessages
             std::regex errorRegex("ˆNOK IS ");   
             if (std::regex_search(bufferAsStr,errorRegex))  
             {
+                std::cerr << "Authentication Failed" << std::endl;
                 return AUTH_FAILED;
             }
             
