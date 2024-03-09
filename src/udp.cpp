@@ -326,7 +326,7 @@ public:
                             expectedConfirm = false; // Do not Expect Confirm Anymore
                             udpMessageReceiver.IncrementUdpMsgId();
                             udpMessageTransmitter.IncrementUdpMsgId();
-
+                            currentRetries = 0;
                         }
                         else 
                         {

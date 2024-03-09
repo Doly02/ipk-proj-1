@@ -293,6 +293,7 @@ public:
         {
             perror("sendto failed");
         }
+        printf("SUCCESSFULLY SEND (SendUdpMessage)\n");
     }
 
     void SendUdpConfirm(int sock,   const struct sockaddr_in& server, int internalId)
