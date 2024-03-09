@@ -30,6 +30,7 @@ all: $(TARGET)
 # Rule For Assemble of Final Executable File
 $(TARGET): $(OBJECTS)
 	$(CC) $(CFLAGS) -o $@ $^
+	rm -f $(OBJECTS)
 
 # Rule For Assemble Object Files
 %.o: %.cpp

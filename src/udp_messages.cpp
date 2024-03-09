@@ -168,7 +168,7 @@ public:
                 result = serializedMsg[offset++];
                 refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset + 1]) << 8);
                 offset = offset + 2; // Used Two Bytes
-                
+
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
                 {
                     msg.content.push_back(static_cast<char>(serializedMsg[offset]));
@@ -268,7 +268,7 @@ public:
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
-            printf("recvUdpConfirm -> CONFIRM MESSAGE\n");
+            printf("recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
@@ -285,17 +285,17 @@ public:
         return CONFIRM_FAILED;
     }
 
-    void SendUdpMessage(int sock)
+    void SendUdpMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-        ssize_t bytesTx = send(sock, serialized.data(), serialized.size(), 0);
+        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
             perror("sendto failed");
         }
     }
 
-    void SendUdpConfirm(int sock, int internalId)
+    void SendUdpConfirm(int sock,   const struct sockaddr_in& server, int internalId)
     {
         std::vector<uint8_t> serialized;
 
@@ -304,7 +304,7 @@ public:
         /*  MESSAGE ID   */
         serialized.push_back(internalId & 0xFF);
         serialized.push_back((internalId >> 8) & 0xFF);
-        ssize_t bytesTx = send(sock, serialized.data(), serialized.size(), 0);
+        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
             perror("sendto failed");

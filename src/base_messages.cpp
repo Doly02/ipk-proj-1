@@ -354,6 +354,7 @@ class BaseMessages
 
         }
         retVal = checkLength();
+        printf("MSG TYPE: %d, retVal: %d (checkMessage)\n",msg.type,retVal);
         return retVal;   
     }
 
