@@ -57,6 +57,7 @@ class BaseMessages
         ERROR            = 0xFE,     //!< Error - Template: ERROR FROM {DisplayName} IS {MessageContent}\r\n
         COMMAND_BYE      = 0xFF,     //!< Disconnect - Template: BYE\r\n
         UNKNOWN_MSG_TYPE = 0x99,     //!< Unknown Message Type
+        COMMAND_HELP     = 0x100     //!< Print Help To STDIN
 
     };
     enum InputType_t
@@ -536,6 +537,17 @@ class BaseMessages
                 printf("%s\n", content.c_str());
             }
         }
+    }
+
+    void printHelp()
+    {
+        printf("Commands:\n");
+        printf("----------------------------------------------\n");
+        printf("AUTHENTICATION CMD:  /auth [username] [password] [displayname]\n");
+        printf("JOIN CMD:            /join [channel]\n");
+        printf("RENAME CMD:          /rename [displayname]\n");
+        printf("HELP CMD:            /help\n");
+        printf("To Exit The Program Correctly, Type 'BYE' And Press ENTER\n");
     }
 
 };

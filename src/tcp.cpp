@@ -314,6 +314,10 @@ public:
                             memset(buf, 0, sizeof(buf));
                         }
                         /// TODO: Missing ERRORMSG
+                        if ((int)TcpMessages::COMMAND_HELP == tcpMessage.msg.type)
+                        {
+                            tcpMessage.printHelp();
+                        }
                     }
                 }
             }

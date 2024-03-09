@@ -283,6 +283,7 @@ public:
                             lastSentMessageID++;
                             // Confirm Is Expected
                             expectedConfirm = true;
+                            break;
                         }
                         else if ((int)BaseMessages::MSG == udpMessageTransmitter.msg.type)
                         {
@@ -296,6 +297,10 @@ public:
                             lastSentMessageID++;
                             // Confirm Is Expected
                             expectedConfirm = true;
+                        }
+                        else if ((int)BaseMessages::COMMAND_HELP == udpMessageTransmitter.msg.type)
+                        {
+                            udpMessageTransmitter.printHelp();
                         }
                     }                                                
                 }
