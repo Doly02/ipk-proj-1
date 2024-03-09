@@ -45,9 +45,9 @@ private:
     UdpMessages udpMessageReceiver;
     struct sockaddr_in si_other;    
 
-    unsigned long lastSentMessageID = 0;                    // ID Last Sended Message  
-    unsigned long lastReceivedMessageID = 0;                 // ID Last Received Message
-    std::unordered_set<unsigned long> receivedMessageIDs;   // Watchdog For Unique Received ID Messages
+    int lastSentMessageID       = 0;                // ID Last Sended Message  
+    int lastReceivedMessageID   = 0;                // ID Last Received Message
+    std::unordered_set<int> receivedMessageIDs;     // Watchdog For Unique Received ID Messages
 
 public:
     UdpClient(const std::string& addr, int port,int retryCnt,int confirmTimeOut) : Client(addr, port, UDP) // Inicialization By Contructor From Base Class
@@ -63,10 +63,12 @@ public:
     int processAuthetification()
     {
         /* Variables */
+        udpMessageTransmitter.messageID = 1;
         bool checkReply = false;
         int retValue    = 0;
         int currentRetries = 0;
-        
+        const struct sockaddr_in& serverAddr = GetServerAddr();
+
         tv.tv_sec = 0;
         tv.tv_usec = 250000;        // 250ms TimeOut
         // While Not Authenticated
@@ -83,9 +85,9 @@ public:
                     }
                     udpMessageTransmitter.readAndStoreContent(buf);
                     retValue = udpMessageTransmitter.checkMessage();
-                    if (retValue == 0 && udpMessageTransmitter.msgType == UdpMessages::COMMAND_AUTH) 
+                    if (retValue == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
                     {
-                        udpMessageTransmitter.sendUdpAuthMessage(sock);
+                        udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
                         lastSentMessageID = udpMessageTransmitter.messageID;
                         sendAuth = true;
                         checkReply = true;
@@ -110,7 +112,7 @@ public:
                 if (currentRetries < retryCount) 
                 {
                     // If We Didn't Get a Answer Back Try To Send It Again
-                    udpMessageTransmitter.sendUdpAuthMessage(sock);
+                    udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
                     currentRetries++;
                 } 
                 else 
@@ -125,11 +127,24 @@ public:
                 // Máme nějakou aktivitu, pokusíme se přijmout zprávu
                 memset(buf, 0, BUFSIZE);
                 socklen_t slen = sizeof(si_other);
-                if (recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen) == -1) {
+                ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
+                if (-1 == bytesRx) 
+                {
+                    // Chyba při příjmu dat
+                    perror("recvfrom() failed");
+                    exit(EXIT_FAILURE);
+                }
+                else 
+                {   
                     buf[BUFSIZE - 1] = '\0'; 
-                    udpMessageReceiver.readAndStoreContent(buf);
+                    udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
+
+                    printf("RECEIVED %zu Bytes\n",udpMessageReceiver.msg.buffer.size());
+
                     retValue = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
-                    if (!authConfirmed && retValue == UdpMessages::SUCCESS) {
+                    if (!authConfirmed && retValue == UdpMessages::SUCCESS) 
+                    {
+                        printf(" AUTHENTICATION MESSAGE CONFIRMED\n");
                         authConfirmed = true;
                     } 
                     else if (checkReply && authConfirmed) 
@@ -149,11 +164,6 @@ public:
                         }
                     }
                 } 
-                else 
-                {
-                    perror("recv() failed");
-                    exit(EXIT_FAILURE);
-                }
             }
         }
         return UdpMessages::SUCCESS;

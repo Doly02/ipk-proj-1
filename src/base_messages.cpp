@@ -191,6 +191,20 @@ class BaseMessages
 
     }
 
+
+    void readAndStoreBytes(const char* buffer, size_t bytesRx)
+    {
+        // Clear The Message Content
+        msg.buffer.clear();
+
+        for (size_t i = 0; i < bytesRx; i++)
+        {
+            
+            msg.buffer.push_back(buffer[i]);
+
+        }
+    }
+
     /**
      * @brief Identifies Message Type & Parse Message Parts
      * 

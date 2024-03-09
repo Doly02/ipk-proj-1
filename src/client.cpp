@@ -129,6 +129,11 @@ public:
         return sock != NOT_CONNECTED;
     }
 
+    // Return server's struct 
+    const struct sockaddr_in& GetServerAddr() const 
+    {
+        return server;
+    }
     /**
      * @brief Connects The Client To The Server
      * @return True If The Connection Was Successful, False Otherwise

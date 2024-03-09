@@ -21,11 +21,13 @@
 /************************************************/
 #include <iostream>
 #include <string>
-#include <unistd.h>     // For close
+#include <unistd.h>             // For close
 #include <unordered_set>
 #include <chrono>
 #include <thread>
 #include "base_messages.cpp"
+#include <netinet/in.h>         // For sockaddr_in, AF_INET, SOCK_DGRAM
+#include <arpa/inet.h>          // For Debug
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -73,12 +75,12 @@ public:
         std::vector<uint8_t> serialized;
 
         /*  MESSAGE TYPE */
-        serialized.push_back(msgType);
+        serialized.push_back(msg.type);
         /*  MESSAGE ID   */
         serialized.push_back(messageID & 0xFF);
         serialized.push_back((messageID >> 8) & 0xFF);
 
-        switch (msgType)
+        switch (msg.type)
         {
             
             case REPLY:
@@ -124,6 +126,10 @@ public:
             case UNKNOWN_MSG_TYPE:
                 exit(1);
         }
+        std::string login(msg.login.begin(),msg.login.end());
+        std::string display(msg.displayName.begin(),msg.displayName.end());
+        std::string secret(msg.secret.begin(),msg.secret.end());
+        printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s\n",messageID,login.c_str(),display.c_str(),secret.c_str());
         return serialized;
     }
 
@@ -137,6 +143,7 @@ public:
     */
     void deserializeMessage(const std::vector<char>& serializedMsg)
     {
+        printf("RECEIVED MESSAGE SIZE: %zu\n",serializedMsg.size());
         if (serializedMsg.size() < 3)
         {
             throw std::runtime_error("Invalid Message Length");
@@ -203,7 +210,7 @@ public:
 
     int RecvUdpMessage(int internalId)
     {
-        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
         if (refMessageID == internalId && result == SUCCESS)
@@ -220,7 +227,7 @@ public:
 
     int recvUpdIncomingReply(int internalId)
     {
-        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
         if (REPLY == msg.type)
@@ -241,15 +248,27 @@ public:
     }
 
 
-    void sendUdpAuthMessage(int sock)
+    void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-        send(sock, serialized.data(), serialized.size(), 0);
+    
+    
+        char *ip = inet_ntoa(server.sin_addr);
+        unsigned int port = ntohs(server.sin_port); // ntohs převede číslo portu z network byte order do host byte order
+
+        printf("Odesílání zprávy na IP: %s, Port: %u\n", ip, port);
         
+    
+        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
+        if (bytesTx < 0) 
+        {
+            perror("sendto failed");
+        }
     }
+
     int recvUpdConfirm(int internalId)
     {
-        std::vector<char> serialized(msg.content.begin(), msg.content.end());
+        std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
