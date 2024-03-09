@@ -10,6 +10,21 @@
 *.o
 *.obj
 
+
+# Binary files
+*.exe
+*.out
+*.bin
+*.dll  
+*.so   
+*.dylib
+
+# Executables   -> Personal
+client
+# Others        -> Personal
+.vscode
+microsoft.gpg
+
 # Precompiled Headers
 *.gch
 *.pch

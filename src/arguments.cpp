@@ -34,7 +34,7 @@ public:
     /*      Arguments             */
     std::string transferProtocol;               //!< Transfer Protocol Used For Communication (1 - TCP, 2 - UDP)
     std::string hostName;                       //!< Host Name of The Server
-    std::string ipAddress;                   //!< Structure For IP Address of The Server
+    std::string ipAddress;                      //!< Structure For IP Address of The Server
     uint16_t port                   = 4567u;    //!< Port Number on Which The Server Is Listening
     uint16_t confirmTimeOutUDP      = 250u;     //!< Time Out For UDP Protocol
     uint8_t confirmRetriesUDP       = 3u;       //!< Number of Retries For UDP Protocol

@@ -70,8 +70,8 @@ public:
                     if (buf[len - 1] == '\n') {
                         buf[len - 1] = '\0';
                     }
-                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
-                    retVal = tcpMessage.checkMessage();   // Check Message
+                    tcpMessage.ReadAndStoreContent(buf);    // Store Content To Vector                    
+                    retVal = tcpMessage.CheckMessage();   // Check Message
                     if (0 == retVal) 
                     {
                         if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
@@ -104,7 +104,7 @@ public:
                 int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
                 if (bytesRx > 0) {
                     buf[BUFSIZE - 1] = '\0';
-                    tcpMessage.readAndStoreContent(buf);
+                    tcpMessage.ReadAndStoreContent(buf);
 
                     /* Check If Error Was Send */
                     retVal = tcpMessage.CheckIfErrorOrBye();
@@ -114,7 +114,7 @@ public:
                         exit(0);
 
                     if (checkReply) {
-                        retVal = tcpMessage.handleReply();
+                        retVal = tcpMessage.HandleReply();
                         if (BaseMessages::SUCCESS == retVal) 
                         {
                             authConfirmed = true;
@@ -187,7 +187,7 @@ public:
                 {
                     //buf[bytesRx]    = '\0'; //TODO: Check If This Is Right ("\r\n")
                     buf[BUFSIZE-1]  = '\0';
-                    tcpMessage.readAndStoreContent(buf);  
+                    tcpMessage.ReadAndStoreContent(buf);  
                     
                     /* Check If Error Was Send */
                     retVal = tcpMessage.CheckIfErrorOrBye();
@@ -210,7 +210,7 @@ public:
                         if (joinServerMsgSend)
                         {
 
-                            retVal = tcpMessage.handleReply();
+                            retVal = tcpMessage.HandleReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
                                 tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);
@@ -227,7 +227,7 @@ public:
                         // Store The Content Of The Buffer Into Internal Vector
                         // tcpMessage.readAndStoreContent(buf);       
                         // Check If The Message Is REPLY
-                        retVal = tcpMessage.handleReply();
+                        retVal = tcpMessage.HandleReply();
                         if (retVal == 0)
                         {
                             checkReply = false;
@@ -243,7 +243,7 @@ public:
                     {
 
                         // Print The Content Of The Buffer
-                        retVal = tcpMessage.parseMessage();
+                        retVal = tcpMessage.ParseMessage();
                         if (BaseMessages::SUCCESS == retVal)
                             tcpMessage.PrintMessage();
                     }
@@ -287,9 +287,9 @@ public:
                     }
 #endif
 
-                    tcpMessage.msgType = TcpMessages::UNKNOWN_MSG_TYPE;
-                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
-                    RetValue = tcpMessage.checkMessage();   // Check Message
+                    tcpMessage.msg.type = TcpMessages::UNKNOWN_MSG_TYPE;
+                    tcpMessage.ReadAndStoreContent(buf);    // Store Content To Vector                    
+                    RetValue = tcpMessage.CheckMessage();   // Check Message
                     if (RetValue == 0) 
                     {
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
@@ -316,7 +316,7 @@ public:
                         /// TODO: Missing ERRORMSG
                         if ((int)TcpMessages::COMMAND_HELP == tcpMessage.msg.type)
                         {
-                            tcpMessage.printHelp();
+                            tcpMessage.PrintHelp();
                         }
                     }
                 }

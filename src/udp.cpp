@@ -102,10 +102,10 @@ public:
                     }
 
                     // Store The Input Into Internal Buffer
-                    udpMessageTransmitter.readAndStoreContent(buf);
+                    udpMessageTransmitter.ReadAndStoreContent(buf);
                     printf("RESEVED MESSAGE TO SEND\n");
                     // Check The Message 
-                    retVal = udpMessageTransmitter.checkMessage();
+                    retVal = udpMessageTransmitter.CheckMessage();
                     if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
                     {
                         udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
@@ -136,7 +136,7 @@ public:
                 else 
                 {   
                     buf[BUFSIZE - 1] = '\0'; 
-                    udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
+                    udpMessageReceiver.ReadAndStoreBytes(buf,bytesRx);
                     retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
                 
                     if (!receivedConfirm && retVal == UdpMessages::SUCCESS) 
@@ -248,7 +248,7 @@ public:
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
                     // Store Input From STDIN To Vector
-                    udpMessageTransmitter.readAndStoreContent(buf);
+                    udpMessageTransmitter.ReadAndStoreContent(buf);
                     // Check Message Validity
                     size_t len = strlen(buf);
                     if (buf[len - 1] == '\n') 
@@ -256,7 +256,7 @@ public:
                         buf[len - 1] = '\0';
                     }
 
-                    retVal = udpMessageTransmitter.checkMessage();
+                    retVal = udpMessageTransmitter.CheckMessage();
                     if(BaseMessages::SUCCESS == retVal)
                     {
                         if ((int)BaseMessages::COMMAND_JOIN == udpMessageTransmitter.msg.type)
@@ -300,7 +300,7 @@ public:
                         }
                         else if ((int)BaseMessages::COMMAND_HELP == udpMessageTransmitter.msg.type)
                         {
-                            udpMessageTransmitter.printHelp();
+                            udpMessageTransmitter.PrintHelp();
                         }
                     }                                                
                 }
@@ -320,7 +320,7 @@ public:
                 {
                     int bufferLen = bytesRx;
                     buf[bytesRx-1] = '\0';
-                    udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
+                    udpMessageReceiver.ReadAndStoreBytes(buf,bytesRx);
                     printf("RECEIVED BYTES: %zu but BUFFER IS: %d\n",udpMessageReceiver.msg.buffer.size(),bufferLen);
                     if (true == expectedConfirm)
                     {
@@ -363,7 +363,7 @@ public:
                                 std::string content(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());
                                 printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
                             }
-                            else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
+                            else if (UdpMessages::ERROR == udpMessageReceiver.msg.type)
                             {
                                 // Print The Error
                                 std::string errMessage(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());

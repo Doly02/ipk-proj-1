@@ -86,13 +86,9 @@ class BaseMessages
     };
     
 
-    MessageType_t msgType;
     Message_t msg;
 
-    BaseMessages() : msgType(UNKNOWN_MSG_TYPE) {
-        // Initialize Attributes
-        msg.shouldReply = false;
-    }
+    BaseMessages() {};
     /**
      * @brief Constructor of TcpMessages Class 
      * @param type Type of The Message
@@ -100,7 +96,7 @@ class BaseMessages
      *
      * Constructor Initialize Message With Type And Content.
      */
-    BaseMessages(MessageType_t type, Message_t content) : msgType(type), msg(content) {}
+    BaseMessages(Message_t content) : msg(content) {}
 
     /**
      * @brief Destructor of TcpMessages Class 
@@ -117,13 +113,13 @@ class BaseMessages
      * 
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) {
+    bool CompareVectorAndString(const std::vector<char>& vec, const std::string& str) {
         std::string vecAsString(vec.begin(), vec.end());
         return vecAsString == str;
     }
 
 
-    void cleanMessage()
+    void CleanMessage()
     {
         msg.content.clear();
         //msg.login.clear();
@@ -139,7 +135,7 @@ class BaseMessages
      * 
      * @return 0 If The Message Is Valid, Otherwise Returns -1, -2, -3, -4
      */
-    int checkLength()
+    int CheckLength()
     {
         if (msg.channelID.size() > LENGHT_ID)
         {
@@ -172,7 +168,7 @@ class BaseMessages
      * Stores Chars From Buffer To Message Buffer
      * @return None
      */
-    void readAndStoreContent(const char* buffer)
+    void ReadAndStoreContent(const char* buffer)
     {
         // Clear The Message Content
         msg.buffer.clear();
@@ -193,7 +189,7 @@ class BaseMessages
     }
 
 
-    void readAndStoreBytes(const char* buffer, size_t bytesRx)
+    void ReadAndStoreBytes(const char* buffer, size_t bytesRx)
     {
         // Clear The Message Content
         msg.buffer.clear();
@@ -212,7 +208,7 @@ class BaseMessages
      * 
      * @return 0 If The Message Is Valid, Otherwise Returns -1
      */
-    int checkMessage()
+    int CheckMessage()
     {
         size_t idx = 0;
         int retVal = FAIL;
@@ -331,7 +327,7 @@ class BaseMessages
             }
         }
         // Otherwise Message Is Already Stored In The Content    
-        else if (compareVectorAndString(msg.buffer, "BYE\r\n")) 
+        else if (CompareVectorAndString(msg.buffer, "BYE\r\n")) 
         {
             idx = 0;
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
@@ -354,7 +350,7 @@ class BaseMessages
             msg.type = MSG;
 
         }
-        retVal = checkLength();
+        retVal = CheckLength();
         printf("MSG TYPE: %d, retVal: %d (checkMessage)\n",msg.type,retVal);
         return retVal;   
     }
@@ -366,7 +362,7 @@ class BaseMessages
      * 
      * @return None, Exits If Something Goes Wrong
     */
-    int parseMessage()
+    int ParseMessage()
     {
         int retVal = 0;
         size_t idx = 0;
@@ -420,8 +416,8 @@ class BaseMessages
             std::string realContent(msg.content.begin(),msg.content.end());
 
             // Check The Message And User Name Length
-            retVal = checkLength();
-            msgType = MSG;
+            retVal = CheckLength();
+            msg.type = MSG;
             return retVal;
         }
         else if (std::regex_search(bufferStr, std::regex("^BYE\r\n")))
@@ -434,7 +430,7 @@ class BaseMessages
                 msg.content.push_back(msg.buffer[idx]);
                 idx++;
             }
-            msgType = COMMAND_BYE;
+            msg.type = COMMAND_BYE;
             return SUCCESS;
         }
         return MSG_PARSE_FAILED;
@@ -446,7 +442,7 @@ class BaseMessages
      * 
      * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
     */
-    int handleReply()
+    int HandleReply()
     {
         /* Preparation  */
         std::regex replyPrefix("^REPLY ");
@@ -470,7 +466,7 @@ class BaseMessages
             printf("PREFIX REMOVED\n");
         }
 
-        if (compareVectorAndString(msg.buffer, "OK IS Authentication successful.\r\n")) 
+        if (CompareVectorAndString(msg.buffer, "OK IS Authentication successful.\r\n")) 
         {
             msg.shouldReply = false;
             printf(" SUCCESS\n");
@@ -522,7 +518,7 @@ class BaseMessages
     {
         std::string content(msg.content.begin(), msg.content.end());
         std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
-        if (MSG == msgType)
+        if (MSG == msg.type)
         {
             if (!displayNameOutside.empty() && !content.empty())
             {
@@ -530,7 +526,7 @@ class BaseMessages
             }
 
         }
-        else if (COMMAND_BYE == msgType)
+        else if (COMMAND_BYE == msg.type)
         {
             if (!content.empty())
             {
@@ -539,7 +535,7 @@ class BaseMessages
         }
     }
 
-    void printHelp()
+    void PrintHelp()
     {
         printf("Commands:\n");
         printf("----------------------------------------------\n");

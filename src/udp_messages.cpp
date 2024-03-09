@@ -46,14 +46,14 @@ public:
 
     UdpMessages() : BaseMessages() {}
 
-    UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
+    UdpMessages(Message_t content) : BaseMessages(content) 
     {
         refMessageID = 1;
         result = 0;
         messageID = 1;
     }
 
-    void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
+    void AppendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
         // Serialize The Message Content To UDP Message 
         for (const auto& byte : contentBuffer) 
         {
@@ -69,7 +69,7 @@ public:
      * Serialize The Message To Byte Array
      * @return Byte Array
     */
-    std::vector<uint8_t> serializeMessage() {
+    std::vector<uint8_t> SerializeMessage() {
         std::vector<uint8_t> serialized;
 
         /*  MESSAGE TYPE */
@@ -88,33 +88,33 @@ public:
                 serialized.push_back(refMessageID & 0xFF);
                 serialized.push_back((refMessageID >> 8) & 0xFF);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, msg.content);
+                AppendContent(serialized, msg.content);
                 break;
             case COMMAND_AUTH:
                 /*  USERNAME        */
-                appendContent(serialized, msg.login);
+                AppendContent(serialized, msg.login);
                 /*  DISPLAY NAME    */
-                appendContent(serialized, msg.displayName);
+                AppendContent(serialized, msg.displayName);
                 /*  SECRET          */
-                appendContent(serialized, msg.secret);
+                AppendContent(serialized, msg.secret);
                 break;
             case COMMAND_JOIN:
                 /*  CHANNEL ID      */
-                appendContent(serialized, msg.channelID);
+                AppendContent(serialized, msg.channelID);
                 /*  DISPLAY NAME    */
-                appendContent(serialized, msg.displayName);
+                AppendContent(serialized, msg.displayName);
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
-                appendContent(serialized, msg.displayName);
+                AppendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, msg.content);
+                AppendContent(serialized, msg.content);
                 break;
             case ERROR:
                 /*  DISPLAY NAME    */
-                appendContent(serialized, msg.displayName);
+                AppendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
-                appendContent(serialized, msg.content);
+                AppendContent(serialized, msg.content);
                 break;
             case COMMAND_BYE:
                 /* MSG TYPE & IN ALREADY THERE */
@@ -139,24 +139,26 @@ public:
      * Deserialize Byte Array To Message
      * @return Message
     */
-    void deserializeMessage(const std::vector<char>& serializedMsg)
+    void DeserializeMessage(const std::vector<char>& serializedMsg)
     {
-        printf("RECEIVED MESSAGE SIZE: %zu\n",serializedMsg.size());
+        BaseMessages::MessageType_t typeOfMsg = BaseMessages::UNKNOWN_MSG_TYPE;
+
+
         if (serializedMsg.size() < 3)
         {
             throw std::runtime_error("Invalid Message Length");
         }
 
         // Store Packet Into The UDP Message Struct
-        msgType = (BaseMessages::MessageType_t)serializedMsg[0];
-        if (CONFIRM != msgType)
+        typeOfMsg = (BaseMessages::MessageType_t)serializedMsg[0];
+        if (CONFIRM != msg.type)
             messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
         else
             refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
 
         size_t offset = 3;
 
-        switch (msgType)
+        switch (typeOfMsg)
         {
             case CONFIRM:
                 break;
@@ -203,15 +205,15 @@ public:
             
         
         }
-        msg.type = msgType;
+        msg.type = typeOfMsg;
 
     }
 
     int RecvUdpMessage(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
-        cleanMessage();
-        deserializeMessage(serialized);
+        CleanMessage();
+        DeserializeMessage(serialized);
         if (refMessageID == internalId && result == SUCCESS)
         {
             // Check With Global Message ID
@@ -227,8 +229,8 @@ public:
     int recvUpdIncomingReply(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
-        cleanMessage();
-        deserializeMessage(serialized);
+        CleanMessage();
+        DeserializeMessage(serialized);
         if (REPLY == msg.type)
         {
             printf("recvUpdIncomingReply -> REPLY MESSAGE\n");
@@ -252,7 +254,7 @@ public:
 
     void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
-        std::vector<uint8_t> serialized = serializeMessage();
+        std::vector<uint8_t> serialized = SerializeMessage();
     
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
@@ -264,8 +266,8 @@ public:
     int recvUpdConfirm(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
-        cleanMessage();
-        deserializeMessage(serialized);
+        CleanMessage();
+        DeserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
             printf("recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
@@ -287,7 +289,7 @@ public:
 
     void SendUdpMessage(int sock,const struct sockaddr_in& server)
     {
-        std::vector<uint8_t> serialized = serializeMessage();
+        std::vector<uint8_t> serialized = SerializeMessage();
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
