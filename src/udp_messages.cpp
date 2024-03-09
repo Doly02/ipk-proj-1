@@ -166,8 +166,9 @@ public:
                     throw std::runtime_error("Invalid Message Length");
                 }
                 result = serializedMsg[offset++];
-                refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset]) << 8);
-                offset++;
+                refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset + 1]) << 8);
+                offset = offset + 2; // Used Two Bytes
+                
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
                 {
                     msg.content.push_back(static_cast<char>(serializedMsg[offset]));
@@ -230,13 +231,16 @@ public:
         deserializeMessage(serialized);
         if (REPLY == msg.type)
         {
+            printf("recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
+            printf("recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (refMessageID == internalId && result == SUCCESS)
             {
+                printf("recvUpdIncomingReply -> refMessageID == internalId\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
-                    messageID++;
+                    printf("recvUpdIncomingReply -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
             }

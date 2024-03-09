@@ -64,25 +64,36 @@ public:
         // Destructor From Base Class [Calls close(sock)]
     }
 
-
-    int processAuthetification()
+    int processAuthetification() 
     {
-        /* Variables */
-        bool sendAgain = false;
-        bool checkReply = false;
-        int retValue    = 0;
+        /* Variable */
+        bool checkReply = false; 
+        int retValue = 0;
+        bool expectedReply = false;
         int currentRetries = 0;
         const struct sockaddr_in& serverAddr = GetServerAddr();
-
-        struct timeval timeout;
         /* Timers */
         TimePoint startWatch;
         TimePoint stopWatch;
 
-        // While Not Authenticated
-        while(!receivedConfirm && currentRetries < retryCount)
-        {
-            if (!sendAuth) 
+        struct timeval timeout;
+        FD_ZERO(&readfds);
+        FD_SET(STDIN_FILENO, &readfds);
+        FD_SET(sock, &readfds);
+
+        timeout.tv_sec = 0; 
+        timeout.tv_usec = 250000;   // 250ms 
+
+
+        while (currentRetries < retryCount) 
+        {    
+            int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
+            if (activity == -1) {
+                perror("select() failed");
+                exit(EXIT_FAILURE);
+            }
+            // Capture Activity on STDIN
+            if (FD_ISSET(STDIN_FILENO, &readfds)) 
             {
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
@@ -94,7 +105,7 @@ public:
 
                     // Store The Input Into Internal Buffer
                     udpMessageTransmitter.readAndStoreContent(buf);
-
+                    printf("RESEVED MESSAGE TO SEND\n");
                     // Check The Message 
                     retValue = udpMessageTransmitter.checkMessage();
                     if (retValue == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
@@ -104,41 +115,17 @@ public:
                         startWatch = std::chrono::high_resolution_clock::now();
                         lastSentMessageID = udpMessageTransmitter.messageID;
                         sendAuth = true;
+                        expectedReply = true;
                         checkReply = true;
                         currentRetries++;
                     }
                 }   
             }
-            // Pripaire For Waiting With TimeOut
-            FD_ZERO(&readfds);
-            FD_SET(sock, &readfds);
+//            std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Čekáme 250ms
 
-            timeout.tv_sec = 0;         // 0s 
-            timeout.tv_usec = 500000;   // 260ms
-
-            int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
-            if (activity == -1) 
+            // Check Activity On Socket
+            if (FD_ISSET(sock, &readfds)) 
             {
-                perror("select() failed");
-                exit(EXIT_FAILURE);
-            }
-            else if (activity == 0) {  // Run Out Of Timeout
-                if (sendAgain && (currentRetries < retryCount))
-                {   // Sent Authetication Message If Program Run Out Of Timeout And Still Have Retries
-                printf("AUTH MESSAGE SEND AGAIN\n");
-                    udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
-                }
-                else
-                {   
-                    // Limit Overrun
-                    printf("OVERRUN!\n");
-                    return UdpMessages::AUTH_FAILED;
-                }
-
-            }
-            else if (FD_ISSET(sock, &readfds)) 
-            {
-                // Máme nějakou aktivitu, pokusíme se přijmout zprávu
                 memset(buf, 0, BUFSIZE);
                 socklen_t slen = sizeof(si_other);
                 ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
@@ -152,29 +139,14 @@ public:
                 {   
                     buf[BUFSIZE - 1] = '\0'; 
                     udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
-
-                    printf("RECEIVED %zu Bytes\n",udpMessageReceiver.msg.buffer.size());
-
                     retValue = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
-                    printf("RECEIVED CONFIRM: %d, IS MESSAGE A CONFIRM: %d\n",receivedConfirm,retValue);
+                
                     if (!receivedConfirm && retValue == UdpMessages::SUCCESS) 
                     {
-                        printf(" AUTHENTICATION MESSAGE CONFIRMED\n");
+                        receivedConfirm = true;
+                        expectedReply = false;
                         
-                        // Stop Timer
-                        stopWatch = std::chrono::high_resolution_clock::now();
-                        // Measure Diff Between Send And Receive (CONFIRM)
-                        int diff = udpMessageReceiver.CheckTimer(startWatch,stopWatch);
-                        if (diff > confirmationTimeout)
-                        {
-                            sendAgain = true;
-                        }
-                        else 
-                        {
-                            printf("AUTH MESSAGE WAS CORRECLY HANDLED\n");
-                            receivedConfirm = true;
-                        }
-                    } 
+                    }
                     else if (checkReply && receivedConfirm) 
                     {
                         retValue = udpMessageReceiver.recvUpdIncomingReply(lastSentMessageID);
@@ -191,15 +163,31 @@ public:
                             exit(UdpMessages::AUTH_FAILED);
                         }
                     }
-                    if (sendAgain && (currentRetries < retryCount))
-                    {   // Sent Authetication Message If Program Run Out Of Timeout And Still Have Retries
-                        udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
-                    }
                 } 
+
+            } 
+            // Check The Receive TimeOut
+            if (expectedReply)
+            {
+                stopWatch = std::chrono::high_resolution_clock::now();
+                int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
+                if (elapsedTime > 250) 
+                {
+                    udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
+                }
             }
+
+            FD_ZERO(&readfds);
+            FD_SET(STDIN_FILENO, &readfds);
+            FD_SET(sock, &readfds);
         }
-        // Increment Message ID
+
         udpMessageReceiver.IncrementUdpMsgId();
+        
+        if (currentRetries >= retryCount) {
+            // Attempts Overrun
+            return UdpMessages::AUTH_FAILED;
+        }
         return UdpMessages::SUCCESS;
     }
 
@@ -226,7 +214,7 @@ public:
             printf("AUTHENTICATION FAILED (return code: %d)\n",retValue);
             return retValue;
         }
-        printf("AUTHENTICATION DONE\n");
+        printf("AUTHENTICATION DONE (runUdpClient)\n");
 
         /* Main Loop */
         while (currentRetries < retryCount)
