@@ -34,6 +34,7 @@
 class BaseMessages 
 {
     public:
+    /************** RETURN CODES *******************/
     static constexpr int SERVER_SAYS_BYE        = 1;
     static constexpr int SUCCESS                = 0;
     static constexpr int AUTH_FAILED            = -1;
@@ -42,11 +43,15 @@ class BaseMessages
     static constexpr int MSG_PARSE_FAILED       = -4;
     static constexpr int FAIL                   = -5;
     static constexpr int EXTERNAL_ERROR         = -6;
+    /************** CONSTANTS **********************/
     static constexpr int LENGHT_ID              = 20;
     static constexpr int LENGHT_SECRET          = 128;
     static constexpr int LENGHT_CONTENT         = 1400;
     static constexpr int LENGHT_DISPLAY_NAME    = 128;
-    /* MESSAGE TYPES */
+    /**
+     * @brief Message Types That May Occur in The Flow of Communication.
+     * 
+     */
     enum MessageType_t
     {
         CONFIRM          = 0x00,     //!< Confirm - Template: CONFIRM {MessageID}\r\n
@@ -60,6 +65,10 @@ class BaseMessages
         COMMAND_HELP     = 0x100     //!< Print Help To STDIN
 
     };
+
+    /**
+     * @brief Inputs That Can User Enter.
+     */
     enum InputType_t
     {
         INPUT_UNKNOWN,    //!< Unknown Input
@@ -70,6 +79,10 @@ class BaseMessages
         INPUT_HELP        //!< Disconnect - Template: BYE\r\n
     };
 
+    /**
+     * @brief Message Structure.
+     * 
+     */
     struct Message_t
     {
         /* data */
@@ -85,7 +98,9 @@ class BaseMessages
         bool shouldReply;
     };
     
-
+    /**
+     * @brief Attributes of TcpMessages Class
+     */
     Message_t msg;
 
     BaseMessages() {};

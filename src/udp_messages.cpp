@@ -53,14 +53,64 @@ public:
         messageID = 1;
     }
 
-    void AppendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
+    /*----------------------------------------------------------------------*/
+    /*                          Supporting Methods                          */
+    /*----------------------------------------------------------------------*/
+    /**
+     * @brief Sets the UDP Message ID.
+     * 
+     * Sets the UDP Message ID.
+     */
+    void SetUdpMsgId()
+    {
+        messageID = 1;
+    }
+
+    /**
+     * @brief Increments UDP Message ID.
+     * 
+     * Increments UDP Message ID.
+     */
+    void IncrementUdpMsgId()
+    {
+        messageID++;
+    }
+
+    /**
+     * @brief Returns Time Difference In Milliseconds Between Two Events.
+     * 
+     * @param startTime Start Event
+     * @param endTime End Event
+     * @return Time Differecnce In Milliseconds Between Two Events.
+     * 
+     * Returns Time Difference In Milliseconds Between Two Events.
+     */
+    int CheckTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
+    {
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        return duration.count();
+    }
+
+    /**
+     * @brief Appends Content To Serialized Message With NULL Byte At The End.
+     * 
+     * @param serialized Serialized Message
+     * @param contentBuffer Source Buffer
+     * Appends Content To Serialized Message With NULL Byte At The End.
+     */
+    void AppendContent(std::vector<uint8_t>& serialized, const std::vector<char>& sourceBuffer) 
+    {
         // Serialize The Message Content To UDP Message 
-        for (const auto& byte : contentBuffer) 
+        for (const auto& byte : sourceBuffer) 
         {
             serialized.push_back(static_cast<uint8_t>(byte));
         }
         serialized.push_back(NULL_BYTE);
     }
+
+    /*----------------------------------------------------------------------*/
+    /*                          Operational Functions                       */
+    /*----------------------------------------------------------------------*/
 
     /**
      * @brief Serialize The Message To Byte Array
@@ -124,10 +174,6 @@ public:
             case UNKNOWN_MSG_TYPE:
                 exit(1);
         }
-        std::string login(msg.login.begin(),msg.login.end());
-        std::string display(msg.displayName.begin(),msg.displayName.end());
-        std::string secret(msg.secret.begin(),msg.secret.end());
-        printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s\n",messageID,login.c_str(),display.c_str(),secret.c_str());
         return serialized;
     }
 
@@ -139,14 +185,15 @@ public:
      * Deserialize Byte Array To Message
      * @return Message
     */
-    void DeserializeMessage(const std::vector<char>& serializedMsg)
+    int DeserializeMessage(const std::vector<char>& serializedMsg)
     {
         BaseMessages::MessageType_t typeOfMsg = BaseMessages::UNKNOWN_MSG_TYPE;
 
 
         if (serializedMsg.size() < 3)
         {
-            throw std::runtime_error("Invalid Message Length");
+            std::cerr << "ERR: Invalid Message Length" << std::endl;
+            return BaseMessages::EXTERNAL_ERROR;
         }
 
         // Store Packet Into The UDP Message Struct
@@ -165,8 +212,10 @@ public:
             case REPLY:
                 if (serializedMsg.size() < offset + 3)
                 {
-                    throw std::runtime_error("Invalid Message Length");
+                    std::cerr << "ERR: Invalid Message Length" << std::endl;
+                    return BaseMessages::EXTERNAL_ERROR;
                 }
+
                 result = serializedMsg[offset++];
                 refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset + 1]) << 8);
                 offset = offset + 2; // Used Two Bytes
@@ -178,10 +227,12 @@ public:
                 }
                 msg.type = REPLY;
                 break;
+
             case COMMAND_AUTH: /* Should Not Be Sended To Client */
             case COMMAND_JOIN: /* Should Not Be Sended To Client */
-                printf("Invalid Message Type\n"); //TODO:
-                break;
+                std::cerr << "ERR: Invalid Message Length" << std::endl;
+                return BaseMessages::EXTERNAL_ERROR;
+            
             case MSG: 
             case ERROR:
                 /* DISPLAY NAME */
@@ -201,7 +252,7 @@ public:
                 break;
             case UNKNOWN_MSG_TYPE:  /* Unused */
             default:
-                exit(1);
+                exit(EXIT_FAILURE);
             
         
         }
@@ -209,6 +260,15 @@ public:
 
     }
 
+    /**
+     * @brief Handles The Incommed UDP Message.
+     * 
+     * @param internalId Internally Stored Message ID.
+     * @return If The Message Was Successfully Received Returns 'SUCCESS' (0) Otherwise Returns 'MSG_FAILED'.
+     * 
+     * Stores Message Parts (Type, ID, Result, Ref. ID, Content) Into The Message Struct And Checks The Message IDs.
+     * @warning In The Begging Clears The Message Struct.
+     */
     int RecvUdpMessage(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
@@ -226,67 +286,83 @@ public:
         return MSG_FAILED;
     }
 
+
+    /**
+     * @brief Handles The Incoming UDP 'Reply' Message.
+     * 
+     * @param internalId Internally Stored Message ID.
+     * @return If The Message Was Successfully Received Returns 'SUCCESS' (0) Otherwise Returns 'AUTH_FAILED'.
+     * 
+     * Stores Message Parts (Type, ID, Result, Ref. ID) Into The Message Struct And Checks The Message IDs.
+     * @warning In The Begging Clears The Message Struct. 
+     */
     int recvUpdIncomingReply(int internalId)
     {
+        int retVal = EXTERNAL_ERROR;
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
+        
         CleanMessage();
-        DeserializeMessage(serialized);
+        retVal = DeserializeMessage(serialized);
+        if (SUCCESS != retVal)
+            return retVal;
+
         if (REPLY == msg.type)
         {
-            printf("recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
-            printf("recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (refMessageID == internalId && result == SUCCESS)
             {
-                printf("recvUpdIncomingReply -> refMessageID == internalId\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
-                    printf("recvUpdIncomingReply -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
             }
         }
         return AUTH_FAILED;
-
     }
 
-
-    void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
-    {
-        std::vector<uint8_t> serialized = SerializeMessage();
-    
-        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
-        if (bytesTx < 0) 
-        {
-            perror("sendto failed");
-        }
-    }
-
+    /**
+     * @brief Handles The Incoming UDP 'Confirm' Message.
+     * 
+     * @param internalId Internally Stored Message ID.
+     * @return If The Message Was Successfully Received Returns 'SUCCESS' (0) Otherwise Returns 'CONFIRM_FAILED'.
+     * 
+     * Stores Message Parts (Type, ID, Result) Into The Message Struct And Checks The Message IDs.
+     * @warning In The Begging Clears The Message Struct. 
+     */
     int recvUpdConfirm(int internalId)
     {
+        int retVal = EXTERNAL_ERROR;
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
+        
         CleanMessage();
-        DeserializeMessage(serialized);
+        retVal = DeserializeMessage(serialized);
+        if (SUCCESS != retVal)
+            return retVal;
+
         if (CONFIRM == msg.type)
         {
-            printf("recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
-                printf("recvUdpConfirm -> refMessageID == internalId\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
-                    printf("recvUdpConfirm -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
             }
         }
-        printf("recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
 
+    /**
+     * @brief Serializes And Sends UDP Message (Except 'Confirm' Message)
+     * 
+     * @param sock Socket Where To Send The Message
+     * @param server Server Where To Send The Message
+     * 
+     * Sends UDP Message (Except 'Confirm' Message)
+     */
     void SendUdpMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = SerializeMessage();
@@ -295,9 +371,16 @@ public:
         {
             perror("sendto failed");
         }
-        printf("SUCCESSFULLY SEND (SendUdpMessage)\n");
     }
 
+    /**
+     * @brief Serializes And Sends UDP 'Confirm' Message
+     * 
+     * @param sock Socket Where To Send The Message
+     * @param server Server Where To Send The Message
+     * 
+     * Sends UDP 'Confirm' Message
+     */
     void SendUdpConfirm(int sock,   const struct sockaddr_in& server, int internalId)
     {
         std::vector<uint8_t> serialized;
@@ -313,24 +396,6 @@ public:
             perror("sendto failed");
         }
     }
-
-
-    int CheckTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
-    {
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        return duration.count();
-    }
-
-    void IncrementUdpMsgId()
-    {
-        messageID++;
-    }
-
-    void SetUdpMsgId()
-    {
-        messageID = 1;
-    }
-
 };
 
 
