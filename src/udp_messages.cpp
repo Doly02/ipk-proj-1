@@ -170,6 +170,7 @@ public:
                 /* MSG TYPE & IN ALREADY THERE */
                 break;
             case CONFIRM:
+            case COMMAND_HELP:
                 break;
             case UNKNOWN_MSG_TYPE:
                 exit(1);
@@ -257,6 +258,7 @@ public:
         
         }
         msg.type = typeOfMsg;
+        return BaseMessages::SUCCESS;
 
     }
 

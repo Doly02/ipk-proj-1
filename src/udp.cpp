@@ -108,7 +108,7 @@ public:
                     retVal = udpMessageTransmitter.CheckMessage();
                     if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
                     {
-                        udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
+                        udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
                         // Set Timer
                         startWatch = std::chrono::high_resolution_clock::now();
                         lastSentMessageID = udpMessageTransmitter.messageID;
@@ -171,7 +171,7 @@ public:
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > 250) 
                 {
-                    udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
+                    udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
                 }
             }
 
