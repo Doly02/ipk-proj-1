@@ -199,7 +199,7 @@ public:
                     {
                         if (!joinServerMsgSend)
                         {
-                            retVal = tcpMessage.checkJoinReply();
+                            retVal = tcpMessage.CheckJoinReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
                                 tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);

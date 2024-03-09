@@ -34,7 +34,7 @@ class TcpMessages : public BaseMessages
 {
 public:
     TcpMessages() : BaseMessages() {}
-    TcpMessages(MessageType_t type, const Message_t& content) : BaseMessages(type, content) {}
+    TcpMessages(const Message_t& content) : BaseMessages(content) {}
 
     /**
     * @brief Sends Authentication Message.
@@ -57,7 +57,7 @@ public:
      * 
      * @return Returns BaseMessages::SUCCESS If Everything Went Well Otherwise Returns BaseMessages::JOIN_FAILED
     */
-    int checkJoinReply() {
+    int CheckJoinReply() {
         const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
         const std::string prefix = "^MSG FROM Server IS ";
         const std::string prefixForLenght = "MSG FROM Server IS ";
@@ -158,7 +158,7 @@ public:
                 msg.content.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            msgType = ERROR;
+            msg.type = ERROR;
 
             /* PRINT ERROR MESSAGE */
             std::string sender(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
@@ -172,7 +172,7 @@ public:
         else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
         {
             printf("BYE");
-            msgType = COMMAND_BYE;
+            msg.type = COMMAND_BYE;
 
             return BaseMessages::SERVER_SAYS_BYE;
         }
