@@ -39,20 +39,18 @@ public:
     static constexpr int8_t CONFIRM_FAILED      = 0x55;
     static constexpr int    OUT_OF_TIMEOUT      = 0x77;
 
-    //MessageType_t type;           //!< Type of The Message
-    uint16_t messageID;     //!< ID of The Message
-    uint16_t refMessageID;  //!< ID of The Referenced Message
-    uint8_t result;     //!< Result of The Message
+    uint16_t messageID;         //!< ID of The Message
+    uint16_t refMessageID;      //!< ID of The Referenced Message
+    uint8_t  result;            //!< Result of The Message
     uint16_t internalMsgId;
-    //Message_t msgContent;      //!< Content of The Message
 
     UdpMessages() : BaseMessages() {}
 
     UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
     {
-        refMessageID = 0;
+        refMessageID = 1;
         result = 0;
-        messageID = 0;
+        messageID = 1;
     }
 
     void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
@@ -203,8 +201,8 @@ public:
                 exit(1);
             
         
-            msg.type = msgType;
         }
+        msg.type = msgType;
 
     }
 
@@ -252,13 +250,6 @@ public:
     {
         std::vector<uint8_t> serialized = serializeMessage();
     
-    
-        char *ip = inet_ntoa(server.sin_addr);
-        unsigned int port = ntohs(server.sin_port); // ntohs převede číslo portu z network byte order do host byte order
-
-        printf("Odesílání zprávy na IP: %s, Port: %u\n", ip, port);
-        
-    
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -273,17 +264,20 @@ public:
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
+            printf("recvUdpConfirm -> CONFIRM MESSAGE\n");
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
+                printf("recvUdpConfirm -> refMessageID == internalId\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
-                    messageID++;
+                    printf("recvUdpConfirm -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
             }
         }
+        printf("recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
 
@@ -312,6 +306,24 @@ public:
             perror("sendto failed");
         }
     }
+
+
+    int CheckTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
+    {
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        return duration.count();
+    }
+
+    void IncrementUdpMsgId()
+    {
+        messageID++;
+    }
+
+    void SetUdpMsgId()
+    {
+        messageID = 1;
+    }
+
 };
 
 
