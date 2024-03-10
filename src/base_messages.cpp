@@ -208,7 +208,7 @@ class BaseMessages
     {
         // Clear The Message Content
         msg.buffer.clear();
-        printf("READING BYTES\n");
+        printf("READING BYTES (%zuB)\n",bytesRx);
         for (size_t i = 0; i < bytesRx; i++)
         {
             

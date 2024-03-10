@@ -1,6 +1,6 @@
 # Program Name
-TARGET = client
-DEBUG_TARGET = client
+TARGET = ipk24chat-client
+DEBUG_TARGET = ipk24chat-client
 # Test Program Name
 TEST_TARGET = client_test
 # Compiler

@@ -103,6 +103,7 @@ public:
 
                     // Store The Input Into Internal Buffer
                     udpMessageTransmitter.ReadAndStoreContent(buf);
+                    printf("CONTENT STORED IN INTERNAL BUFF\n");
                     // Check The Message 
                     retVal = udpMessageTransmitter.CheckMessage();
                     if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
@@ -110,11 +111,16 @@ public:
                         udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
                         // Set Timer
                         startWatch = std::chrono::high_resolution_clock::now();
+                        printf("AUTH WAS SEND\n");
                         lastSentMessageID = udpMessageTransmitter.messageID;
                         sendAuth = true;
                         expectedReply = true;
                         checkReply = true;
                         currentRetries++;
+                    }
+                    else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_HELP)
+                    {
+                        udpMessageTransmitter.PrintHelp();
                     }
                 }   
             }
@@ -140,8 +146,10 @@ public:
                 
                     if (!receivedConfirm && retVal == UdpMessages::SUCCESS) 
                     {
+                        printf("GOT CONFIRM\n");
                         receivedConfirm = true;
                         expectedReply = false;
+                        currentRetries = 0;
                         
                     }
                     else if (checkReply && receivedConfirm) 
@@ -170,6 +178,7 @@ public:
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > 250) 
                 {
+                    printf("ANOTHER ATTEMPT\n");
                     udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
                 }
             }
@@ -184,6 +193,7 @@ public:
         
         if (currentRetries >= retryCount) {
             // Attempts Overrun
+
             return UdpMessages::AUTH_FAILED;
         }
         return UdpMessages::SUCCESS;
@@ -223,14 +233,15 @@ public:
         }
         printf("AUTHENTICATION DONE (runUdpClient)\n");
         printf("------------------------------------------------\n");
-
+        int len1 = strlen(buf);
+        printf("BUFFER: %d\n",len1);
         /* Main Loop */
         while (currentRetries < retryCount)
         {
             FD_ZERO(&readfds);
             FD_SET(STDIN_FILENO, &readfds);
             FD_SET(sock, &readfds);
-
+            printf("Main Loop\n");
             // Nastavení timeout pro select
             timeout.tv_sec = 0; // 0 sekund
             timeout.tv_usec = 250000; // 250 milisekund

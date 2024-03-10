@@ -127,6 +127,7 @@ public:
         /*  MESSAGE ID   */
         serialized.push_back(messageID & 0xFF);
         serialized.push_back((messageID >> 8) & 0xFF);
+        printf("Sends: MSG ID: %d\n",messageID);
 
         switch (msg.type)
         {
@@ -137,6 +138,7 @@ public:
                 /*  REF. MESSAGE ID */
                 serialized.push_back(refMessageID & 0xFF);
                 serialized.push_back((refMessageID >> 8) & 0xFF);
+                printf("Ref.Sends: MSG ID: %d\n",refMessageID);
                 /*  MESSAGE CONTENT */
                 AppendContent(serialized, msg.content);
                 break;
@@ -310,12 +312,15 @@ public:
 
         if (REPLY == msg.type)
         {
+            printf("recvUpdIncomingReply -> REPLY MESSAGE, refMessageID=%d,internalId=%d,result = %d\n",refMessageID,internalId,result);
             // Check With Internal Message ID
             if (refMessageID == internalId && result == SUCCESS)
             {
+                printf("recvUpdIncomingReply -> refMessageID == internalId && result == SUCCESS\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
+                    printf("recvUpdIncomingReply -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
             }
@@ -344,14 +349,30 @@ public:
 
         if (CONFIRM == msg.type)
         {
+            printf("recvUpdConfirm -> CONFIRM MESSAGE, refMessageID=%d,internalId=%d,result = %d\n",refMessageID,internalId,result);
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
+                printf("recvUdpConfirm -> refMessageID == internalId\n");
                 // Check With Global Message ID
                 if (refMessageID == messageID)
                 {
+                    printf("recvUdpConfirm -> refMessageID == messageID\n");
                     return SUCCESS;
                 }
+                printf("recvUdpConfirm -> CONFIRM_FAILED\n");
+            }
+        }
+        else if (ERROR == msg.type)
+        {
+            if (messageID == internalId) // TODO: Schvalne co to udela
+            {
+                //Print Error On STDOUT
+                std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
+                std::string errContext(msg.content.begin(),msg.content.end());
+
+                fprintf(stderr,"ERR FROM %s: %s\n",errDisplayName.c_str(),errContext.c_str());                
+                return FAIL; //TODO: 
             }
         }
         return CONFIRM_FAILED;

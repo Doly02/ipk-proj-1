@@ -190,7 +190,11 @@ public:
                     /* Check If Error Was Send */
                     retVal = tcpMessage.CheckIfErrorOrBye();
                     if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
+                    {
+                        // Send Server BYE Message
+                        tcpMessage.SentByeMessage(sock);
                         return retVal;
+                    }
 
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
