@@ -62,7 +62,7 @@ public:
         // Destructor From Base Class [Calls close(sock)]
     }
 
-    int processAuthetification() 
+    int ProcessAuthetification() 
     {
         /* Variable */
         bool checkReply = false; 
@@ -103,7 +103,6 @@ public:
 
                     // Store The Input Into Internal Buffer
                     udpMessageTransmitter.ReadAndStoreContent(buf);
-                    printf("RESEVED MESSAGE TO SEND\n");
                     // Check The Message 
                     retVal = udpMessageTransmitter.CheckMessage();
                     if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
@@ -190,7 +189,7 @@ public:
         return UdpMessages::SUCCESS;
     }
 
-    int runUdpClient()
+    int RunUdpClient()
     {
         int currentRetries = 0;
         int retVal = 0;
@@ -216,7 +215,7 @@ public:
         udpMessageTransmitter.SetUdpMsgId();
 
         /* Process Authentication */
-        retVal = processAuthetification();
+        retVal = ProcessAuthetification();
         if (BaseMessages::SUCCESS != retVal)
         {
             printf("AUTHENTICATION FAILED (return code: %d)\n",retVal);
@@ -287,7 +286,6 @@ public:
                         }
                         else if ((int)BaseMessages::MSG == udpMessageTransmitter.msg.type)
                         {
-                            printf("RECOGNISED MSG\n");
                             udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();

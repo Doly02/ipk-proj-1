@@ -46,13 +46,13 @@ int main(int argc, char *argv[])
         if ("tcp" == args.transferProtocol)
         {
             TcpClient client(args.ipAddress, args.port, Client::TCP);
-            retVal = client.runTcpClient();
+            retVal = client.RunTcpClient();
             return retVal;   
         }
         else if ("udp" == args.transferProtocol)
         {
             UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
-            retVal = client.runUdpClient();
+            retVal = client.RunUdpClient();
             return retVal;
         }
     }

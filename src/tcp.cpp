@@ -58,7 +58,7 @@ public:
         // Destructor
     }
 
-    void checkAuthentication() 
+    void CheckAuthentication() 
     {
         int retVal = 0;
         while (!authConfirmed) {
@@ -136,14 +136,12 @@ public:
     }
 
 
-    int runTcpClient()
+    int RunTcpClient()
     {
         /* Variables */
         int retVal = 0;
         bool joinSend = false;
         bool joinServerMsgSend = false;
-        int RetValue = 0;
-
         /* Code */
         if (!Client::isConnected())
         {
@@ -155,7 +153,7 @@ public:
         // Set Standard Input To Non-blocking Mode
         fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
         // First Handle Authentication
-        checkAuthentication();
+        CheckAuthentication();
 
 
         while (true) 
@@ -289,8 +287,8 @@ public:
 
                     tcpMessage.msg.type = TcpMessages::UNKNOWN_MSG_TYPE;
                     tcpMessage.ReadAndStoreContent(buf);    // Store Content To Vector                    
-                    RetValue = tcpMessage.CheckMessage();   // Check Message
-                    if (RetValue == 0) 
+                    retVal = tcpMessage.CheckMessage();   // Check Message
+                    if (0 == retVal) 
                     {
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
