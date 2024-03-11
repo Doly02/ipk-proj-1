@@ -43,6 +43,7 @@ class BaseMessages
         COMMAND_AUTH     = 0x02,     //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
         COMMAND_JOIN     = 0x03,     //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
         MSG              = 0x04,     //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
+        COMMAND_HELP     = 0x05,
         ERROR            = 0xFE,     //!< Error - Template: ERROR FROM {DisplayName} IS {MessageContent}\r\n
         COMMAND_BYE      = 0xFF,     //!< Disconnect - Template: BYE\r\n
         UNKNOWN_MSG_TYPE = 0x99,     //!< Unknown Message Type
@@ -303,8 +304,7 @@ class BaseMessages
 
         }
         else if (inputType == INPUT_HELP) {
-            //TODO: - Print Help Message
-            msg.type = COMMAND_BYE;
+            msg.type = COMMAND_HELP;
 
         }
         else if (inputType == INPUT_RENAME)
@@ -526,6 +526,14 @@ class BaseMessages
             }
         }
     }
+
+    void printError()
+    {
+        std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
+        std::string errContent(msg.content.begin(),msg.content.end());
+        fprintf(stderr,"ERR FROM: %s: %s\n",errDisplayName.c_str(),errContent.c_str());
+    }
+
 
     void printHelp()
     {

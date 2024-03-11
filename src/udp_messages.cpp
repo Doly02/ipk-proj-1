@@ -139,6 +139,7 @@ public:
                 break;
             case CONFIRM:
                 break;
+            case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:
                 exit(1);
         }
@@ -218,6 +219,7 @@ public:
                 break;
             case COMMAND_BYE:
                 break;
+            case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:  /* Unused */
             default:
                 exit(1);
@@ -266,6 +268,11 @@ public:
                 }
             }
         }
+        else if (ERROR == msg.type)
+        {
+            printError();
+            return EXTERNAL_ERROR;
+        }
         return AUTH_FAILED;
 
     }
@@ -302,6 +309,11 @@ public:
                     return SUCCESS;
                 }
             }
+        }
+        else if (ERROR == msg.type)
+        {
+            printError();
+            return EXTERNAL_ERROR;
         }
         printf("recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;

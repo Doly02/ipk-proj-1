@@ -127,10 +127,9 @@ public:
                         {
                             return SUCCESS;;
                         }
-                        else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH)
+                        else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_HELP)
                         {
                             udpMessageReceiver.printHelp();
-                            return SUCCESS;; 
                         }
                         
                     }   
@@ -171,6 +170,10 @@ public:
                                 break;
 
                             }
+                            if (EXTERNAL_ERROR == retVal)
+                            {
+                                exit(EXTERNAL_ERROR);
+                            }
                             else 
                             {
                                 // Reply Failed -> Exit
@@ -186,7 +189,7 @@ public:
             {
                 stopWatch = std::chrono::high_resolution_clock::now();
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
-                if (elapsedTime > 250) 
+                if (elapsedTime > confirmationTimeout) 
                 {
                     udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
                     currentRetries++;
@@ -324,6 +327,10 @@ public:
                             // Confirm Is Expected
                             expectedConfirm = true;
                         }
+                        else if ((int)BaseMessages::COMMAND_HELP == udpMessageTransmitter.msg.type)
+                        {
+                            udpMessageTransmitter.printHelp();
+                        }
                     }                                                
                 }
             }              
@@ -356,6 +363,10 @@ public:
                             if (lastMessage)
                                 return SUCCESS;
                             currentRetries = 0;
+                        }
+                        else if (EXTERNAL_ERROR == retVal)
+                        {
+                            exit(EXTERNAL_ERROR);
                         }
                         else 
                         {
@@ -390,9 +401,8 @@ public:
                             else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
                             {
                                 // Print The Error
-                                std::string errMessage(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());
-                                printf("Error: %s\n", errMessage.c_str());
-                                exit(EXIT_FAILURE);
+                                udpMessageReceiver.printError();
+                                exit(EXTERNAL_ERROR);
                             }
                             else if (expectedConfirm && lastMessage)
                             {
@@ -400,7 +410,7 @@ public:
                             }
                             else
                             {
-                                // Unknown Message Type
+                                //TODO: Unknown Message Type
                                 exit(EXIT_FAILURE);
                             }
                             // Store Message ID of Message That Has To Be Confirmed
@@ -419,7 +429,7 @@ public:
             {
                 stopWatch = std::chrono::high_resolution_clock::now();
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
-                if (elapsedTime > 250) 
+                if (elapsedTime > confirmationTimeout) 
                 {   
                     printf("OUT OF TIMEOUT!\n");
                     udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
