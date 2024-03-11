@@ -46,10 +46,10 @@ class Client
 {
 private:
 
-    std::string serverAddress;  //!< IP Address of The Server
-    int port;                   //!< Port Number on Which The Server Is Listening
-    struct sockaddr_in server;  //!< Structure Containing Server's Address Information
-    uint protocol;
+    std::string _serverAddress;  //!< IP Address of The Server
+    int _port;                   //!< Port Number on Which The Server Is Listening
+    struct sockaddr_in _server;  //!< Structure Containing Server's Address Information
+    uint _protocol;
 
 public:
     int sock;                 //!<  File Descriptor of The Socket Used For Communication
@@ -66,14 +66,14 @@ public:
      * Default State of Socket Is Set To NOT_CONNECTED.
 \     */
     Client(const std::string& addr, int port, uint prot) 
-        : serverAddress(addr), port(port), protocol(prot), sock(NOT_CONNECTED)
+        : _serverAddress(addr), _port(port), _protocol(prot), sock(NOT_CONNECTED)
     {
 
-        if (TCP == protocol)
+        if (TCP == _protocol)
         {
             sock = socket(AF_INET, SOCK_STREAM, 0);
         }
-        else if (UDP == protocol)
+        else if (UDP == _protocol)
         {
             sock = socket(AF_INET, SOCK_DGRAM, 0);
         }
@@ -84,18 +84,18 @@ public:
         }
 
         // Set Server's Address Information
-        memset(&server, 0, sizeof(server));
-        server.sin_family = AF_INET;
-        server.sin_port = htons(this->port);
+        memset(&_server, 0, sizeof(_server));
+        _server.sin_family = AF_INET;
+        _server.sin_port = htons(this->_port);
 
-        if (inet_pton(AF_INET, serverAddress.c_str(), &server.sin_addr) <= 0)
+        if (inet_pton(AF_INET, _serverAddress.c_str(), &_server.sin_addr) <= 0)
         {
             throw std::runtime_error("Invalid address/ Address not supported");
         }
 
-        if (TCP == protocol)
+        if (TCP == _protocol)
         {
-            if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
+            if (connect(sock, (struct sockaddr *)&_server, sizeof(_server)) < 0)
             {
                 throw std::runtime_error("Socket creation failed");
             }            
@@ -119,7 +119,7 @@ public:
 
     void updateServerAddress(const std::string& newAddress) 
     {
-        serverAddress = newAddress;
+        _serverAddress = newAddress;
     }
     /**
      * @brief Determine If The Client Is Connected To The Server
@@ -130,9 +130,9 @@ public:
     }
 
     // Return server's struct 
-    const struct sockaddr_in& GetServerAddr() const 
+    const struct sockaddr_in& getServerAddr() const 
     {
-        return server;
+        return _server;
     }
     /**
      * @brief Connects The Client To The Server

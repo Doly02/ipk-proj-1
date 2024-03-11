@@ -77,7 +77,7 @@ public:
                         if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
                         {
                             // Sent To Server Authentication Message
-                            tcpMessage.SendAuthMessage(sock);
+                            tcpMessage.sendAuthMessage(sock);
                             sendAuth = true;
                             checkReply = true;
                         }
@@ -107,7 +107,7 @@ public:
                     tcpMessage.readAndStoreContent(buf);
 
                     /* Check If Error Was Send */
-                    retVal = tcpMessage.CheckIfErrorOrBye();
+                    retVal = tcpMessage.checkIfErrorOrBye();
                     if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
                         exit(retVal);
                     else if (BaseMessages::SERVER_SAYS_BYE == retVal)
@@ -190,7 +190,7 @@ public:
                     tcpMessage.readAndStoreContent(buf);  
                     
                     /* Check If Error Was Send */
-                    retVal = tcpMessage.CheckIfErrorOrBye();
+                    retVal = tcpMessage.checkIfErrorOrBye();
                     if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
                         return retVal;
 
@@ -202,7 +202,7 @@ public:
                             retVal = tcpMessage.checkJoinReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
-                                tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);
+                                tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
                             }
                         }
@@ -213,7 +213,7 @@ public:
                             retVal = tcpMessage.handleReply();
                             if (BaseMessages::SUCCESS != retVal)
                             {
-                                tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);
+                                tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return BaseMessages::JOIN_FAILED;
                             }
                             checkReply = false;
@@ -234,7 +234,7 @@ public:
                         }
                         else
                         {
-                            tcpMessage.SendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
+                            tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
                             std::cerr << "Error: " << strerror(errno) << std::endl;
                             return -1;
                         }
@@ -245,7 +245,7 @@ public:
                         // Print The Content Of The Buffer
                         retVal = tcpMessage.parseMessage();
                         if (BaseMessages::SUCCESS == retVal)
-                            tcpMessage.PrintMessage();
+                            tcpMessage.printMessage();
                     }
                     
                     // Clear The Buffer After All
@@ -295,7 +295,7 @@ public:
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
                             // Sent To Server Join Message
-                            tcpMessage.SendJoinMessage(sock);
+                            tcpMessage.sendJoinMessage(sock);
                             joinSend = true;
                             joinServerMsgSend = false;
                             checkReply = true;
@@ -303,14 +303,14 @@ public:
                         if ((int)TcpMessages::COMMAND_BYE == tcpMessage.msg.type )
                         {
                             // Sent To Server Bye Message
-                            tcpMessage.SentByeMessage(sock);
+                            tcpMessage.sentByeMessage(sock);
                             exit(EXIT_SUCCESS);
                         }
                         // TODO: Missing Some Message Types
                         if ((int)TcpMessages::MSG == tcpMessage.msg.type)
                         {
                             // Sent User's Message To Server
-                            tcpMessage.SentUsersMessage(sock); 
+                            tcpMessage.sentUsersMessage(sock); 
                             memset(buf, 0, sizeof(buf));
                         }
                         /// TODO: Missing ERRORMSG

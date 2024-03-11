@@ -13,7 +13,9 @@
 # Precompiled Headers
 *.gch
 *.pch
-
+.vscode
+client
+microsoft.gpg
 # Compiled Dynamic libraries
 *.so
 *.dylib

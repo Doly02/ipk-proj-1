@@ -41,7 +41,7 @@ public:
     * @param client_socket Client Socket
     * @return None
     */
-    void SendAuthMessage(int client_socket)
+    void sendAuthMessage(int client_socket)
     {
         std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end()) + "\r\n";
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -79,7 +79,7 @@ public:
      * Sends 'Join' Message
      * @return None
     */
-    void SendJoinMessage(int client_socket)
+    void sendJoinMessage(int client_socket)
     {
         std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
         printf("JOIN MSG: %s",msgToSend.c_str());
@@ -98,7 +98,7 @@ public:
      * Sends 'Bye' Message
      * @return None
     */
-    void SentByeMessage(int clientSocket)
+    void sentByeMessage(int clientSocket)
     {
         std::string msgToSend = std::string(msg.content.begin(), msg.content.end()) + "\r\n"; //TODO:  "\r\n" WARNING!
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -113,7 +113,7 @@ public:
      * Sends User's Message To Server
      * @return None
     */
-    void SentUsersMessage(int clientSocket)
+    void sentUsersMessage(int clientSocket)
     {
         std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end()) + "\r\n";
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -121,7 +121,7 @@ public:
             perror("ERROR in sendto");
     }
 
-    int CheckIfErrorOrBye()
+    int checkIfErrorOrBye()
     {
         size_t idx = 0;
     
@@ -180,7 +180,7 @@ public:
     }
 
 
-    void SendErrorMessage(int clientSocket, MessageType_t type)
+    void sendErrorMessage(int clientSocket, MessageType_t type)
     {
         /* Variables */
         std::string errContent;

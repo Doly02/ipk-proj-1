@@ -517,7 +517,7 @@ class BaseMessages
     }
 
 
-    void PrintMessage()
+    void printMessage()
     {
         std::string content(msg.content.begin(), msg.content.end());
         std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
@@ -538,7 +538,7 @@ class BaseMessages
         }
     }
 
-    void PrintHelp()
+    void printHelp()
     {
         printf("Commands:\n");
         printf("----------------------------------------------\n");

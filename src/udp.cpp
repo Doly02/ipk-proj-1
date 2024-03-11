@@ -69,7 +69,7 @@ public:
         int retVal = 0;
         bool expectedReply = false;
         int currentRetries = 0;
-        const struct sockaddr_in& serverAddr = GetServerAddr();
+        const struct sockaddr_in& serverAddr = getServerAddr();
         /* Timers */
         TimePoint startWatch;
         TimePoint stopWatch;
@@ -130,7 +130,7 @@ public:
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH)
                         {
-                            udpMessageReceiver.PrintHelp();
+                            udpMessageReceiver.printHelp();
                             return BaseMessages::SUCCESS;; 
                         }
                         
@@ -199,8 +199,8 @@ public:
             FD_SET(sock, &readfds);
         }
 
-        udpMessageReceiver.IncrementUdpMsgId();
-        udpMessageTransmitter.IncrementUdpMsgId();
+        udpMessageReceiver.incrementUdpMsgId();
+        udpMessageTransmitter.incrementUdpMsgId();
         
         if (currentRetries >= retryCount) {
             // Attempts Overrun
@@ -225,15 +225,15 @@ public:
         timeout.tv_sec = 0; 
         timeout.tv_usec = 250000;   // 250ms 
 
-        const struct sockaddr_in& serverAddr = GetServerAddr();
+        const struct sockaddr_in& serverAddr = getServerAddr();
 
         if (!Client::isConnected())
         {
             return NOT_CONNECTED;
         }
 
-        udpMessageReceiver.SetUdpMsgId();
-        udpMessageTransmitter.SetUdpMsgId();
+        udpMessageReceiver.setUdpMsgId();
+        udpMessageTransmitter.setUdpMsgId();
 
         /* Process Authentication */
         retVal = processAuthetification();
@@ -287,7 +287,7 @@ public:
                         if ((int)BaseMessages::COMMAND_JOIN == udpMessageTransmitter.msg.type)
                         {
                             // Send Join Message
-                            udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();                        
                             // Increment Retries
@@ -300,7 +300,7 @@ public:
                         else if ((int)BaseMessages::COMMAND_BYE == udpMessageTransmitter.msg.type)
                         {
                             printf("COMMAND BYE\n");
-                            udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -315,7 +315,7 @@ public:
                         else if ((int)BaseMessages::MSG == udpMessageTransmitter.msg.type)
                         {
                             printf("RECOGNISED MSG\n");
-                            udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -352,8 +352,8 @@ public:
                         {
                             printf("RECEIVED CONFIRM\n");
                             expectedConfirm = false; // Do not Expect Confirm Anymore
-                            udpMessageReceiver.IncrementUdpMsgId();
-                            udpMessageTransmitter.IncrementUdpMsgId();
+                            udpMessageReceiver.incrementUdpMsgId();
+                            udpMessageTransmitter.incrementUdpMsgId();
                             if (lastMessage)
                                 return BaseMessages::SUCCESS;
                             currentRetries = 0;
@@ -366,7 +366,7 @@ public:
                     else
                     {
                         // Message With Data Was Send
-                        retVal = udpMessageReceiver.RecvUdpMessage(lastSentMessageID);
+                        retVal = udpMessageReceiver.recvUdpMessage(lastSentMessageID);
                         if (BaseMessages::SUCCESS == retVal)
                         {
                             // Set Retries To Zero
@@ -407,7 +407,7 @@ public:
                             // Store Message ID of Message That Has To Be Confirmed
                             lastReceivedMessageID = udpMessageReceiver.messageID;
                             // Send Confirmation
-                            udpMessageReceiver.SendUdpConfirm(sock,serverAddr,lastReceivedMessageID);
+                            udpMessageReceiver.sendUdpConfirm(sock,serverAddr,lastReceivedMessageID);
                             // Message Is Processed -> Clear The Buffer
                             memset(buf, 0, BUFSIZE);
 
@@ -423,7 +423,7 @@ public:
                 if (elapsedTime > 250) 
                 {   
                     printf("OUT OF TIMEOUT!\n");
-                    udpMessageTransmitter.SendUdpMessage(sock,serverAddr);
+                    udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
                     currentRetries++;
                 }
                 elapsedTime = 0;

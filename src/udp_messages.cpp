@@ -64,6 +64,23 @@ public:
         serialized.push_back(NULL_BYTE);
     }
 
+
+    int checkTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
+    {
+        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
+        return duration.count();
+    }
+
+    void incrementUdpMsgId()
+    {
+        messageID++;
+    }
+
+    void setUdpMsgId()
+    {
+        messageID = 1;
+    }
+
     /**
      * @brief Serialize The Message To Byte Array
      * @param message Message To Serialize
@@ -213,7 +230,7 @@ public:
 
     }
 
-    int RecvUdpMessage(int internalId)
+    int recvUdpMessage(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -292,18 +309,9 @@ public:
         return CONFIRM_FAILED;
     }
 
-    void SendUdpMessage(int sock,const struct sockaddr_in& server)
+    void sendUdpMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-        std::cout << "Serialized data in hex: [";
-        for(size_t i = 0; i < serialized.size(); ++i) {
-            // Nastaví std::hex pro výpis v hexadecimálním formátu
-            // Nastaví std::setw(2) a std::setfill('0') pro zajištění dvouciferného výstupu s předchozím nulovým vyplněním
-            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(serialized[i]);
-            if (i < serialized.size() - 1) std::cout << ", ";
-        }
-        std::cout << "]" << std::endl;
-
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -311,7 +319,7 @@ public:
         }
     }
 
-    void SendUdpConfirm(int sock,   const struct sockaddr_in& server, int internalId)
+    void sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId)
     {
         std::vector<uint8_t> serialized;
 
@@ -325,23 +333,6 @@ public:
         {
             perror("sendto failed");
         }
-    }
-
-
-    int CheckTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
-    {
-        auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
-        return duration.count();
-    }
-
-    void IncrementUdpMsgId()
-    {
-        messageID++;
-    }
-
-    void SetUdpMsgId()
-    {
-        messageID = 1;
     }
 
 };
