@@ -28,6 +28,7 @@
 #include "base_messages.cpp"
 #include <netinet/in.h>         // For sockaddr_in, AF_INET, SOCK_DGRAM
 #include <arpa/inet.h>          // For Debug
+#include <iomanip> 
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -38,7 +39,8 @@ private:
 public:
     static constexpr int8_t CONFIRM_FAILED      = 0x55;
     static constexpr int    OUT_OF_TIMEOUT      = 0x77;
-
+    int debugCouter = 0;
+    int debugCouterMax = 15;
     uint16_t messageID;         //!< ID of The Message
     uint16_t refMessageID;      //!< ID of The Referenced Message
     uint8_t  result;            //!< Result of The Message
@@ -73,10 +75,11 @@ public:
         std::vector<uint8_t> serialized;
 
         /*  MESSAGE TYPE */
-        serialized.push_back(msg.type);
+        serialized.push_back((uint8_t)msg.type);
         /*  MESSAGE ID   */
         serialized.push_back(messageID & 0xFF);
         serialized.push_back((messageID >> 8) & 0xFF);
+        printf("SERIALIZED: type = %d, messageID = %d\n",msg.type,messageID);
 
         switch (msg.type)
         {
@@ -127,7 +130,10 @@ public:
         std::string login(msg.login.begin(),msg.login.end());
         std::string display(msg.displayName.begin(),msg.displayName.end());
         std::string secret(msg.secret.begin(),msg.secret.end());
-        printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s\n",messageID,login.c_str(),display.c_str(),secret.c_str());
+        printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s,TYPE: %d\n",messageID,login.c_str(),display.c_str(),secret.c_str(),msg.type);
+        if (debugCouter >= debugCouterMax)
+            exit(FAIL);
+        debugCouter++;
         return serialized;
     }
 
@@ -253,12 +259,13 @@ public:
     void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-    
+        printf("SENDING AUTH MESSAGE TO SERVER\n");
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
             perror("sendto failed");
         }
+        printf("SEND AUTH MESSAGE TO SERVER\n");
     }
 
     int recvUpdConfirm(int internalId)
@@ -288,6 +295,15 @@ public:
     void SendUdpMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
+        std::cout << "Serialized data in hex: [";
+        for(size_t i = 0; i < serialized.size(); ++i) {
+            // Nastaví std::hex pro výpis v hexadecimálním formátu
+            // Nastaví std::setw(2) a std::setfill('0') pro zajištění dvouciferného výstupu s předchozím nulovým vyplněním
+            std::cout << std::hex << std::setw(2) << std::setfill('0') << static_cast<int>(serialized[i]);
+            if (i < serialized.size() - 1) std::cout << ", ";
+        }
+        std::cout << "]" << std::endl;
+
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {

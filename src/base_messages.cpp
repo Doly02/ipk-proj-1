@@ -538,6 +538,18 @@ class BaseMessages
         }
     }
 
+    void PrintHelp()
+    {
+        printf("Commands:\n");
+        printf("----------------------------------------------\n");
+        printf("AUTHENTICATION CMD:  /auth [username] [password] [displayname]\n");
+        printf("JOIN CMD:            /join [channel]\n");
+        printf("RENAME CMD:          /rename [displayname]\n");
+        printf("HELP CMD:            /help\n");
+        printf("To Exit The Program Correctly, Type 'BYE' And Press ENTER\n");
+    }
+
+
 };
 
 
