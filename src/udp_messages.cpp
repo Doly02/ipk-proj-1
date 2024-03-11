@@ -37,8 +37,6 @@ private:
     static constexpr int8_t NULL_BYTE           = 0x00;
 
 public:
-    static constexpr int8_t CONFIRM_FAILED      = 0x55;
-    static constexpr int    OUT_OF_TIMEOUT      = 0x77;
     int debugCouter = 0;
     int debugCouterMax = 15;
     uint16_t messageID;         //!< ID of The Message

@@ -64,11 +64,11 @@ public:
         if (std::regex_search(joinServerMsg, std::regex(prefix))) {
             if (msg.buffer.size() >= prefixForLenght.length()) {
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixForLenght.length());
-                return BaseMessages::SUCCESS;
+                return SUCCESS;
             }
         }
         //TODO: Return Issue
-        return BaseMessages::JOIN_FAILED;
+        return JOIN_FAILED;
     }
 
 
@@ -148,7 +148,7 @@ public:
             }  
 
             if (!std::regex_search(bufferStr, std::regex("^IS ")))
-                return BaseMessages::MSG_PARSE_FAILED;
+                return MSG_PARSE_FAILED;
 
             /* PARSE MESSAGE CONTENT */
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 3);
@@ -166,7 +166,7 @@ public:
 
             printf("%s: %s\n",sender.c_str(),msgContent.c_str());
 
-            return BaseMessages::EXTERNAL_ERROR;            
+            return EXTERNAL_ERROR;            
 
         }
         else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
@@ -174,9 +174,9 @@ public:
             printf("BYE");
             msgType = COMMAND_BYE;
 
-            return BaseMessages::SERVER_SAYS_BYE;
+            return SERVER_SAYS_BYE;
         }
-        return BaseMessages::SUCCESS;
+        return SUCCESS;
     }
 
 

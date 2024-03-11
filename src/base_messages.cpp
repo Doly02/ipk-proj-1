@@ -28,24 +28,13 @@
 #include <iostream>
 #include <regex>
 #include <sys/socket.h>
+#include "../include/macros.hpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
 class BaseMessages 
 {
     public:
-    static constexpr int SERVER_SAYS_BYE        = 1;
-    static constexpr int SUCCESS                = 0;
-    static constexpr int AUTH_FAILED            = -1;
-    static constexpr int JOIN_FAILED            = -2;
-    static constexpr int MSG_FAILED             = -3;
-    static constexpr int MSG_PARSE_FAILED       = -4;
-    static constexpr int FAIL                   = -5;
-    static constexpr int EXTERNAL_ERROR         = -6;
-    static constexpr int LENGHT_ID              = 20;
-    static constexpr int LENGHT_SECRET          = 128;
-    static constexpr int LENGHT_CONTENT         = 1400;
-    static constexpr int LENGHT_DISPLAY_NAME    = 128;
     /* MESSAGE TYPES */
     enum MessageType_t
     {

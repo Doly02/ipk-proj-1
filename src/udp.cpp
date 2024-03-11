@@ -32,6 +32,7 @@
 class UdpClient : public Client {
 
 private: 
+    static constexpr int AUTHENTICATION_BYE        = 74;
     fd_set readfds;
     const int BUFSIZE = 1536;
     char buf[1536];
@@ -124,14 +125,12 @@ public:
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_BYE)
                         {
-                            printf("BYE BRANCH!\n");
-                            // Send Bye
-                            return BaseMessages::SUCCESS;;
+                            return SUCCESS;;
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH)
                         {
                             udpMessageReceiver.printHelp();
-                            return BaseMessages::SUCCESS;; 
+                            return SUCCESS;; 
                         }
                         
                     }   
@@ -156,7 +155,7 @@ public:
                         udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
                     
-                        if (!receivedConfirm && retVal == UdpMessages::SUCCESS) 
+                        if (!receivedConfirm && retVal == SUCCESS) 
                         {
                             receivedConfirm = true;
                             expectedReply = false;
@@ -165,7 +164,7 @@ public:
                         else if (checkReply && receivedConfirm) 
                         {
                             retVal = udpMessageReceiver.recvUpdIncomingReply(lastSentMessageID);
-                            if (UdpMessages::SUCCESS == retVal)
+                            if (SUCCESS == retVal)
                             {
                                 receivedConfirm = true;
                                 checkReply = false;
@@ -175,7 +174,7 @@ public:
                             else 
                             {
                                 // Reply Failed -> Exit
-                                exit(UdpMessages::AUTH_FAILED);
+                                exit(AUTH_FAILED);
                             }
                         }
                     } 
@@ -204,29 +203,29 @@ public:
         
         if (currentRetries >= retryCount) {
             // Attempts Overrun
-            return UdpMessages::AUTH_FAILED;
+            return AUTH_FAILED;
         }
-        return UdpMessages::SUCCESS;
+        return SUCCESS;
     }
 
     int runUdpClient()
     {
-        int currentRetries = 0;
-        int retVal = 0;
-        bool expectedConfirm = false;
-        bool lastMessage = false;
+        /*** Variables ***/
+        int currentRetries      = 0;
+        int retVal              = 0;
+        bool expectedConfirm    = false;
+        bool lastMessage        = false;
 
         /* Timers */
         TimePoint startWatch;
         TimePoint stopWatch;
-
         struct timeval timeout;
-
-        timeout.tv_sec = 0; 
-        timeout.tv_usec = 250000;   // 250ms 
+        timeout.tv_sec          = 0; 
+        timeout.tv_usec         = 250000;   // 250ms
 
         const struct sockaddr_in& serverAddr = getServerAddr();
 
+        /*** Code ***/
         if (!Client::isConnected())
         {
             return NOT_CONNECTED;
@@ -237,15 +236,15 @@ public:
 
         /* Process Authentication */
         retVal = processAuthetification();
-        if (BaseMessages::SUCCESS != retVal)
+        if (SUCCESS != retVal)
         {
             printf("AUTHENTICATION FAILED (return code: %d)\n",retVal);
             return retVal;
         }
-        else if (BaseMessages::SUCCESS && BaseMessages::COMMAND_AUTH == udpMessageTransmitter.msg.type)
+        else if (SUCCESS && BaseMessages::COMMAND_AUTH == udpMessageTransmitter.msg.type)
         {
             // Propagate 
-            return BaseMessages::SUCCESS;;
+            return SUCCESS;;
         }
         printf("AUTHENTICATION DONE (runUdpClient)\n");
         printf("------------------------------------------------\n");
@@ -282,7 +281,7 @@ public:
                     }
 
                     retVal = udpMessageTransmitter.checkMessage();
-                    if(BaseMessages::SUCCESS == retVal)
+                    if(SUCCESS == retVal)
                     {
                         if ((int)BaseMessages::COMMAND_JOIN == udpMessageTransmitter.msg.type)
                         {
@@ -348,14 +347,14 @@ public:
                     if (true == expectedConfirm)
                     {
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
-                        if (BaseMessages::SUCCESS == retVal)
+                        if (SUCCESS == retVal)
                         {
                             printf("RECEIVED CONFIRM\n");
                             expectedConfirm = false; // Do not Expect Confirm Anymore
                             udpMessageReceiver.incrementUdpMsgId();
                             udpMessageTransmitter.incrementUdpMsgId();
                             if (lastMessage)
-                                return BaseMessages::SUCCESS;
+                                return SUCCESS;
                             currentRetries = 0;
                         }
                         else 
@@ -367,7 +366,7 @@ public:
                     {
                         // Message With Data Was Send
                         retVal = udpMessageReceiver.recvUdpMessage(lastSentMessageID);
-                        if (BaseMessages::SUCCESS == retVal)
+                        if (SUCCESS == retVal)
                         {
                             // Set Retries To Zero
                             currentRetries = 0;
@@ -397,7 +396,7 @@ public:
                             }
                             else if (expectedConfirm && lastMessage)
                             {
-                                return BaseMessages::SUCCESS;
+                                return SUCCESS;
                             }
                             else
                             {
@@ -433,10 +432,10 @@ public:
         }
         if (currentRetries >= retryCount) {
             // Attempts Overrun
-            return UdpMessages::AUTH_FAILED;
+            return FAIL;
         }
 
-        return BaseMessages::SUCCESS;
+        return SUCCESS;
     }
     
 };

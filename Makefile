@@ -6,8 +6,10 @@ TEST_TARGET = client_test
 # Compiler
 CC = clang++
 # Compiler Flags
-CFLAGS = -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
+CFLAGS = -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic -Iinclude
 DEBUG_CFLAGS = -fsanitize=address -g -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
+# Header Files
+HEADERS = macros.hpp
 # Source Files
 SOURCES = src/client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp.cpp src/udp.cpp src/main.cpp
 # Test Source Files
@@ -35,6 +37,9 @@ $(TARGET): $(OBJECTS)
 # Rule For Assemble Object Files
 %.o: %.cpp
 	$(CC) $(CFLAGS) -c $< -o $@
+%.o: %.cpp $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
 
 # Rule For Cleaning Executable And Object Files
 clean:

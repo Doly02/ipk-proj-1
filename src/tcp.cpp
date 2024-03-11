@@ -108,14 +108,14 @@ public:
 
                     /* Check If Error Was Send */
                     retVal = tcpMessage.checkIfErrorOrBye();
-                    if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
+                    if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
                         exit(retVal);
-                    else if (BaseMessages::SERVER_SAYS_BYE == retVal)
+                    else if (SERVER_SAYS_BYE == retVal)
                         exit(0);
 
                     if (checkReply) {
                         retVal = tcpMessage.handleReply();
-                        if (BaseMessages::SUCCESS == retVal) 
+                        if (SUCCESS == retVal) 
                         {
                             authConfirmed = true;
                             checkReply = false;
@@ -123,7 +123,7 @@ public:
                         } 
                         else {
                             // Reply Failed -> Exit
-                            exit(TcpMessages::AUTH_FAILED); 
+                            exit(AUTH_FAILED); 
                         }
                     }
                 } else if (bytesRx == 0) {
@@ -191,7 +191,7 @@ public:
                     
                     /* Check If Error Was Send */
                     retVal = tcpMessage.checkIfErrorOrBye();
-                    if (BaseMessages::MSG_PARSE_FAILED == retVal || BaseMessages::EXTERNAL_ERROR == retVal)
+                    if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
                         return retVal;
 
                     // Check If Is Alles Gute
@@ -200,7 +200,7 @@ public:
                         if (!joinServerMsgSend)
                         {
                             retVal = tcpMessage.checkJoinReply();
-                            if (BaseMessages::SUCCESS != retVal)
+                            if (SUCCESS != retVal)
                             {
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
@@ -211,10 +211,10 @@ public:
                         {
 
                             retVal = tcpMessage.handleReply();
-                            if (BaseMessages::SUCCESS != retVal)
+                            if (SUCCESS != retVal)
                             {
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
-                                return BaseMessages::JOIN_FAILED;
+                                return JOIN_FAILED;
                             }
                             checkReply = false;
                             joinSend = false;
@@ -244,7 +244,7 @@ public:
 
                         // Print The Content Of The Buffer
                         retVal = tcpMessage.parseMessage();
-                        if (BaseMessages::SUCCESS == retVal)
+                        if (SUCCESS == retVal)
                             tcpMessage.printMessage();
                     }
                     
