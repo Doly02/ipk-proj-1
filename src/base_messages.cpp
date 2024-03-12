@@ -220,6 +220,7 @@ class BaseMessages
             msg.buffer.push_back(buffer[i]);
 
         }
+        printf("BYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
     }
 
     /**

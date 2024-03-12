@@ -163,7 +163,6 @@ public:
     */
     void deserializeMessage(const std::vector<char>& serializedMsg)
     {
-        printf("RECEIVED MESSAGE SIZE: %zu\n",serializedMsg.size());
         if (serializedMsg.size() < 3)
         {
             throw std::runtime_error("Invalid Message Length");
@@ -252,20 +251,21 @@ public:
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
+        
+        std::string contentReply(msg.content.begin(),msg.content.end());
+        printf("recvUpdIncomingReply -> contentReply: %s\n",contentReply.c_str());
+
         if (REPLY == msg.type)
         {
             printf("recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
             printf("recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
-            if (refMessageID == internalId && result == SUCCESS)
+            if (refMessageID == internalId && result == 1)
             {
-                printf("recvUpdIncomingReply -> refMessageID == internalId\n");
+                printf("recvUpdIncomingReply -> MessageID = %d\n",messageID);
                 // Check With Global Message ID
-                if (refMessageID == messageID)
-                {
-                    printf("recvUpdIncomingReply -> refMessageID == messageID\n");
-                    return SUCCESS;
-                }
+                return SUCCESS;
+                
             }
         }
         else if (ERROR == msg.type)
@@ -281,13 +281,11 @@ public:
     void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-        printf("SENDING AUTH MESSAGE TO SERVER\n");
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
             perror("sendto failed");
         }
-        printf("SEND AUTH MESSAGE TO SERVER\n");
     }
 
     int recvUpdConfirm(int internalId)
@@ -302,13 +300,9 @@ public:
             if (refMessageID == internalId)
             {
                 printf("recvUdpConfirm -> refMessageID == internalId\n");
-                // Check With Global Message ID
-                if (refMessageID == messageID)
-                {
-                    printf("recvUdpConfirm -> refMessageID == messageID\n");
-                    return SUCCESS;
-                }
+                return SUCCESS;
             }
+
         }
         else if (ERROR == msg.type)
         {

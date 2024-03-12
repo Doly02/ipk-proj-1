@@ -110,10 +110,9 @@ public:
 
                         // Store The Input Into Internal Buffer
                         udpMessageTransmitter.readAndStoreContent(buf);
-                        printf("RESEVED MESSAGE TO SEND\n");
                         // Check The Message 
                         retVal = udpMessageTransmitter.checkMessage();
-                        printf("MSG TYPE: %d",udpMessageTransmitter.msg.type);
+                        printf("MSG TYPE: %d\n",udpMessageTransmitter.msg.type);
                         if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
                         {
                             udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
@@ -123,7 +122,6 @@ public:
                             sendAuth = true;
                             expectedReply = true;
                             checkReply = true;
-                            printf("INCREMENT currentRetries\n");
                             currentRetries++;
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_BYE)
@@ -158,7 +156,7 @@ public:
                     else 
                     {   
                         newServerAddr = si_other;  
-                        printf("RECEIVED BYTES: %zu\n",bytesRx);
+                        printf("RECEIVED: %s\n",buf);
                         buf[BUFSIZE - 1] = '\0'; 
                         udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
@@ -171,6 +169,7 @@ public:
                         }
                         else if (checkReply && receivedConfirm) 
                         {
+
                             retVal = udpMessageReceiver.recvUpdIncomingReply(lastSentMessageID);
                             if (SUCCESS == retVal)
                             {
@@ -360,10 +359,8 @@ public:
                 }
                 else
                 {
-                    int bufferLen = bytesRx;
                     buf[bytesRx-1] = '\0';
                     udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
-                    printf("RECEIVED BYTES: %zu but BUFFER IS: %d\n",udpMessageReceiver.msg.buffer.size(),bufferLen);
                     if (true == expectedConfirm)
                     {
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
@@ -402,6 +399,7 @@ public:
                             else if (UdpMessages::COMMAND_BYE == udpMessageReceiver.msg.type)
                             {
                                 // Stop The Loop
+                                printf("SERVER CLOSED THE CONNECTION\n");
                                 break;
                             }
                             else if (UdpMessages::MSG == udpMessageReceiver.msg.type)
