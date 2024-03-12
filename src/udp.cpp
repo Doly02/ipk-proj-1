@@ -43,6 +43,7 @@ private:
     UdpMessages udpMessageTransmitter;
     UdpMessages udpMessageReceiver;
     struct sockaddr_in si_other;    // Struct For Storing Server (Sender) Address
+    struct sockaddr_in newServerAddr;
 
     int lastSentMessageID       = 0;                // ID Last Sended Message  
     int lastReceivedMessageID   = 0;                // ID Last Received Message
@@ -57,6 +58,7 @@ public:
     {
         retryCount = retryCnt;
         confirmationTimeout = confirmTimeOut;
+        newServerAddr = server;
     }
 
     virtual ~UdpClient() {
@@ -71,6 +73,7 @@ public:
         bool expectedReply = false;
         int currentRetries = 0;
         const struct sockaddr_in& serverAddr = getServerAddr();
+
         /* Timers */
         TimePoint startWatch;
         TimePoint stopWatch;
@@ -154,6 +157,8 @@ public:
                     }
                     else 
                     {   
+                        newServerAddr = si_other;  
+                        printf("RECEIVED BYTES: %zu\n",bytesRx);
                         buf[BUFSIZE - 1] = '\0'; 
                         udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
@@ -195,7 +200,7 @@ public:
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > confirmationTimeout) 
                 {
-                    udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
+                    udpMessageTransmitter.sendUdpAuthMessage(sock,newServerAddr);
                     currentRetries++;
                 }
             }
@@ -293,7 +298,7 @@ public:
                         if ((int)BaseMessages::COMMAND_JOIN == udpMessageTransmitter.msg.type)
                         {
                             // Send Join Message
-                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();                        
                             // Increment Retries
@@ -306,7 +311,7 @@ public:
                         else if ((int)BaseMessages::COMMAND_BYE == udpMessageTransmitter.msg.type)
                         {
                             printf("COMMAND BYE\n");
-                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -321,7 +326,7 @@ public:
                         else if ((int)BaseMessages::MSG == udpMessageTransmitter.msg.type)
                         {
                             printf("RECOGNISED MSG\n");
-                            udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
+                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -424,7 +429,7 @@ public:
                             // Store Message ID of Message That Has To Be Confirmed
                             lastReceivedMessageID = udpMessageReceiver.messageID;
                             // Send Confirmation
-                            udpMessageReceiver.sendUdpConfirm(sock,serverAddr,lastReceivedMessageID);
+                            udpMessageReceiver.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                             // Message Is Processed -> Clear The Buffer
                             memset(buf, 0, BUFSIZE);
 

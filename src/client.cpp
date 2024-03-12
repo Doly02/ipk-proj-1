@@ -48,11 +48,11 @@ private:
 
     std::string _serverAddress;  //!< IP Address of The Server
     int _port;                   //!< Port Number on Which The Server Is Listening
-    struct sockaddr_in _server;  //!< Structure Containing Server's Address Information
     uint _protocol;
 
 public:
     int sock;                 //!<  File Descriptor of The Socket Used For Communication
+    struct sockaddr_in server;  //!< Structure Containing Server's Address Information
     static constexpr uint TCP = 99u;
     static constexpr uint UDP = 100u;
 
@@ -84,18 +84,18 @@ public:
         }
 
         // Set Server's Address Information
-        memset(&_server, 0, sizeof(_server));
-        _server.sin_family = AF_INET;
-        _server.sin_port = htons(this->_port);
+        memset(&server, 0, sizeof(server));
+        server.sin_family = AF_INET;
+        server.sin_port = htons(this->_port);
 
-        if (inet_pton(AF_INET, _serverAddress.c_str(), &_server.sin_addr) <= 0)
+        if (inet_pton(AF_INET, _serverAddress.c_str(), &server.sin_addr) <= 0)
         {
             throw std::runtime_error("Invalid address/ Address not supported");
         }
 
         if (TCP == _protocol)
         {
-            if (connect(sock, (struct sockaddr *)&_server, sizeof(_server)) < 0)
+            if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
             {
                 throw std::runtime_error("Socket creation failed");
             }            
@@ -132,7 +132,7 @@ public:
     // Return server's struct 
     const struct sockaddr_in& getServerAddr() const 
     {
-        return _server;
+        return server;
     }
     /**
      * @brief Connects The Client To The Server
