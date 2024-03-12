@@ -25,6 +25,8 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <algorithm>
+#include <cctype> // For isdigit and isalpha
 #include <iostream>
 #include <regex>
 #include <sys/socket.h>
@@ -106,9 +108,25 @@ class BaseMessages
      * 
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) {
+    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
+    {
         std::string vecAsString(vec.begin(), vec.end());
         return vecAsString == str;
+    }
+
+    bool areAllDigitsOrLettersOrDash(const std::vector<char>& vec) {
+        return std::all_of(vec.begin(), vec.end(), [](char c) { 
+            return std::isdigit(c) || std::isalpha(c) || c == '-'; 
+        });
+    }
+    bool areAllPrintableCharacters(const std::vector<char>& vec) 
+    {
+        return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x21 && c <= 0x7E; });
+    }
+
+    bool areAllPrintableCharactersOrSpace(const std::vector<char>& vec) 
+    {
+        return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x20 && c <= 0x7E; });
     }
 
 
@@ -126,31 +144,40 @@ class BaseMessages
      * @brief Check If The Message Components Are Valid (ID, Display Name, Content, Secret Length)
      * 
      * 
-     * @return 0 If The Message Is Valid, Otherwise Returns -1, -2, -3, -4
+     * @return SUCCESS If The Message Is Valid, Otherwise Returns NON_VALID_PARAM
      */
     int checkLength()
     {
-        if (msg.channelID.size() > LENGHT_ID)
+        // Check Username
+        if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
         {
-            return -1;
+            return NON_VALID_PARAM;
         }
-        if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
+        // Check Channel ID
+        if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
         {
-            return -2;
+            return NON_VALID_PARAM;
         }
-        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
+        // Check Secret
+        if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
         {
-            return -2;
+            return NON_VALID_PARAM;
         }
-        if (msg.content.size() > LENGHT_CONTENT)
+        // Check Display Name
+        if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
         {
-            return -3;
+            return NON_VALID_PARAM;
         }
-        if (msg.secret.size() > LENGHT_SECRET)
+        // Check Display Name From Outside (Another Client)
+        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
         {
-            return -4;
+            return NON_VALID_PARAM;
         }
-        return 0;
+        if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
+        {
+            return NON_VALID_PARAM;
+        }
+        return SUCCESS;
     }
 
 
@@ -366,7 +393,7 @@ class BaseMessages
         // Convert Vector To String
         std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
         std::regex msgIsRegex("^IS");
-
+        printf("BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
         if (std::regex_search(bufferStr, std::regex("^MSG FROM"))) 
         {
@@ -458,7 +485,7 @@ class BaseMessages
             printf("PREFIX REMOVED\n");
         }
 
-        if (compareVectorAndString(msg.buffer, "OK IS Authentication successful.\r\n")) 
+        if (compareVectorAndString(msg.buffer, "OK IS Auth successful.\r\n")) 
         {
             msg.shouldReply = false;
             printf(" SUCCESS\n");

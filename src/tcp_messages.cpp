@@ -128,8 +128,9 @@ public:
         /* HAS TO BE CLEANED -> WILL BE MODIFIED */
         msg.displayNameOutside.clear();
         msg.content.clear();
-
+        
         std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
+        printf("BUFFER: %s\n",bufferStr.c_str());
         if (msg.buffer.size() >= 9 && std::regex_search(bufferStr, std::regex("^ERR FROM ")))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);

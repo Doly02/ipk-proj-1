@@ -82,6 +82,12 @@ public:
                             checkReply = true;
                         }
                     }
+                    else
+                    {
+                        printf("Error: %d\n", retVal);
+                        // TODO: Dej si pozor co ti to muze vratit! Treba osetrit
+                        //exit(retVal);
+                    }
                 }
             }
 
@@ -157,7 +163,6 @@ public:
         // First Handle Authentication
         checkAuthentication();
 
-
         while (true) 
         {
             FD_ZERO(&readfds);
@@ -188,12 +193,14 @@ public:
                     //buf[bytesRx]    = '\0'; //TODO: Check If This Is Right ("\r\n")
                     buf[BUFSIZE-1]  = '\0';
                     tcpMessage.readAndStoreContent(buf);  
-                    
                     /* Check If Error Was Send */
                     retVal = tcpMessage.checkIfErrorOrBye();
                     if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
+                    {
+                        printf("Error: %d\n", retVal);
                         return retVal;
-
+                    }
+                    printf("BUFFER: %s\n",buf); 
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
                     {
@@ -202,6 +209,7 @@ public:
                             retVal = tcpMessage.checkJoinReply();
                             if (SUCCESS != retVal)
                             {
+                                printf("Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
                             }
@@ -213,6 +221,7 @@ public:
                             retVal = tcpMessage.handleReply();
                             if (SUCCESS != retVal)
                             {
+                                printf("Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return JOIN_FAILED;
                             }
@@ -246,6 +255,12 @@ public:
                         retVal = tcpMessage.parseMessage();
                         if (SUCCESS == retVal)
                             tcpMessage.printMessage();
+                        else
+                        {
+                            // TODO: Dve moznosti co to muze vratit -> je treba to osetrit!
+                            printf("Error: %d\n", retVal);
+                            //return retVal;
+                        }
                     }
                     
                     // Clear The Buffer After All
@@ -254,6 +269,7 @@ public:
                 else if (bytesRx == 0) 
                 {
                     /* Server Closed The Connection */
+                    printf("Server Closed The Connection\n");
                     break;
                 } 
                 else 
@@ -290,7 +306,7 @@ public:
                     tcpMessage.msgType = TcpMessages::UNKNOWN_MSG_TYPE;
                     tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
                     RetValue = tcpMessage.checkMessage();   // Check Message
-                    if (RetValue == 0) 
+                    if (0 == RetValue) 
                     {
                         if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
                         {
@@ -314,6 +330,12 @@ public:
                             memset(buf, 0, sizeof(buf));
                         }
                         /// TODO: Missing ERRORMSG
+                    }
+                    else
+                    {
+                        printf("Error: %d\n", RetValue);
+                        // TODO: Treba osetrit co vsechno funkce muze vratit (checkMessage)
+                        //return RetValue;
                     }
                 }
             }

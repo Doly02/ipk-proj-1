@@ -131,7 +131,11 @@ public:
                         {
                             udpMessageReceiver.printHelp();
                         }
-                        
+                        else
+                        {
+                            // TODO: Treba osetrit co vsechno muze byt spatne (fce checkMessage)
+                            return retVal;
+                        }
                     }   
                 }
     //            std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Čekáme 250ms
@@ -331,7 +335,11 @@ public:
                         {
                             udpMessageTransmitter.printHelp();
                         }
-                    }                                                
+                    }
+                    else
+                    {
+                        // TODO: Treba osetrit co vsechno muze funkce (checkMessage) vratit
+                    }                                              
                 }
             }              
             // Activity On Socket (Incoming Message From Server)

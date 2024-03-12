@@ -15,6 +15,7 @@
 *.pch
 .vscode
 client
+ipk24chat-client
 microsoft.gpg
 # Compiled Dynamic libraries
 *.so

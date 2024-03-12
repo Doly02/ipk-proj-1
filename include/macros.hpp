@@ -31,11 +31,13 @@
     static constexpr int MSG_PARSE_FAILED       = -4;   //!< Indicates That Parsing of Incomming Message Failed
     static constexpr int FAIL                   = -5;   //!< Indicates That Operation FAILED During Run-Time
     static constexpr int EXTERNAL_ERROR         = -6;   //!< Indicates That An External Error Occurred
+    static constexpr int NON_VALID_PARAM        = -7;   //!< Indicates That String Contains Non-Alphanumeric Characters
 
     /*****************************************************/
     /*                  Message Limits                   */
     /*****************************************************/
-    static constexpr int LENGHT_ID              = 20;
+    static constexpr int LENGHT_CHANNEL_ID      = 20;
+    static constexpr int LENGHT_USERNAME        = 20;
     static constexpr int LENGHT_SECRET          = 128;
     static constexpr int LENGHT_CONTENT         = 1400;
     static constexpr int LENGHT_DISPLAY_NAME    = 128;
