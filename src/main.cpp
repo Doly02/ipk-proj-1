@@ -17,9 +17,9 @@
 
 
 
-/************************************************/
-/*                  Libraries                   */
-/************************************************/
+/*******************************************************/
+/*                  Libraries                          */
+/*******************************************************/
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,11 +28,16 @@
 #include "arguments.cpp"
 #include "tcp.cpp"
 #include "udp.cpp"
-/************************************************/
-/*                  Functions                   */
-/************************************************/
+/*******************************************************/
+/*                  Global Variables                   */
+/*******************************************************/
 UdpClient* globalUdpClientInstance = nullptr;
 TcpClient* globalTcpClientInstance = nullptr;
+
+
+/*******************************************************/
+/*                  Functions                          */
+/*******************************************************/
 
 void globalUdpHandleInterrupt(int signal) 
 {
@@ -51,14 +56,17 @@ void globalTcpHandleInterrupt(int signal)
     }
 }
 
-
-/************************************************/
-/*                  Main                        */
-/************************************************/
+/*******************************************************/
+/*                  Main Function                      */
+/*******************************************************/
 int main(int argc, char *argv[])
 {
     try {
+        /*** Variables ****/
         int retVal = FAIL;
+
+
+        /****** Code ******/
 
         // Parse Arguments
         arguments args(argc, argv); 
@@ -66,10 +74,12 @@ int main(int argc, char *argv[])
         if ("tcp" == args.transferProtocol)
         {
             TcpClient client(args.ipAddress, args.port, Client::TCP);
+            
             // Set Global Instance Of TcpClient For Signal Handling
             globalTcpClientInstance = &client;
             // Set Signal Handler
             signal(SIGINT, globalTcpHandleInterrupt);
+            
             // Run Tcp Client
             retVal = client.runTcpClient();
             return retVal;   
@@ -77,10 +87,12 @@ int main(int argc, char *argv[])
         else if ("udp" == args.transferProtocol)
         {
             UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
+            
             // Set Global Instance Of UdpClient For Signal Handling
             globalUdpClientInstance = &client;          
             // Set Signal Handler
             signal(SIGINT, globalUdpHandleInterrupt);
+            
             // Run Udp Client
             retVal = client.runUdpClient();
             return retVal;

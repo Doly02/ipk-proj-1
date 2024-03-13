@@ -37,8 +37,6 @@ private:
     static constexpr int8_t NULL_BYTE           = 0x00;
 
 public:
-    int debugCouter = 0;
-    int debugCouterMax = 15;
     uint16_t messageID;         //!< ID of The Message
     uint16_t refMessageID;      //!< ID of The Referenced Message
     uint8_t  result;            //!< Result of The Message
@@ -54,14 +52,12 @@ public:
     }
 
     void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
+        
         // Serialize The Message Content To UDP Message 
-        printf("APPEND: ");
         for (const auto& byte : contentBuffer) 
         {
             serialized.push_back(static_cast<uint8_t>(byte));
-            printf("%c",static_cast<char>(byte));
         }
-        printf(" \n");
         serialized.push_back(NULL_BYTE);
     }
 
@@ -123,13 +119,10 @@ public:
                 break;
             case COMMAND_AUTH:
                 /*  USERNAME        */
-                printf("SERIALIZED LOGIN: \n");
                 appendContent(serialized, msg.login);
                 /*  DISPLAY NAME    */
-                printf("SERIALIZED DISPLAY NAME: \n");
                 appendContent(serialized, msg.displayName);
                 /*  SECRET          */
-                printf("SERIALIZED SECRET: \n");
                 appendContent(serialized, msg.secret);
                 break;
             case COMMAND_JOIN:

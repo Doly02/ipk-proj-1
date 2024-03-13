@@ -28,6 +28,10 @@
 #include "udp_messages.cpp"
 #include "client.cpp"
 /*************************************************/
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
+using Milliseconds = std::chrono::milliseconds;
+
 
 /************************************************/
 /*                  Constants                   */
@@ -52,9 +56,6 @@ private:
     int lastReceivedMessageID   = 0;                // ID Last Received Message
     std::unordered_set<int> receivedMessageIDs;     // Watchdog For Unique Received ID Messages
 
-    using Clock = std::chrono::high_resolution_clock;
-    using TimePoint = std::chrono::time_point<Clock>;
-    using Milliseconds = std::chrono::milliseconds;
 
 public:
     UdpClient(const std::string& addr, int port,int retryCnt,int confirmTimeOut) : Client(addr, port, UDP) // Inicialization By Contructor From Base Class
@@ -70,7 +71,7 @@ public:
 
     void udpHandleInterrupt(int signal)
     {
-        if (signal == SIGINT || signal == SIGTERM)
+        if (SIGINT == signal || SIGTERM == signal)
         {
             int retVal = 0;
             udpMessageTransmitter.msg.type = UdpMessages::COMMAND_BYE;
@@ -104,16 +105,16 @@ public:
 
     int processAuthetification() 
     {
-        /* Variable */
-        bool checkReply = false; 
+        /* Variables */
         int retVal = 0;
-        bool expectedReply = false;
-        int currentRetries = 0;
+        int currentRetries = 0;             //!< Actual Number Of Retries
+        bool checkReply = false;            //!< Indicates Whether It is Expected Reply Message
         const struct sockaddr_in& serverAddr = getServerAddr();
 
         /* Timers */
-        TimePoint startWatch;
-        TimePoint stopWatch;
+        TimePoint startWatch;               //!< Contains the Initial Measurement Time
+        TimePoint stopWatch;                //!< Contains the Final Measurement Time
+        bool measureTime = false;           //!< Indicates That Time Should Be Measured
         struct timeval timeout;
 
         FD_ZERO(&readfds);
@@ -127,7 +128,7 @@ public:
         {    
             int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
             if (activity == -1) {
-                perror("select() failed");
+                perror("select() failed"); // FIXME
                 exit(EXIT_FAILURE);
             }
             else if (activity > 0)
@@ -156,7 +157,7 @@ public:
                             startWatch = std::chrono::high_resolution_clock::now();
                             lastSentMessageID = udpMessageTransmitter.messageID;
                             sendAuth = true;
-                            expectedReply = true;
+                            measureTime = true;
                             checkReply = true;
                             currentRetries++;
                         }
@@ -200,7 +201,7 @@ public:
                         if (!receivedConfirm && retVal == SUCCESS) 
                         {
                             receivedConfirm = true;
-                            expectedReply = false;
+                            measureTime = false;
                             
                         }
                         else if (checkReply && receivedConfirm) 
@@ -229,7 +230,7 @@ public:
                 } 
             }
             // Check The Receive TimeOut
-            if (expectedReply)
+            if (measureTime)
             {
                 stopWatch = std::chrono::high_resolution_clock::now();
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
@@ -313,8 +314,9 @@ public:
             timeout.tv_usec = 250000; // 250 milisekund
 
             int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
-            if (activity == -1) {
-                perror("Select error");
+            if (-1 == activity) 
+            { 
+                perror("Select error"); // FIXME
                 exit(EXIT_FAILURE);
             }
             // Capture Activity on STDIN
@@ -452,16 +454,16 @@ public:
                                 std::string content(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());
                                 printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
                             }
-                            else if (expectedConfirm && lastMessage)
-                            {
-                                return SUCCESS;
-                            }
                             else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
                             {
                                 // Print The Error
                                 printf("SHOULD PRINT ERROR\n");
                                 udpMessageReceiver.printError();
                                 exit(EXTERNAL_ERROR);
+                            }
+                            else if (expectedConfirm && lastMessage)
+                            {
+                                return SUCCESS;
                             }
                             else
                             {
