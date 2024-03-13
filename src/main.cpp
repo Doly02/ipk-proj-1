@@ -31,7 +31,15 @@
 /************************************************/
 /*                  Constants                   */
 /************************************************/
+UdpClient* globalUdpClientInstance = nullptr;
 
+void globalUdpHandleInterrupt(int signal) 
+{
+    if (globalUdpClientInstance) 
+    {
+        globalUdpClientInstance->udpHandleInterrupt(signal);
+    }
+}
 
 
 /************************************************/
@@ -52,6 +60,8 @@ int main(int argc, char *argv[])
         else if ("udp" == args.transferProtocol)
         {
             UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
+            globalUdpClientInstance = &client;
+            signal(SIGINT, globalUdpHandleInterrupt);
             retVal = client.runUdpClient();
             return retVal;
         }

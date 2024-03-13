@@ -19,13 +19,16 @@
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include "client.cpp"
 #include <iostream>
 #include <string>
-#include <unistd.h>     // For close
+#include <csignal>          // For Signal Handling
+#include <unistd.h>         // For close
 #include <unordered_set>
 #include <chrono>
 #include "udp_messages.cpp"
+#include "client.cpp"
+/*************************************************/
+
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -65,6 +68,40 @@ public:
         // Destructor From Base Class [Calls close(sock)]
     }
 
+    void udpHandleInterrupt(int signal)
+    {
+        if (signal == SIGINT || signal == SIGTERM)
+        {
+            int retVal = 0;
+            udpMessageTransmitter.msg.type = UdpMessages::COMMAND_BYE;
+            /* Send Message */
+            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
+            printf("BYE MESSAGE SENT\n");
+            /* Receive CONFIRM */
+            socklen_t slen = sizeof(si_other);
+            ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
+            if (-1 == bytesRx) 
+            {
+                // Chyba při příjmu dat
+                perror("recvfrom() failed"); // FIXME
+                exit(EXIT_FAILURE);
+            }
+            newServerAddr = si_other;   //TODO  Needs To Be Here?
+            udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
+            retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
+            if (SUCCESS != retVal)
+            {
+                printf("CONFIRMATION RECEIVED\n");
+                // FIXME Add ERROR STRING
+                exit(retVal);
+            }
+            exit(SUCCESS);
+        }
+
+    }
+
+
+
     int processAuthetification() 
     {
         /* Variable */
@@ -85,7 +122,6 @@ public:
 
         timeout.tv_sec = 0; 
         timeout.tv_usec = 250000;   // 250ms 
-
 
         while (currentRetries < retryCount) 
         {    
