@@ -55,10 +55,13 @@ public:
 
     void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
         // Serialize The Message Content To UDP Message 
+        printf("APPEND: ");
         for (const auto& byte : contentBuffer) 
         {
             serialized.push_back(static_cast<uint8_t>(byte));
+            printf("%c",static_cast<char>(byte));
         }
+        printf(" \n");
         serialized.push_back(NULL_BYTE);
     }
 
@@ -120,10 +123,13 @@ public:
                 break;
             case COMMAND_AUTH:
                 /*  USERNAME        */
+                printf("SERIALIZED LOGIN: \n");
                 appendContent(serialized, msg.login);
                 /*  DISPLAY NAME    */
+                printf("SERIALIZED DISPLAY NAME: \n");
                 appendContent(serialized, msg.displayName);
                 /*  SECRET          */
+                printf("SERIALIZED SECRET: \n");
                 appendContent(serialized, msg.secret);
                 break;
             case COMMAND_JOIN:
@@ -176,7 +182,7 @@ public:
     {
         if (serializedMsg.size() < 3)
         {
-            throw std::runtime_error("Invalid Message Length");
+            throw std::runtime_error("Invalid Message Length"); //FIXME:
         }
 
         // Store Packet Into The UDP Message Struct
@@ -187,7 +193,7 @@ public:
             refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
 
         size_t offset = 3;
-
+        printf("DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
         switch (msgType)
         {
             case CONFIRM:
@@ -195,7 +201,7 @@ public:
             case REPLY:
                 if (serializedMsg.size() < offset + 3)
                 {
-                    throw std::runtime_error("Invalid Message Length");
+                    throw std::runtime_error("Invalid Message Length"); //FIXME:
                 }
                 result = serializedMsg[offset++];
                 refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset + 1]) << 8);
@@ -215,8 +221,13 @@ public:
             case MSG: 
             case ERROR:
                 /* DISPLAY NAME */
-                while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
+                while (offset < serializedMsg.size())
                 {
+                    if (serializedMsg[offset] == NULL_BYTE)
+                    {
+                        offset++;
+                        break;
+                    } 
                     msg.displayNameOutside.push_back(static_cast<char>(serializedMsg[offset]));
                     offset++;
                 }
@@ -245,14 +256,11 @@ public:
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
-        if (refMessageID == internalId && result == SUCCESS)
+        if (messageID == internalId)
         {
-            // Check With Global Message ID
-            if (refMessageID == messageID)
-            {
-                messageID++;
-                return SUCCESS;
-            }
+            messageID++;
+            return SUCCESS;
+            
         }
         return MSG_FAILED;
     }

@@ -126,7 +126,7 @@ public:
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_BYE)
                         {
-                            return SUCCESS;;
+                            return SERVER_SAYS_BYE;
                         }
                         else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_HELP)
                         {
@@ -252,15 +252,15 @@ public:
 
         /* Process Authentication */
         retVal = processAuthetification();
-        if (SUCCESS != retVal)
+        if (SERVER_SAYS_BYE == retVal)
+        {
+            // Finish The Program 
+            return SUCCESS;;
+        }
+        else if (SUCCESS != retVal)
         {
             printf("AUTHENTICATION FAILED (return code: %d)\n",retVal);
             return retVal;
-        }
-        else if (SUCCESS && BaseMessages::COMMAND_AUTH == udpMessageTransmitter.msg.type)
-        {
-            // Propagate 
-            return SUCCESS;;
         }
         printf("AUTHENTICATION DONE (runUdpClient)\n");
         printf("------------------------------------------------\n");
@@ -368,6 +368,7 @@ public:
                     udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
                     if (true == expectedConfirm)
                     {
+                        printf("RECEIVED CONFIRM MESSAGE\n");
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
                         if (SUCCESS == retVal)
                         {
@@ -381,6 +382,7 @@ public:
                         }
                         else if (EXTERNAL_ERROR == retVal)
                         {
+                            udpMessageReceiver.printError();
                             exit(EXTERNAL_ERROR);
                         }
                         else 
@@ -414,15 +416,16 @@ public:
                                 std::string content(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());
                                 printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
                             }
-                            else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
-                            {
-                                // Print The Error
-                                udpMessageReceiver.printError();
-                                exit(EXTERNAL_ERROR);
-                            }
                             else if (expectedConfirm && lastMessage)
                             {
                                 return SUCCESS;
+                            }
+                            else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
+                            {
+                                // Print The Error
+                                printf("SHOULD PRINT ERROR\n");
+                                udpMessageReceiver.printError();
+                                exit(EXTERNAL_ERROR);
                             }
                             else
                             {
@@ -435,7 +438,6 @@ public:
                             udpMessageReceiver.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                             // Message Is Processed -> Clear The Buffer
                             memset(buf, 0, BUFSIZE);
-
                         }
                     }
                 } 

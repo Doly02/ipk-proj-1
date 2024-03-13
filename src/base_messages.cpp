@@ -25,6 +25,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <cstdint>
 #include <algorithm>
 #include <cctype> // For isdigit and isalpha
 #include <iostream>
@@ -39,7 +40,7 @@ class BaseMessages
 {
     public:
     /* MESSAGE TYPES */
-    enum MessageType_t
+    enum MessageType_t : uint8_t
     {
         CONFIRM          = 0x00,     //!< Confirm - Template: CONFIRM {MessageID}\r\n
         REPLY            = 0x01,     //!< Reply - Template: REPLY IS {MessageContent}\r\n
@@ -168,46 +169,65 @@ class BaseMessages
      */
     int checkLength()
     {
-        // Check Username
-//        if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
-        if (msg.login.size() > LENGHT_USERNAME)
+        if (msg.type == COMMAND_AUTH)
         {
-            insertErrorMsgToContent("Username Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            // Check Username
+            if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
+            //if (msg.login.size() > LENGHT_USERNAME)
+            {
+                insertErrorMsgToContent("Username Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
         }
-        // Check Channel ID
-        //if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
-        if (msg.channelID.size() > LENGHT_CHANNEL_ID)
+        if (msg.type == COMMAND_JOIN)
         {
-            insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            // Check Channel ID
+            if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
+            //if (msg.channelID.size() > LENGHT_CHANNEL_ID)
+            {
+                insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
         }
-        // Check Secret
-        //if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
-        if (msg.secret.size() > LENGHT_SECRET)
+        if (msg.type == COMMAND_AUTH)
         {
-            insertErrorMsgToContent("Secret Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            // Check Secret
+            if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
+            //if (msg.secret.size() > LENGHT_SECRET)
+            {
+                insertErrorMsgToContent("Secret Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
         }
-        // Check Display Name
-        //if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
-        if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
+        if (msg.type == MSG || msg.type == COMMAND_AUTH || msg.type == COMMAND_JOIN || msg.type == ERROR)
         {
-            insertErrorMsgToContent("Display Name Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            // Check Display Name
+            if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
+            //if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
+            {
+                insertErrorMsgToContent("Display Name Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
         }
-        // Check Display Name From Outside (Another Client)
-        //if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
-        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
+        if (!msg.content.empty()) //FIXME: Should Findout Valid Condition
         {
-            insertErrorMsgToContent("Display Name From Another User Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            // Check Display Name From Outside (Another Client)
+            if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
+            //if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
+            {
+                insertErrorMsgToContent("Display Name From Another User Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
         }
-        //if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
-        if (msg.content.size() > LENGHT_CONTENT)
+        if (msg.type == MSG || msg.type == ERROR || msg.type == REPLY)
         {
-            insertErrorMsgToContent("Message Is Too Long Or Contains Non-Alphanumeric Characters");
-            return NON_VALID_PARAM;
+            if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
+            //if (msg.content.size() > LENGHT_CONTENT)
+            {
+                insertErrorMsgToContent("Message Is Too Long Or Contains Non-Alphanumeric Characters");
+                return NON_VALID_PARAM;
+            }
+
         }
         return SUCCESS;
     }
@@ -250,7 +270,7 @@ class BaseMessages
         {
             
             msg.buffer.push_back(buffer[i]);
-            if (i > 3)
+            if (i > 2)
             {
                 printf("%c",buffer[i]);
             }
