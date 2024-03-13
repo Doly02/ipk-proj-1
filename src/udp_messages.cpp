@@ -79,6 +79,16 @@ public:
         messageID = 1;
     }
 
+    void setUdpDisplayName(const std::vector<char>& displayNameVec)
+    {
+        msg.displayName.assign(displayNameVec.begin(), displayNameVec.end());
+    }
+
+    void setUdpChannelID(const std::vector<char>& channelIDVec)
+    {
+        msg.channelID.assign(channelIDVec.begin(), channelIDVec.end());
+    }
+
     /**
      * @brief Serialize The Message To Byte Array
      * @param message Message To Serialize
@@ -144,12 +154,13 @@ public:
                 exit(1);
         }
         std::string login(msg.login.begin(),msg.login.end());
-        std::string display(msg.displayName.begin(),msg.displayName.end());
-        std::string secret(msg.secret.begin(),msg.secret.end());
-        printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s,TYPE: %d\n",messageID,login.c_str(),display.c_str(),secret.c_str(),msg.type);
-        if (debugCouter >= debugCouterMax)
-            exit(FAIL);
-        debugCouter++;
+        std::string cont(msg.content.begin(),msg.content.end());
+        std::string chann(msg.channelID.begin(),msg.channelID.end());
+        //printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s,TYPE: %d\n",messageID,login.c_str(),display.c_str(),secret.c_str(),msg.type);
+        if (msg.type == MSG)
+        {
+            printf("SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,chann.c_str(),cont.c_str());
+        }
         return serialized;
     }
 

@@ -197,10 +197,9 @@ public:
                     retVal = tcpMessage.checkIfErrorOrBye();
                     if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
                     {
-                        printf("Error: %d\n", retVal);
+                        tcpMessage.printError();
                         return retVal;
                     }
-                    printf("BUFFER: %s\n",buf); 
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
                     {
@@ -223,6 +222,7 @@ public:
                             {
                                 printf("Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
+                                tcpMessage.printError();
                                 return JOIN_FAILED;
                             }
                             checkReply = false;
@@ -244,7 +244,7 @@ public:
                         else
                         {
                             tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
-                            std::cerr << "Error: " << strerror(errno) << std::endl;
+                            tcpMessage.printError();
                             return -1;
                         }
                     }

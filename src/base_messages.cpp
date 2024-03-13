@@ -129,6 +129,18 @@ class BaseMessages
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x20 && c <= 0x7E; });
     }
 
+    void insertErrorMsgToContent(const std::string& inputString)
+    {
+        msg.content.clear();
+        msg.content.assign(inputString.begin(), inputString.end());
+    }
+
+    std::string convertToString(const std::vector<char>& inputVector)
+{
+    // Vytvoření stringu z vektoru
+    return std::string(inputVector.begin(), inputVector.end());
+}
+
 
     void cleanMessage()
     {
@@ -149,32 +161,44 @@ class BaseMessages
     int checkLength()
     {
         // Check Username
-        if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
+//        if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
+        if (msg.login.size() > LENGHT_USERNAME)
         {
+            insertErrorMsgToContent("Username Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
         // Check Channel ID
-        if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
+        //if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
+        if (msg.channelID.size() > LENGHT_CHANNEL_ID)
         {
+            insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
         // Check Secret
-        if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
+        //if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
+        if (msg.secret.size() > LENGHT_SECRET)
         {
+            insertErrorMsgToContent("Secret Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
         // Check Display Name
-        if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
+        //if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
+        if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
         {
+            insertErrorMsgToContent("Display Name Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
         // Check Display Name From Outside (Another Client)
-        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
+        //if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
+        if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
         {
+            insertErrorMsgToContent("Display Name From Another User Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
-        if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
+        //if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
+        if (msg.content.size() > LENGHT_CONTENT)
         {
+            insertErrorMsgToContent("Message Is Too Long Or Contains Non-Alphanumeric Characters");
             return NON_VALID_PARAM;
         }
         return SUCCESS;
@@ -213,14 +237,18 @@ class BaseMessages
     {
         // Clear The Message Content
         msg.buffer.clear();
-        printf("READING BYTES\n");
+        printf("READING BYTES: ");
         for (size_t i = 0; i < bytesRx; i++)
         {
             
             msg.buffer.push_back(buffer[i]);
+            if (i > 3)
+            {
+                printf("%c",buffer[i]);
+            }
 
         }
-        printf("BYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
+        printf("\nBYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
     }
 
     /**
@@ -234,7 +262,7 @@ class BaseMessages
         size_t idx = 0;
         int retVal = FAIL;
         InputType_t inputType = INPUT_UNKNOWN;
-        std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
+        std::string bufferStr = convertToString(msg.buffer);
 
         /*                  INPUT TYPE RECOGNITION LOGIC                                */
         if (msg.buffer.size() >= 6 && std::regex_search(bufferStr, std::regex("^/auth"))) 
@@ -393,13 +421,14 @@ class BaseMessages
 
         // Convert Vector To String
         std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
+        std::string bufferStr = convertToString(msg.buffer); //FIXME:
         std::regex msgIsRegex("^IS");
         printf("BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
-        if (std::regex_search(bufferStr, std::regex("^MSG FROM"))) 
+        if (std::regex_search(bufferStr, std::regex("^MSG FROM")))  //FIXME: Change To Internal Function 
         {
-            size_t prefixLength = std::string("MSG FROM").length();
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLength + 1); 
+            size_t prefixLength = std::string("MSG FROM ").length();
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLength); 
             
             idx = 0;
             // Loop until the substring starting at the current idx does not start with "IN"
@@ -477,13 +506,11 @@ class BaseMessages
         /* Execution    */
         if (msg.buffer.size() >= prefixLenght.length() && std::regex_search(bufferAsStr,replyPrefix)) 
         {
-            printf("BEFORE PREFIX REMOVED\n");
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLenght.length());
             // Update Local String
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
             printf("Internal(1): %s\n", bufferAsStr.c_str());
-            printf("PREFIX REMOVED\n");
         }
 
         if (compareVectorAndString(msg.buffer, "OK IS Auth successful.\r\n")) 

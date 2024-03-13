@@ -160,7 +160,7 @@ public:
                         buf[BUFSIZE - 1] = '\0'; 
                         udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
                         retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
-                    
+                        printf("RETVAL: %d (rectConfirm)\n",retVal);
                         if (!receivedConfirm && retVal == SUCCESS) 
                         {
                             receivedConfirm = true;
@@ -209,8 +209,13 @@ public:
             FD_SET(sock, &readfds);
         }
 
+        /* Prepare Objects For Main Loop*/
         udpMessageReceiver.incrementUdpMsgId();
         udpMessageTransmitter.incrementUdpMsgId();
+        /* Display Name Is Stored In Transmiting Message */
+        udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayNameOutside);
+        /* Channel ID Is Stored In Receiving Message */
+        udpMessageTransmitter.setUdpChannelID(udpMessageReceiver.msg.channelID);
         
         if (currentRetries >= retryCount) {
             // Attempts Overrun
@@ -435,6 +440,13 @@ public:
                     }
                 } 
             }
+
+            /* Display Name Is Stored In Transmiting Message */
+            udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayNameOutside);
+            /* Channel ID Is Stored In Receiving Message */
+            udpMessageReceiver.setUdpChannelID(udpMessageTransmitter.msg.channelID);
+
+
             // Check The Receive TimeOut
             if (expectedConfirm)
             {
