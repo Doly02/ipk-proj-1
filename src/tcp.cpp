@@ -29,14 +29,14 @@
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <unistd.h> 
+#include <csignal>     
 #include <vector>
 #include "tcp_messages.cpp"
 #include "client.cpp"
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-
 class TcpClient : public Client {
 private:
     fd_set readfds;
@@ -57,6 +57,19 @@ public:
     ~TcpClient() {
         // Destructor
     }
+
+    void tcpHandleInterrupt(int signal)
+    {
+        if (signal == SIGINT || signal == SIGTERM)
+        {   
+            /* Send Message */
+            tcpMessage.sentByeMessage(sock);
+            exit(SUCCESS);
+        }
+    }
+
+
+
 
     void checkAuthentication() 
     {

@@ -100,7 +100,7 @@ public:
     */
     void sentByeMessage(int clientSocket)
     {
-        std::string msgToSend = std::string(msg.content.begin(), msg.content.end()) + "\r\n"; //TODO:  "\r\n" WARNING!
+        std::string msgToSend = "BYE\r\n"; //TODO:  "\r\n" WARNING!
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0)
             perror("ERROR in sendto");
