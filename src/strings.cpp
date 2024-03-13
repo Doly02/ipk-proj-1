@@ -18,8 +18,10 @@
 #include <cstring>
 #include <vector>
 #include <algorithm>
+#include <regex>
 
-
+#ifndef STRINGS_H
+#define STRINGS_H
     /**
      * @brief Compares Content Of Vector And String
      * @param vec Vector To Compare
@@ -27,7 +29,7 @@
      * 
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
+    /*bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
     {
         std::string vecAsString(vec.begin(), vec.end());
         return vecAsString == str;
@@ -47,3 +49,14 @@
     {
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x20 && c <= 0x7E; });
     }
+    bool compare(const std::vector<char>& vec, const std::string& pattern) {
+        std::string str(vec.begin(), vec.end());
+        std::regex regexPattern(pattern);
+
+        return std::regex_search(str, regexPattern);
+    }
+    */
+
+#endif // STRINGS_H
+
+

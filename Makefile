@@ -11,7 +11,7 @@ DEBUG_CFLAGS = -fsanitize=address -g -std=c++17 -Wall -Wextra -Werror -Wshadow -
 # Header Files
 HEADERS = macros.hpp
 # Source Files
-SOURCES = src/client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp.cpp src/udp.cpp src/main.cpp
+SOURCES =  src/client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp.cpp src/udp.cpp src/main.cpp
 # Test Source Files
 TEST_SOURCES = tests/test_parseMessage.cpp
 #tests/test_readAndStore.cpp

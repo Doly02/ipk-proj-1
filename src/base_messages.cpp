@@ -31,6 +31,7 @@
 #include <regex>
 #include <sys/socket.h>
 #include "../include/macros.hpp"
+#include "strings.cpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
@@ -136,10 +137,17 @@ class BaseMessages
     }
 
     std::string convertToString(const std::vector<char>& inputVector)
-{
+    {   
     // Vytvoření stringu z vektoru
     return std::string(inputVector.begin(), inputVector.end());
-}
+    }
+
+    bool compare(const std::vector<char>& vec, const std::string& pattern) {
+        std::string str(vec.begin(), vec.end());
+        std::regex regexPattern(pattern);
+
+        return std::regex_search(str, regexPattern);
+    }
 
 
     void cleanMessage()
@@ -265,31 +273,31 @@ class BaseMessages
         std::string bufferStr = convertToString(msg.buffer);
 
         /*                  INPUT TYPE RECOGNITION LOGIC                                */
-        if (msg.buffer.size() >= 6 && std::regex_search(bufferStr, std::regex("^/auth"))) 
+        if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/auth")) 
         {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_AUTH;
         }
-        else if (msg.buffer.size() >= 6 && std::regex_search(bufferStr, std::regex("^/join"))) 
+        else if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/join"))
         {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_JOIN;
         }
-        else if (msg.buffer.size() >= 7 && std::regex_search(bufferStr, std::regex("^/rename"))) 
+        else if (msg.buffer.size() >= 7 && compare(msg.buffer,"^/rename")) 
         {
             // delete first 7 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 8);
             inputType = INPUT_RENAME;
         }
-        else if (msg.buffer.size() >= 5 && std::regex_search(bufferStr, std::regex("^/help"))) 
+        else if (msg.buffer.size() >= 5 && compare(msg.buffer,"^/help")) 
         {
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_HELP;
         }
-        else if (msg.buffer.size() >= 5 && std::regex_search(bufferStr, std::regex("^BYE\r\n"))) 
+        else if (msg.buffer.size() >= 5 && compare(msg.buffer,"^BYE\r\n")) 
         {
             msg.type = COMMAND_BYE;
             return SUCCESS;
@@ -421,7 +429,7 @@ class BaseMessages
 
         // Convert Vector To String
         std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
-        std::string bufferStr = convertToString(msg.buffer); //FIXME:
+        //std::string bufferStr = convertToString(msg.buffer); //FIXME:
         std::regex msgIsRegex("^IS");
         printf("BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
