@@ -433,7 +433,7 @@ class BaseMessages
         std::regex msgIsRegex("^IS");
         printf("BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
-        if (std::regex_search(bufferStr, std::regex("^MSG FROM")))  //FIXME: Change To Internal Function 
+        if (compare(msg.buffer,"^MSG FROM"))  //FIXME: Change To Internal Function 
         {
             size_t prefixLength = std::string("MSG FROM ").length();
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLength); 
@@ -454,7 +454,8 @@ class BaseMessages
             }
 
             // Check and Remove the Last Character if Needed (It's a Space)
-            if (!msg.displayNameOutside.empty()) {
+            if (!msg.displayNameOutside.empty()) 
+            {
                 msg.displayNameOutside.pop_back();
             }
             /* Process The Content */
@@ -477,7 +478,7 @@ class BaseMessages
             msgType = MSG;
             return retVal;
         }
-        else if (std::regex_search(bufferStr, std::regex("^BYE\r\n")))
+        else if (compare(msg.buffer, "^BYE\r\n"))
         {
             idx = 0;
             while (idx < msg.buffer.size()) 
@@ -502,23 +503,20 @@ class BaseMessages
     int handleReply()
     {
         /* Preparation  */
-        std::regex replyPrefix("^REPLY ");
         std::string bufferAsStr(msg.buffer.begin(), msg.buffer.end());
-        std::regex okReply("^OK IS ");
-        std::regex errorPrefix("^ERR FROM Server IS ");
         
         std::string errorLenght     = "ERR FROM Server IS ";
         std::string prefixLenght    = "REPLY ";
         std::string okLenght        = "OK IS ";
 
         /* Execution    */
-        if (msg.buffer.size() >= prefixLenght.length() && std::regex_search(bufferAsStr,replyPrefix)) 
+        if (msg.buffer.size() >= prefixLenght.length() && compare(msg.buffer,"^REPLY ")) 
         {
-            // delete first 5 characters + 1 space
+            // Delete Prefix
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLenght.length());
-            // Update Local String
-            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            printf("Internal(1): %s\n", bufferAsStr.c_str());
+
+            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());            //FIXME: Debug
+            printf("Internal(1): %s\n", bufferAsStr.c_str());                           //FIXME: Debug
         }
 
         if (compareVectorAndString(msg.buffer, "OK IS Auth successful.\r\n")) 
@@ -527,15 +525,15 @@ class BaseMessages
             printf(" SUCCESS\n");
             return SUCCESS;
         }
-        else if (std::regex_search(bufferAsStr,okReply)) 
+        else if (compare(msg.buffer,"^OK IS ")) 
         {
             // Erase The Ok From The Message 
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + okLenght.length());
             
             
             /* Prepaire Message buffer -> Get Rid of '\n\r' */  
-            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            if (msg.buffer.size() > 2 || bufferAsStr == "\r\n") {
+            if (msg.buffer.size() > 2 || compareVectorAndString(msg.buffer,"\r\n")) 
+            {
                 msg.buffer.resize(msg.buffer.size() - 2);
             }         
             
@@ -547,7 +545,7 @@ class BaseMessages
         }
 
         /*  ERROR MESSAGE HANDLING  */
-        else if (std::regex_search(bufferAsStr,errorPrefix))
+        else if (compare(msg.buffer,"^ERR FROM Server IS "))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
@@ -556,9 +554,8 @@ class BaseMessages
         }
         else 
         {
-            // Compare With Error Message Template
-            std::regex errorRegex("ˆNOK IS ");   
-            if (std::regex_search(bufferAsStr,errorRegex))  
+            // Compare With Error Message Template   
+            if (compare(msg.buffer,"ˆNOK IS "))  
             {
                 std::cerr << "Authentication Failed" << std::endl;
                 return AUTH_FAILED;
