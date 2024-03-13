@@ -26,8 +26,8 @@
 #include <cstring>
 
 #include "arguments.cpp"
-#include "tcp.cpp"
-#include "udp.cpp"
+#include "tcp_client.cpp"
+#include "udp_client.cpp"
 /*******************************************************/
 /*                  Global Variables                   */
 /*******************************************************/

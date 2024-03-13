@@ -20,11 +20,7 @@
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <arpa/inet.h>
-#include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <iostream>
 #include <netinet/in.h>
 #include <sys/select.h>
 #include <sys/socket.h>
@@ -33,7 +29,7 @@
 #include <csignal>     
 #include <vector>
 #include "tcp_messages.cpp"
-#include "client.cpp"
+#include "base_client.cpp"
 /************************************************/
 /*                  CLASS                       */
 /************************************************/

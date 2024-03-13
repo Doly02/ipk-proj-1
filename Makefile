@@ -1,30 +1,39 @@
+#   Project:        IPK Project 1 - Client for Chat Servers
+#   File Name:      base_messages.cpp
+#   Author:         Tomas Dolak
+#   Date:           21.02.2024
+#   Description:    Makefile for ipk24chat-client Client Application.
+ 
+
 # Program Name
 TARGET = ipk24chat-client
-DEBUG_TARGET = ipk24chat-client
+# Program Name For Debug Configuration
+DEBUG_TARGET = ipk24chat-client_debug
 # Test Program Name
-TEST_TARGET = client_test
+TEST_TARGET = ipk24chat-client_test
+
 # Compiler
 CC = clang++
 # Compiler Flags
 CFLAGS = -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic -Iinclude
 DEBUG_CFLAGS = -fsanitize=address -g -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
+
 # Header Files
 HEADERS = macros.hpp
+
 # Source Files
-SOURCES =  src/client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp.cpp src/udp.cpp src/main.cpp
-# Test Source Files
-TEST_SOURCES = tests/test_parseMessage.cpp
-#tests/test_readAndStore.cpp
-# tests/test_checkInout_CmdAuth_2.cpp
-# tests/test_checkInput_CmdAuth.cpp
-# tests/test_checkInput_CmdJoin.cpp
-# tests/test_argumentsParsing.cpp
+SOURCES =  src/base_client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp_client.cpp src/udp_client.cpp src/main.cpp
 # Object Files 
 OBJECTS = $(SOURCES:.cpp=.o)
+
+# Test Source Files
+TEST_SOURCES = tests/test_parseMessage.cpp
 # Test Object Files (Derived from TEST_SOURCES)
 TEST_OBJECTS = $(TEST_SOURCES:.cpp=.o)
 # Google Test Flags
 GTEST_FLAGS = -lgtest -lgtest_main -pthread
+
+
 
 # Rule for Target
 all: $(TARGET)

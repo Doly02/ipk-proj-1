@@ -26,7 +26,7 @@
 #include <unordered_set>
 #include <chrono>
 #include "udp_messages.cpp"
-#include "client.cpp"
+#include "base_client.cpp"
 /*************************************************/
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::time_point<Clock>;
