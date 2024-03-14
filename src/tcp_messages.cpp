@@ -15,6 +15,10 @@
  *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
  * ****************************/
 
+#ifndef TCP_MESSAGES_H
+#define TCP_MESSAGES_H
+
+
 #define DEBUG_MACRO 0
 /************************************************/
 /*                  Libraries                   */
@@ -221,3 +225,7 @@ public:
     }
 
 };
+
+
+#endif
+

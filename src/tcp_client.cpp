@@ -15,7 +15,8 @@
  *  @brief          Implements Communication With Chat Server Thru TCP Protocol.
  * ****************************/
 
-
+#ifndef TCP_CLIENT_H
+#define TCP_CLIENT_H
 
 /************************************************/
 /*                  Libraries                   */
@@ -122,7 +123,7 @@ public:
 
                     /* Check If Error Was Send */
                     retVal = tcpMessage.checkIfErrorOrBye();
-                    if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
+                    if (EXTERNAL_ERROR == retVal)
                         exit(retVal);
                     else if (SERVER_SAYS_BYE == retVal)
                         exit(0);
@@ -354,7 +355,7 @@ public:
         return 0;
     };
 
-
+#endif // TCP_CLIENT_H
 
 // NOTES:
 /* Melo by fungovat odesilani zpravy AUTH 

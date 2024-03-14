@@ -32,7 +32,7 @@
 #include <regex>
 #include <sys/socket.h>
 #include "../include/macros.hpp"
-#include "strings.cpp"
+//#include "strings.cpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
@@ -110,6 +110,7 @@ class BaseMessages
      * 
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
+   
     bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
     {
         std::string vecAsString(vec.begin(), vec.end());
@@ -131,11 +132,6 @@ class BaseMessages
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x20 && c <= 0x7E; });
     }
 
-    void insertErrorMsgToContent(const std::string& inputString)
-    {
-        msg.content.clear();
-        msg.content.assign(inputString.begin(), inputString.end());
-    }
 
     std::string convertToString(const std::vector<char>& inputVector)
     {   
@@ -149,7 +145,12 @@ class BaseMessages
 
         return std::regex_search(str, regexPattern);
     }
-
+    
+    void insertErrorMsgToContent(const std::string& inputString)
+    {
+        msg.content.clear();
+        msg.content.assign(inputString.begin(), inputString.end());
+    }
 
     void cleanMessage()
     {
@@ -346,6 +347,8 @@ class BaseMessages
                 msg.login.push_back(msg.buffer[idx]);   
                 idx++;
             }
+            std::string log(msg.login.begin(),msg.login.end());
+            printf("DEBUG INFO: login->|%s|\n",log.c_str());
             if (idx < msg.buffer.size()) {  
                 // Clear The Username And Space 
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
@@ -361,13 +364,14 @@ class BaseMessages
                 // Clear The Secret And Space 
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
             }
-
             // Process Display Name
             idx = 0; // Reset idx if you're using it to iterate through the remaining content
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') {
                 msg.displayName.push_back(msg.buffer[idx]);   
                 idx++;
             }
+            std::string disp(msg.displayName.begin(),msg.displayName.end());
+            printf("DEBUG INFO: DisplayName->|%s|\n",disp.c_str());
             msg.type = COMMAND_AUTH;
         }
         else if (inputType == INPUT_JOIN) 
