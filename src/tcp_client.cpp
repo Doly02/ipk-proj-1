@@ -93,9 +93,8 @@ public:
                     }
                     else
                     {
-                        printf("WARNING! Error: %d\n", retVal);
                         // TODO: Dej si pozor co ti to muze vratit! Treba osetrit
-                        //exit(retVal);
+                        exit(retVal);
                     }
                 }
             }
@@ -204,10 +203,14 @@ public:
                     tcpMessage.readAndStoreContent(buf);  
                     /* Check If Error Was Send */
                     retVal = tcpMessage.checkIfErrorOrBye();
-                    if (MSG_PARSE_FAILED == retVal || EXTERNAL_ERROR == retVal)
+                    if (EXTERNAL_ERROR == retVal)
                     {
-                        tcpMessage.printError();
+                        // Upravit Tak ze se ERR Message Pridava uz ve funkci checkIfErrorOrBye
                         return retVal;
+                    }
+                    else if (SERVER_SAYS_BYE == retVal)
+                    {
+                        return SUCCESS;
                     }
                     // Check If Is Alles Gute
                     if (true == checkReply && true == joinSend)
@@ -217,7 +220,8 @@ public:
                             retVal = tcpMessage.checkJoinReply();
                             if (SUCCESS != retVal)
                             {
-                                printf("WARNING Error: %d\n", retVal);
+
+                                tcpMessage.basePrintInternalError(retVal); //FIXME -> Zkotrolovat 
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
                             }
@@ -229,9 +233,8 @@ public:
                             retVal = tcpMessage.handleReply();
                             if (SUCCESS != retVal)
                             {
-                                printf("WARNING Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
-                                tcpMessage.printError();
+                                tcpMessage.basePrintExternalError();    // FIXME -> Zkotrolovat
                                 return JOIN_FAILED;
                             }
                             checkReply = false;
@@ -251,9 +254,9 @@ public:
                             checkReply = false;
                         }
                         else
-                        {
+                        {   // FIXME Tady je to treba rozlisovat podle navratovych hodnot
                             tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
-                            tcpMessage.printError();
+                            //tcpMessage.printError();
                             return -1;
                         }
                     }
@@ -342,9 +345,7 @@ public:
                     }
                     else
                     {
-                        printf("DEBUG INFO: Error: %d\n", RetValue);
-                        // TODO: Treba osetrit co vsechno funkce muze vratit (checkMessage)
-                        //return RetValue;
+                        return RetValue;
                     }
                 }
             }

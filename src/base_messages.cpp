@@ -173,9 +173,9 @@ class BaseMessages
         {
             // Check Username
             if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
-            //if (msg.login.size() > LENGHT_USERNAME)
             {
                 insertErrorMsgToContent("Username Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
         }
@@ -183,9 +183,9 @@ class BaseMessages
         {
             // Check Channel ID
             if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
-            //if (msg.channelID.size() > LENGHT_CHANNEL_ID)
             {
                 insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
         }
@@ -193,9 +193,9 @@ class BaseMessages
         {
             // Check Secret
             if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
-            //if (msg.secret.size() > LENGHT_SECRET)
             {
                 insertErrorMsgToContent("Secret Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
         }
@@ -203,28 +203,28 @@ class BaseMessages
         {
             // Check Display Name
             if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
-            //if (msg.displayName.size() > LENGHT_DISPLAY_NAME)
             {
                 insertErrorMsgToContent("Display Name Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
         }
-        if (!msg.content.empty()) //FIXME: Should Findout Valid Condition
+        if (!msg.displayNameOutside.empty()) //FIXME: Should Findout Valid Condition
         {
             // Check Display Name From Outside (Another Client)
             if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
-            //if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME)
             {
                 insertErrorMsgToContent("Display Name From Another User Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
         }
         if (msg.type == MSG || msg.type == ERROR || msg.type == REPLY)
         {
             if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
-            //if (msg.content.size() > LENGHT_CONTENT)
             {
                 insertErrorMsgToContent("Message Is Too Long Or Contains Non-Alphanumeric Characters");
+                basePrintInternalError(NON_VALID_PARAM);
                 return NON_VALID_PARAM;
             }
 
@@ -364,14 +364,11 @@ class BaseMessages
 
             // Process Display Name
             idx = 0; // Reset idx if you're using it to iterate through the remaining content
-            //while (idx < msg.content.size()) 
-            //{
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') {
                 msg.displayName.push_back(msg.buffer[idx]);   
                 idx++;
             }
             msg.type = COMMAND_AUTH;
-
         }
         else if (inputType == INPUT_JOIN) 
         {
@@ -427,7 +424,6 @@ class BaseMessages
 
         }
         retVal = checkLength();
-        printf("DEBUG INFO: MSG TYPE: %d, retVal: %d (checkMessage)\n",msg.type,retVal);
         return retVal;   
     }
 
@@ -607,11 +603,24 @@ class BaseMessages
         }
     }
 
-    void printError()
+    void PrintServeReply()
+    {
+        std::string serverSay(msg.content.begin(),msg.content.end());
+        fprintf(stdout,"server: %s\n",serverSay.c_str());
+    }
+
+    void basePrintExternalError()
     {
         std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
         std::string errContent(msg.content.begin(),msg.content.end());
         fprintf(stderr,"ERR FROM: %s: %s\n",errDisplayName.c_str(),errContent.c_str());
+    }
+
+    void basePrintInternalError(int retVal)
+    {
+        std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
+        std::string errContent(msg.content.begin(),msg.content.end());
+        fprintf(stderr,"ERR: %s (Return Value: %d)\n",errContent.c_str(),retVal);
     }
 
 
@@ -630,4 +639,4 @@ class BaseMessages
 };
 
 
-#endif // BASE_MESSAGES_H
+#endif // BASE_MESSAGES_HWARNING

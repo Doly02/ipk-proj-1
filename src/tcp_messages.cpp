@@ -60,10 +60,27 @@ public:
     int checkJoinReply() {
         const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
         const std::string prefix = "^MSG FROM Server IS ";
-        const std::string prefixForLenght = "MSG FROM Server IS ";
-        if (std::regex_search(joinServerMsg, std::regex(prefix))) {
-            if (msg.buffer.size() >= prefixForLenght.length()) {
-                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixForLenght.length());
+        const std::string stdPrefixLenght = "MSG FROM Server IS ";
+        const std::string errPrefixLenght = "ERR FROM Server IS ";
+
+        if (compare(msg.buffer, "^MSG FROM Server IS ")) {
+            if (msg.buffer.size() >= stdPrefixLenght.length()) 
+            {
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + stdPrefixLenght.length());
+                msg.content.clear();
+                msg.content = msg.buffer;
+                PrintServeReply();
+                return SUCCESS;
+            }
+        }
+        else if (compare(msg.buffer,"^ERR FROM Server IS "))
+        {
+            if (msg.buffer.size() >= errPrefixLenght.length()) 
+            {
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errPrefixLenght.length());
+                msg.content.clear();
+                msg.content = msg.buffer;
+                basePrintExternalError();
                 return SUCCESS;
             }
         }
@@ -162,16 +179,20 @@ public:
             msgType = ERROR;
 
             /* PRINT ERROR MESSAGE */
-            std::string sender(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
-            std::string msgContent(msg.content.begin(), msg.content.end());
-
-            printf("WARNING: %s: %s\n",sender.c_str(),msgContent.c_str());
+            basePrintExternalError();
 
             return EXTERNAL_ERROR;            
 
         }
         else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
         {
+            // FIXME Should Optimalize
+            while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
+            {
+                msg.content.push_back(msg.buffer[idx]);   
+                idx++;
+            }
+            PrintServeReply();
             msgType = COMMAND_BYE;
 
             return SERVER_SAYS_BYE;
