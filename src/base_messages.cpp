@@ -265,7 +265,7 @@ class BaseMessages
     {
         // Clear The Message Content
         msg.buffer.clear();
-        printf("READING BYTES: ");
+        printf("DEBUG INFO: READING BYTES: ");
         for (size_t i = 0; i < bytesRx; i++)
         {
             
@@ -276,7 +276,7 @@ class BaseMessages
             }
 
         }
-        printf("\nBYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
+        printf("\nDEBUG INFO: BYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
     }
 
     /**
@@ -427,7 +427,7 @@ class BaseMessages
 
         }
         retVal = checkLength();
-        printf("MSG TYPE: %d, retVal: %d (checkMessage)\n",msg.type,retVal);
+        printf("DEBUG INFO: MSG TYPE: %d, retVal: %d (checkMessage)\n",msg.type,retVal);
         return retVal;   
     }
 
@@ -451,7 +451,7 @@ class BaseMessages
         std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
         //std::string bufferStr = convertToString(msg.buffer); //FIXME:
         std::regex msgIsRegex("^IS");
-        printf("BUFFER: %s\n",bufferStr.c_str());
+        printf("DEBUG INFO: BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
         if (compare(msg.buffer,"^MSG FROM"))  //FIXME: Change To Internal Function 
         {
@@ -536,13 +536,13 @@ class BaseMessages
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLenght.length());
 
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());            //FIXME: Debug
-            printf("Internal(1): %s\n", bufferAsStr.c_str());                           //FIXME: Debug
+            printf("DEBUG INFO: Internal(1): %s\n", bufferAsStr.c_str());               //FIXME: Debug
         }
 
         if (compareVectorAndString(msg.buffer, "OK IS Auth successful.\r\n")) 
         {
             msg.shouldReply = false;
-            printf(" SUCCESS\n");
+            printf("DEBUG INFO: SUCCESS\n");
             return SUCCESS;
         }
         else if (compare(msg.buffer,"^OK IS ")) 

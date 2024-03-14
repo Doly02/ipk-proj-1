@@ -82,7 +82,7 @@ public:
     void sendJoinMessage(int client_socket)
     {
         std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
-        printf("JOIN MSG: %s",msgToSend.c_str());
+        printf("DEBUG INFO: JOIN MSG: %s",msgToSend.c_str());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -130,7 +130,7 @@ public:
         msg.content.clear();
         
         std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
-        printf("BUFFER: %s\n",bufferStr.c_str());
+        printf("DEBUG INFO: BUFFER: %s\n",bufferStr.c_str());
         if (msg.buffer.size() >= 9 && std::regex_search(bufferStr, std::regex("^ERR FROM ")))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
@@ -165,14 +165,13 @@ public:
             std::string sender(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
             std::string msgContent(msg.content.begin(), msg.content.end());
 
-            printf("%s: %s\n",sender.c_str(),msgContent.c_str());
+            printf("WARNING: %s: %s\n",sender.c_str(),msgContent.c_str());
 
             return EXTERNAL_ERROR;            
 
         }
         else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
         {
-            printf("BYE");
             msgType = COMMAND_BYE;
 
             return SERVER_SAYS_BYE;

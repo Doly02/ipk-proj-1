@@ -103,7 +103,7 @@ public:
         /*  MESSAGE ID   */
         serialized.push_back(messageID & 0xFF);
         serialized.push_back((messageID >> 8) & 0xFF);
-        printf("SERIALIZED: type = %d, messageID = %d\n",msg.type,messageID);
+        printf("DEBUG INFO: SERIALIZED: type = %d, messageID = %d\n",msg.type,messageID);
 
         switch (msg.type)
         {
@@ -155,10 +155,9 @@ public:
         std::string login(msg.login.begin(),msg.login.end());
         std::string cont(msg.content.begin(),msg.content.end());
         std::string chann(msg.channelID.begin(),msg.channelID.end());
-        //printf("MSG_ID: %d,LOG: %s,DISPLAY: %s,SECRET: %s,TYPE: %d\n",messageID,login.c_str(),display.c_str(),secret.c_str(),msg.type);
         if (msg.type == MSG)
         {
-            printf("SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,chann.c_str(),cont.c_str());
+            printf("DEBUG INFO: SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,chann.c_str(),cont.c_str());
         }
         return serialized;
     }
@@ -175,7 +174,7 @@ public:
     {
         if (serializedMsg.size() < 3)
         {
-            throw std::runtime_error("Invalid Message Length"); //FIXME:
+            throw std::runtime_error("WARNING: Invalid Message Length"); //FIXME:
         }
 
         // Store Packet Into The UDP Message Struct
@@ -186,7 +185,7 @@ public:
             refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
 
         size_t offset = 3;
-        printf("DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
+        printf("DEBUG INFO: DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
         switch (msgType)
         {
             case CONFIRM:
@@ -209,7 +208,7 @@ public:
                 break;
             case COMMAND_AUTH: /* Should Not Be Sended To Client */
             case COMMAND_JOIN: /* Should Not Be Sended To Client */
-                printf("Invalid Message Type\n"); //TODO:
+                printf("WARNING: Invalid Message Type\n"); //TODO:
                 break;
             case MSG: 
             case ERROR:
@@ -265,16 +264,16 @@ public:
         deserializeMessage(serialized);
         
         std::string contentReply(msg.content.begin(),msg.content.end());
-        printf("recvUpdIncomingReply -> contentReply: %s\n",contentReply.c_str());
+        printf("DEBUG INFO: recvUpdIncomingReply -> contentReply: %s\n",contentReply.c_str());
 
         if (REPLY == msg.type)
         {
-            printf("recvUpdIncomingReply -> REPLY MESSAGE\n");
+            printf("DEBUG INFO: recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
-            printf("recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
+            printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (refMessageID == internalId && result == 1)
             {
-                printf("recvUpdIncomingReply -> MessageID = %d\n",messageID);
+                printf("DEBUG INFO: recvUpdIncomingReply -> MessageID = %d\n",messageID);
                 // Check With Global Message ID
                 return SUCCESS;
                 
@@ -307,11 +306,11 @@ public:
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
-            printf("recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
+            printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
-                printf("recvUdpConfirm -> refMessageID == internalId\n");
+                printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
                 return SUCCESS;
             }
 
@@ -321,7 +320,7 @@ public:
             printError();
             return EXTERNAL_ERROR;
         }
-        printf("recvUdpConfirm -> CONFIRM_FAILED\n");
+        printf("DEBUG INFO: recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
 

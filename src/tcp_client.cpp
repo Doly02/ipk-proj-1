@@ -93,7 +93,7 @@ public:
                     }
                     else
                     {
-                        printf("Error: %d\n", retVal);
+                        printf("WARNING! Error: %d\n", retVal);
                         // TODO: Dej si pozor co ti to muze vratit! Treba osetrit
                         //exit(retVal);
                     }
@@ -217,7 +217,7 @@ public:
                             retVal = tcpMessage.checkJoinReply();
                             if (SUCCESS != retVal)
                             {
-                                printf("Error: %d\n", retVal);
+                                printf("WARNING Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 return retVal;
                             }
@@ -229,7 +229,7 @@ public:
                             retVal = tcpMessage.handleReply();
                             if (SUCCESS != retVal)
                             {
-                                printf("Error: %d\n", retVal);
+                                printf("WARNING Error: %d\n", retVal);
                                 tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
                                 tcpMessage.printError();
                                 return JOIN_FAILED;
@@ -267,7 +267,7 @@ public:
                         else
                         {
                             // TODO: Dve moznosti co to muze vratit -> je treba to osetrit!
-                            printf("Error: %d\n", retVal);
+                            printf("WARNING Error: %d\n", retVal);
                             //return retVal;
                         }
                     }
@@ -278,14 +278,14 @@ public:
                 else if (bytesRx == 0) 
                 {
                     /* Server Closed The Connection */
-                    printf("Server Closed The Connection\n");
+                    printf("DEBUG INFO: Server Closed The Connection\n");
                     break;
                 } 
                 else 
                 {
                     if (errno != EAGAIN && errno != EWOULDBLOCK) 
                     {
-                        std::cerr << "recv failed: " << strerror(errno) << std::endl;
+                        std::cerr << "WARNING: recv failed: " << strerror(errno) << std::endl;
                     }
                 }
             }
@@ -342,7 +342,7 @@ public:
                     }
                     else
                     {
-                        printf("Error: %d\n", RetValue);
+                        printf("DEBUG INFO: Error: %d\n", RetValue);
                         // TODO: Treba osetrit co vsechno funkce muze vratit (checkMessage)
                         //return RetValue;
                     }
