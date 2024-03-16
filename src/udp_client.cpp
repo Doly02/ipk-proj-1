@@ -426,7 +426,7 @@ public:
                     else
                     {
                         // Message With Data Was Send
-                        retVal = udpMessage.recvUdpMessage(lastReceivedMessageID++);
+                        retVal = udpMessage.recvUdpMessage(lastReceivedMessageID+1);
                         if (SUCCESS == retVal)
                         {
                             // Set Retries To Zero
