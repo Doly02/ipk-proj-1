@@ -44,6 +44,8 @@ public:
     uint8_t  result;            //!< Result of The Message
     uint16_t internalMsgId;
 
+    std::unordered_set<uint16_t> receivedMessageIDs;
+
     UdpMessages() : BaseMessages() {}
 
     UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
@@ -255,14 +257,20 @@ public:
         cleanMessage();
         deserializeMessage(serialized);
         printf("DEBUG INFO: recvUdpMessage -> messageID=%d, internalId=%d\n",messageID,internalId);
-        if (messageID == internalId)
-        {
-            printf("DEBUG INFO: recvUdpMessage -> messageID == internalId\n");
-            return SUCCESS;
-            
+        if (REPLY == msg.type)
+            return MSG_FAILED;
+
+        if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
+            // Message With This ID Was Already Received
+            return MSG_FAILED;
         }
-        printf("DEBUG INFO: recvUdpMessage -> RECEIVE NORMAL MSG FAILED\n");
-        return MSG_FAILED;
+
+        // Přidání messageID do seznamu přijatých ID
+        receivedMessageIDs.insert(messageID);
+
+        printf("DEBUG INFO: recvUdpMessage -> RECEIVED SUCCESS\n");
+        
+        return SUCCESS;
     }
 
     int recvUpdIncomingReply(int internalId)
@@ -281,8 +289,13 @@ public:
             printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (refMessageID == internalId && result == 1)
             {
-                printf("DEBUG INFO: recvUpdIncomingReply -> MessageID = %d\n",messageID);
-                // Check With Global Message ID
+                if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
+                    // Message With This ID Was Already Received
+                    return MSG_FAILED;  // TODO
+                }
+                printf("DEBUG INFO: recvUpdIncomingReply -> REPLY SUCCESS (MessageID = %d)\n",messageID);
+                
+                receivedMessageIDs.insert(messageID);
                 return SUCCESS;
                 
             }
@@ -312,13 +325,13 @@ public:
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
-        printf("DEBUG INFO: CONFIRM type: %d\n",msg.type);
         if (CONFIRM == msg.type)
         {
             printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
             // Check With Internal Message ID
             if (refMessageID == internalId)
             {
+                
                 printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
                 return SUCCESS;
             }
@@ -342,6 +355,7 @@ public:
         {
             perror("sendto failed");
         }
+        printf("DEBUG INFO: sendUdpMessage -> messageID=%d\n",messageID);
     }
 
     void sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId)
