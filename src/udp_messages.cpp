@@ -298,7 +298,6 @@ public:
     void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
-        printf("DEBUG INFO: AUTH SEND!\n");
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -319,9 +318,6 @@ public:
             if (refMessageID == internalId)
             {
                 printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
-                printf("---------------------------------------------------------\n");
-                printf("DEBUG INFO: CONFIRM HANDLED\n");
-                printf("---------------------------------------------------------\n");
                 return SUCCESS;
             }
 

@@ -49,8 +49,7 @@ private:
     int confirmationTimeout;
     bool sendAuth = false;
     bool receivedConfirm = false;
-    UdpMessages udpMessageTransmitter;
-    UdpMessages udpMessageReceiver;
+    UdpMessages udpMessage;
     struct sockaddr_in si_other;    // Struct For Storing Server (Sender) Address
     struct sockaddr_in newServerAddr;
 
@@ -76,9 +75,9 @@ public:
         if (SIGINT == signal || SIGTERM == signal)
         {
             int retVal = 0;
-            udpMessageTransmitter.msg.type = UdpMessages::COMMAND_BYE;
+            udpMessage.msg.type = UdpMessages::COMMAND_BYE;
             /* Send Message */
-            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
+            udpMessage.sendUdpMessage(sock,newServerAddr);
             printf("DEBUG INFO: BYE MESSAGE SENT\n");
             /* Receive CONFIRM */
             socklen_t slen = sizeof(si_other);
@@ -90,8 +89,8 @@ public:
                 exit(EXIT_FAILURE);
             }
             newServerAddr = si_other;   //TODO  Needs To Be Here?
-            udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
-            retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
+            udpMessage.readAndStoreBytes(buf,bytesRx);
+            retVal = udpMessage.recvUpdConfirm(lastSentMessageID);
             if (SUCCESS != retVal)
             {
                 printf("DEBUG INFO: CONFIRMATION RECEIVED\n");
@@ -128,9 +127,7 @@ public:
 
         while (currentRetries < retryCount) 
         {   
-            printf("DEBUG: Calling select. Timeout: %ld sec, %ld usec\n", timeout.tv_sec, timeout.tv_usec);
             int activity = select(sock + 1, &readfds, NULL, NULL, NULL); 
-            printf("DEBUG: Select activity: %d\n", activity);
             if (activity == -1) {
                 perror("select() failed"); // FIXME
                 exit(EXIT_FAILURE);
@@ -141,7 +138,6 @@ public:
                 // Capture Activity on STDIN
                 if (FD_ISSET(STDIN_FILENO, &readfds)) 
                 {
-                    printf("DEBUG: Data available on STDIN\n");
                     if (fgets(buf, BUFSIZE, stdin) != NULL) 
                     {
                         
@@ -152,28 +148,28 @@ public:
                         }
 
                         // Store The Input Into Internal Buffer
-                        udpMessageTransmitter.readAndStoreContent(buf);
+                        udpMessage.readAndStoreContent(buf);
                         // Check The Message 
-                        retVal = udpMessageTransmitter.checkMessage();
-                        printf("DEBUG INFO: MSG TYPE: %d\n",udpMessageTransmitter.msg.type);
-                        if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_AUTH) 
+                        retVal = udpMessage.checkMessage();
+                        printf("DEBUG INFO: MSG TYPE: %d\n",udpMessage.msg.type);
+                        if (retVal == 0 && udpMessage.msg.type == UdpMessages::COMMAND_AUTH) 
                         {
-                            udpMessageTransmitter.sendUdpAuthMessage(sock,serverAddr);
+                            udpMessage.sendUdpAuthMessage(sock,serverAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
-                            lastSentMessageID = udpMessageTransmitter.messageID;
+                            lastSentMessageID = udpMessage.messageID;
                             sendAuth = true;
                             measureTime = true;
                             checkReply = true;
                             currentRetries++;
                         }
-                        else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_BYE)
+                        else if (retVal == 0 && udpMessage.msg.type == UdpMessages::COMMAND_BYE)
                         {
                             return SERVER_SAYS_BYE;
                         }
-                        else if (retVal == 0 && udpMessageTransmitter.msg.type == UdpMessages::COMMAND_HELP)
+                        else if (retVal == 0 && udpMessage.msg.type == UdpMessages::COMMAND_HELP)
                         {
-                            udpMessageReceiver.printHelp();
+                            udpMessage.printHelp();
                         }
                         else
                         {
@@ -186,11 +182,9 @@ public:
                 // Check Activity On Socket
                 if (FD_ISSET(sock, &readfds)) 
                 {
-                    printf("DEBUG: Data available on socket\n");
                     memset(buf, 0, BUFSIZE);
                     socklen_t slen = sizeof(si_other);
                     ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
-                    printf("DEBUG: Message processed. Bytes received: %ld\n", bytesRx);
                     if (bytesRx == -1) {
                         // Zkontrolovat, zda došlo k chybě jiné než EWOULDBLOCK/EAGAIN
                         if (errno != EWOULDBLOCK && errno != EAGAIN) {
@@ -203,8 +197,8 @@ public:
                     {   
                         newServerAddr = si_other;  
                         buf[BUFSIZE - 1] = '\0'; 
-                        udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
-                        retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
+                        udpMessage.readAndStoreBytes(buf,bytesRx);
+                        retVal = udpMessage.recvUpdConfirm(lastSentMessageID);
                         if (!receivedConfirm && retVal == SUCCESS) 
                         {
                             receivedConfirm = true;
@@ -214,9 +208,10 @@ public:
                         else if (checkReply && receivedConfirm) 
                         {
 
-                            retVal = udpMessageReceiver.recvUpdIncomingReply(lastSentMessageID);
+                            retVal = udpMessage.recvUpdIncomingReply(lastSentMessageID);
                             if (SUCCESS == retVal)
                             {
+                                udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 receivedConfirm = true;
                                 checkReply = false;
                                 break;
@@ -239,7 +234,7 @@ public:
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > confirmationTimeout) 
                 {
-                    udpMessageTransmitter.sendUdpAuthMessage(sock,newServerAddr);
+                    udpMessage.sendUdpAuthMessage(sock,newServerAddr);
                     currentRetries++;
                 }
             }
@@ -250,12 +245,7 @@ public:
         }
 
         /* Prepare Objects For Main Loop*/
-        udpMessageReceiver.incrementUdpMsgId();
-        udpMessageTransmitter.incrementUdpMsgId();
-        /* Display Name Is Stored In Transmiting Message */
-        udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayNameOutside);
-        /* Channel ID Is Stored In Receiving Message */
-        udpMessageTransmitter.setUdpChannelID(udpMessageReceiver.msg.channelID);
+        udpMessage.incrementUdpMsgId();
         
 
         if (currentRetries >= retryCount) 
@@ -289,14 +279,7 @@ public:
             return NOT_CONNECTED;
         }
 
-        udpMessageReceiver.setUdpMsgId();
-        udpMessageTransmitter.setUdpMsgId();
-
-        /* Display Name Is Stored In Transmiting Message */
-        udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayName);
-        /* Channel ID Is Stored In Receiving Message */
-        udpMessageReceiver.setUdpChannelID(udpMessageTransmitter.msg.channelID);
-
+        udpMessage.setUdpMsgId();
 
         /* Process Authentication */
         retVal = processAuthetification();
@@ -323,9 +306,7 @@ public:
             // Nastavení timeout pro select
             timeout.tv_sec = 0; // 0 sekund
             timeout.tv_usec = 250000; // 250 milisekund
-            printf("DEBUG: Calling select. Timeout: %ld sec, %ld usec\n", timeout.tv_sec, timeout.tv_usec);
             int activity = select(sock + 1, &readfds, NULL, NULL, NULL); 
-            printf("DEBUG: Select activity: %d\n", activity);
             if (-1 == activity) 
             { 
                 perror("WARNING: Select error"); // FIXME
@@ -337,9 +318,8 @@ public:
                 //memset(buf, 0, BUFSIZE);
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
-                    printf("DEBUG: Data available on STDIN\n");
                     // Store Input From STDIN To Vector
-                    udpMessageTransmitter.readAndStoreContent(buf);
+                    udpMessage.readAndStoreContent(buf);
                     // Check Message Validity
                     size_t len = strlen(buf);
                     if (buf[len - 1] == '\n') 
@@ -347,13 +327,13 @@ public:
                         buf[len - 1] = '\0';
                     }
 
-                    retVal = udpMessageTransmitter.checkMessage();
+                    retVal = udpMessage.checkMessage();
                     if(SUCCESS == retVal)
                     {
-                        if ((int)BaseMessages::COMMAND_JOIN == udpMessageTransmitter.msg.type)
+                        if ((int)BaseMessages::COMMAND_JOIN == udpMessage.msg.type)
                         {
                             // Send Join Message
-                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
+                            udpMessage.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();                        
                             // Increment Retries
@@ -363,10 +343,10 @@ public:
                             // Confirm Is Expected
                             expectedConfirm = true;
                         }
-                        else if ((int)BaseMessages::COMMAND_BYE == udpMessageTransmitter.msg.type)
+                        else if ((int)BaseMessages::COMMAND_BYE == udpMessage.msg.type)
                         {
                             printf("DEBUG INFO: COMMAND BYE\n");
-                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
+                            udpMessage.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -378,10 +358,10 @@ public:
                             lastMessage = true;
 
                         }
-                        else if ((int)BaseMessages::MSG == udpMessageTransmitter.msg.type)
+                        else if ((int)BaseMessages::MSG == udpMessage.msg.type)
                         {
                             printf("DEBUG INFO: RECOGNISED MSG\n");
-                            udpMessageTransmitter.sendUdpMessage(sock,newServerAddr);
+                            udpMessage.sendUdpMessage(sock,newServerAddr);
                             // Set Timer
                             startWatch = std::chrono::high_resolution_clock::now();
                             // Increment Retries
@@ -391,9 +371,9 @@ public:
                             // Confirm Is Expected
                             expectedConfirm = true;
                         }
-                        else if ((int)BaseMessages::COMMAND_HELP == udpMessageTransmitter.msg.type)
+                        else if ((int)BaseMessages::COMMAND_HELP == udpMessage.msg.type)
                         {
-                            udpMessageTransmitter.printHelp();
+                            udpMessage.printHelp();
                         }
                     }
                     // TODO: Treba osetrit co vsechno muze funkce (checkMessage) vratit
@@ -403,8 +383,8 @@ public:
             // Activity On Socket (Incoming Message From Server)
             if (FD_ISSET(sock, &readfds))
             {
-                printf("DEBUG: Data available on socket\n");
                 memset(buf, 0, BUFSIZE);
+
                 socklen_t slen = sizeof(si_other);
                 int bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
                 if (bytesRx == -1) {
@@ -418,17 +398,16 @@ public:
                 else
                 {
                     buf[bytesRx-1] = '\0';
-                    udpMessageReceiver.readAndStoreBytes(buf,bytesRx);
+                    udpMessage.readAndStoreBytes(buf,bytesRx);
                     if (true == expectedConfirm)
                     {
                         printf("DEBUG INFO: RECEIVED CONFIRM MESSAGE\n");
-                        retVal = udpMessageReceiver.recvUpdConfirm(lastSentMessageID);
+                        retVal = udpMessage.recvUpdConfirm(lastSentMessageID);
                         if (SUCCESS == retVal)
                         {
                             printf("DEBUG INFO: RECEIVED CONFIRM\n");
                             expectedConfirm = false; // Do not Expect Confirm Anymore
-                            udpMessageReceiver.incrementUdpMsgId();
-                            udpMessageTransmitter.incrementUdpMsgId();
+                            udpMessage.incrementUdpMsgId();
                             if (lastMessage)
                                 return SUCCESS;
                             currentRetries = 0;
@@ -436,7 +415,7 @@ public:
                         else if (EXTERNAL_ERROR == retVal)
                         {
                             // TODO 
-                            udpMessageReceiver.basePrintExternalError();
+                            udpMessage.basePrintExternalError();
                             exit(EXTERNAL_ERROR);
                         }
                         else 
@@ -447,34 +426,37 @@ public:
                     else
                     {
                         // Message With Data Was Send
-                        retVal = udpMessageReceiver.recvUdpMessage(lastSentMessageID);
+                        retVal = udpMessage.recvUdpMessage(lastSentMessageID);
                         if (SUCCESS == retVal)
                         {
                             // Set Retries To Zero
                             currentRetries = 0;
-                            if (UdpMessages::COMMAND_JOIN == udpMessageReceiver.msg.type)
+                            if (UdpMessages::COMMAND_JOIN == udpMessage.msg.type)
                             {
                                 // Command Join Should Not Be Sended To Client
                                 exit(EXIT_FAILURE);
                             }
-                            else if (UdpMessages::COMMAND_BYE == udpMessageReceiver.msg.type)
+                            else if (UdpMessages::COMMAND_BYE == udpMessage.msg.type)
                             {
                                 // Stop The Loop
+                                udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 printf("DEBUG INFO: SERVER CLOSED THE CONNECTION\n");
                                 break;
                             }
-                            else if (UdpMessages::MSG == udpMessageReceiver.msg.type)
+                            else if (UdpMessages::MSG == udpMessage.msg.type)
                             {
                                 // Print The Message
-                                std::string displayNameOutside(udpMessageReceiver.msg.displayNameOutside.begin(), udpMessageReceiver.msg.displayNameOutside.end());
-                                std::string content(udpMessageReceiver.msg.content.begin(), udpMessageReceiver.msg.content.end());
+                                udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
+                                std::string displayNameOutside(udpMessage.msg.displayNameOutside.begin(), udpMessage.msg.displayNameOutside.end());
+                                std::string content(udpMessage.msg.content.begin(), udpMessage.msg.content.end());
                                 printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
                             }
-                            else if (UdpMessages::ERROR == udpMessageReceiver.msgType)
+                            else if (UdpMessages::ERROR == udpMessage.msgType)
                             {
                                 // Print The Error
+                                udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 printf("DEBUG INFO: SHOULD PRINT ERROR\n");
-                                udpMessageReceiver.basePrintExternalError();
+                                udpMessage.basePrintExternalError();
                                 
                             }
                             else if (expectedConfirm && lastMessage)
@@ -483,21 +465,15 @@ public:
                             }
                             
                             // Store Message ID of Message That Has To Be Confirmed
-                            lastReceivedMessageID = udpMessageReceiver.messageID;
+                            lastReceivedMessageID = udpMessage.messageID;
                             // Send Confirmation
-                            udpMessageReceiver.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
+                            udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                             // Message Is Processed -> Clear The Buffer
                             memset(buf, 0, BUFSIZE);
                         }
                     }
                 } 
             }
-
-            /* Display Name Is Stored In Transmiting Message */
-            udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayNameOutside);
-            /* Channel ID Is Stored In Receiving Message */
-            udpMessageReceiver.setUdpChannelID(udpMessageTransmitter.msg.channelID);
-
 
             // Check The Receive TimeOut
             if (expectedConfirm)
@@ -507,8 +483,11 @@ public:
                 if (elapsedTime > confirmationTimeout) 
                 {   
                     printf("DEBUG INFO: OUT OF TIMEOUT!\n");
-                    udpMessageTransmitter.sendUdpMessage(sock,serverAddr);
-                    currentRetries++;
+                    if (UdpMessages::REPLY != udpMessage.msg.type)
+                    {
+                        udpMessage.sendUdpMessage(sock,serverAddr);
+                        currentRetries++;
+                    }
                 }
                 elapsedTime = 0;
 
