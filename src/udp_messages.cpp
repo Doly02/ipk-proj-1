@@ -15,6 +15,8 @@
  *  @brief          Implements Functions That Handles Processing Of UDP Messages.
  * ****************************/
 
+#ifndef UDP_MESSAGES_H
+#define UDP_MESSAGES_H
 
 /************************************************/
 /*                  Libraries                   */
@@ -98,6 +100,8 @@ public:
     std::vector<uint8_t> serializeMessage() {
         std::vector<uint8_t> serialized;
 
+        std::string disp(msg.displayName.begin(),msg.displayName.end());
+
         /*  MESSAGE TYPE */
         serialized.push_back((uint8_t)msg.type);
         /*  MESSAGE ID   */
@@ -119,6 +123,7 @@ public:
                 break;
             case COMMAND_AUTH:
                 /*  USERNAME        */
+                
                 appendContent(serialized, msg.login);
                 /*  DISPLAY NAME    */
                 appendContent(serialized, msg.displayName);
@@ -133,6 +138,7 @@ public:
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
+                printf("DEBUG INFO: DisplayName->|%s|\n",disp.c_str());
                 appendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
                 appendContent(serialized, msg.content);
@@ -154,10 +160,10 @@ public:
         }
         std::string login(msg.login.begin(),msg.login.end());
         std::string cont(msg.content.begin(),msg.content.end());
-        std::string chann(msg.channelID.begin(),msg.channelID.end());
+        std::string displ(msg.displayName.begin(),msg.displayName.end());
         if (msg.type == MSG)
         {
-            printf("DEBUG INFO: SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,chann.c_str(),cont.c_str());
+            printf("DEBUG INFO: SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,displ.c_str(),cont.c_str());
         }
         return serialized;
     }
@@ -281,7 +287,7 @@ public:
         }
         else if (ERROR == msg.type)
         {
-            printError();
+            basePrintExternalError();
             return EXTERNAL_ERROR;
         }
         return AUTH_FAILED;
@@ -292,6 +298,7 @@ public:
     void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
+        printf("DEBUG INFO: AUTH SEND!\n");
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -304,6 +311,7 @@ public:
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
+        printf("DEBUG INFO: CONFIRM type: %d\n",msg.type);
         if (CONFIRM == msg.type)
         {
             printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
@@ -311,15 +319,19 @@ public:
             if (refMessageID == internalId)
             {
                 printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
+                printf("---------------------------------------------------------\n");
+                printf("DEBUG INFO: CONFIRM HANDLED\n");
+                printf("---------------------------------------------------------\n");
                 return SUCCESS;
             }
 
         }
         else if (ERROR == msg.type)
         {
-            printError();
+            basePrintExternalError();
             return EXTERNAL_ERROR;
         }
+
         printf("DEBUG INFO: recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
@@ -352,4 +364,6 @@ public:
 
 };
 
+
+#endif
 

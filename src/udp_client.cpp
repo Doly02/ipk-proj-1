@@ -15,6 +15,8 @@
  *  @brief          Implements Communication With Chat Server Thru UDP Protocol.
  * ****************************/
 
+#ifndef UDP_CLIENT_H
+#define UDP_CLIENT_H
 
 /************************************************/
 /*                  Libraries                   */
@@ -125,8 +127,10 @@ public:
         timeout.tv_usec = 250000;   // 250ms 
 
         while (currentRetries < retryCount) 
-        {    
-            int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
+        {   
+            printf("DEBUG: Calling select. Timeout: %ld sec, %ld usec\n", timeout.tv_sec, timeout.tv_usec);
+            int activity = select(sock + 1, &readfds, NULL, NULL, NULL); 
+            printf("DEBUG: Select activity: %d\n", activity);
             if (activity == -1) {
                 perror("select() failed"); // FIXME
                 exit(EXIT_FAILURE);
@@ -137,8 +141,10 @@ public:
                 // Capture Activity on STDIN
                 if (FD_ISSET(STDIN_FILENO, &readfds)) 
                 {
+                    printf("DEBUG: Data available on STDIN\n");
                     if (fgets(buf, BUFSIZE, stdin) != NULL) 
                     {
+                        
                         size_t len = strlen(buf);
                         if (buf[len - 1] == '\n') 
                         {
@@ -176,19 +182,22 @@ public:
                         }
                     }   
                 }
-    //            std::this_thread::sleep_for(std::chrono::milliseconds(250)); // Čekáme 250ms
 
                 // Check Activity On Socket
                 if (FD_ISSET(sock, &readfds)) 
                 {
+                    printf("DEBUG: Data available on socket\n");
                     memset(buf, 0, BUFSIZE);
                     socklen_t slen = sizeof(si_other);
                     ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
-                    if (-1 == bytesRx) 
-                    {
-                        // Chyba při příjmu dat
-                        perror("WARNING: recvfrom() failed");
-                        exit(EXIT_FAILURE);
+                    printf("DEBUG: Message processed. Bytes received: %ld\n", bytesRx);
+                    if (bytesRx == -1) {
+                        // Zkontrolovat, zda došlo k chybě jiné než EWOULDBLOCK/EAGAIN
+                        if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                            perror("recvfrom() failed");
+                            // Ošetřit chybu
+                        }
+                        break; // Žádná další data k dispozici
                     }
                     else 
                     {   
@@ -217,11 +226,7 @@ public:
                             {
                                 exit(EXTERNAL_ERROR);
                             }
-                            else 
-                            {
-                                // Reply Failed -> Exit
-                                exit(AUTH_FAILED);
-                            }
+                            // TODO Finish The Program?
                         }
                     } 
 
@@ -252,7 +257,9 @@ public:
         /* Channel ID Is Stored In Receiving Message */
         udpMessageTransmitter.setUdpChannelID(udpMessageReceiver.msg.channelID);
         
-        if (currentRetries >= retryCount) {
+
+        if (currentRetries >= retryCount) 
+        {
             // Attempts Overrun
             return AUTH_FAILED;
         }
@@ -285,6 +292,12 @@ public:
         udpMessageReceiver.setUdpMsgId();
         udpMessageTransmitter.setUdpMsgId();
 
+        /* Display Name Is Stored In Transmiting Message */
+        udpMessageReceiver.setUdpDisplayName(udpMessageTransmitter.msg.displayName);
+        /* Channel ID Is Stored In Receiving Message */
+        udpMessageReceiver.setUdpChannelID(udpMessageTransmitter.msg.channelID);
+
+
         /* Process Authentication */
         retVal = processAuthetification();
         if (SERVER_SAYS_BYE == retVal)
@@ -310,8 +323,9 @@ public:
             // Nastavení timeout pro select
             timeout.tv_sec = 0; // 0 sekund
             timeout.tv_usec = 250000; // 250 milisekund
-
-            int activity = select(sock + 1, &readfds, NULL, NULL, &timeout);
+            printf("DEBUG: Calling select. Timeout: %ld sec, %ld usec\n", timeout.tv_sec, timeout.tv_usec);
+            int activity = select(sock + 1, &readfds, NULL, NULL, NULL); 
+            printf("DEBUG: Select activity: %d\n", activity);
             if (-1 == activity) 
             { 
                 perror("WARNING: Select error"); // FIXME
@@ -323,6 +337,7 @@ public:
                 //memset(buf, 0, BUFSIZE);
                 if (fgets(buf, BUFSIZE, stdin) != NULL) 
                 {
+                    printf("DEBUG: Data available on STDIN\n");
                     // Store Input From STDIN To Vector
                     udpMessageTransmitter.readAndStoreContent(buf);
                     // Check Message Validity
@@ -381,22 +396,24 @@ public:
                             udpMessageTransmitter.printHelp();
                         }
                     }
-                    else
-                    {
-                        // TODO: Treba osetrit co vsechno muze funkce (checkMessage) vratit
-                    }                                              
+                    // TODO: Treba osetrit co vsechno muze funkce (checkMessage) vratit
+                                                          
                 }
             }              
             // Activity On Socket (Incoming Message From Server)
             if (FD_ISSET(sock, &readfds))
             {
+                printf("DEBUG: Data available on socket\n");
                 memset(buf, 0, BUFSIZE);
                 socklen_t slen = sizeof(si_other);
                 int bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
-                if (-1 == bytesRx)
-                {
-                    perror("WARNING: recvfrom() failed");
-                    exit(EXIT_FAILURE);
+                if (bytesRx == -1) {
+                    // Zkontrolovat, zda došlo k chybě jiné než EWOULDBLOCK/EAGAIN
+                    if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                        perror("recvfrom() failed");
+                        // Ošetřit chybu
+                    }
+                    break; // Žádná další data k dispozici
                 }
                 else
                 {
@@ -418,7 +435,8 @@ public:
                         }
                         else if (EXTERNAL_ERROR == retVal)
                         {
-                            udpMessageReceiver.printError();
+                            // TODO 
+                            udpMessageReceiver.basePrintExternalError();
                             exit(EXTERNAL_ERROR);
                         }
                         else 
@@ -456,18 +474,14 @@ public:
                             {
                                 // Print The Error
                                 printf("DEBUG INFO: SHOULD PRINT ERROR\n");
-                                udpMessageReceiver.printError();
-                                exit(EXTERNAL_ERROR);
+                                udpMessageReceiver.basePrintExternalError();
+                                
                             }
                             else if (expectedConfirm && lastMessage)
                             {
                                 return SUCCESS;
                             }
-                            else
-                            {
-                                //TODO: Unknown Message Type
-                                exit(EXIT_FAILURE);
-                            }
+                            
                             // Store Message ID of Message That Has To Be Confirmed
                             lastReceivedMessageID = udpMessageReceiver.messageID;
                             // Send Confirmation
@@ -519,3 +533,5 @@ public:
 - Mozna pouzit jeste kopii Transmit aby se poslala ta zprava kterou opavdu chceme
 - Musim umet potvrdit i errror message
 */
+
+#endif

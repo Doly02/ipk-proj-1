@@ -97,6 +97,7 @@ public:
                         // TODO: Dej si pozor co ti to muze vratit! Treba osetrit
                         exit(retVal);
                     }
+                memset(buf, 0, sizeof(buf));
                 }
             }
 
@@ -146,6 +147,7 @@ public:
                 } else {
                     std::cerr << "recv failed" << std::endl;
                 }
+            memset(buf, 0, sizeof(buf));
             }
         }
     }
@@ -194,7 +196,7 @@ public:
             // Check Socket's Activity
             if (FD_ISSET(sock, &readfds)) 
             {
-                memset(buf, 0, sizeof(buf));
+                
                 // Receive A Packet From Server
                 int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
                 if (bytesRx > 0) 
@@ -218,6 +220,7 @@ public:
                     {
                         if (!joinServerMsgSend)
                         {
+                            printf("DEBUG INFO: MSG\n");
                             retVal = tcpMessage.checkJoinReply();
                             if (SUCCESS != retVal)
                             {
@@ -292,6 +295,7 @@ public:
                         std::cerr << "WARNING: recv failed: " << strerror(errno) << std::endl;
                     }
                 }
+            memset(buf, 0, sizeof(buf));
             }
 
             // Check Activity On STDIN
@@ -349,6 +353,7 @@ public:
                         return RetValue;
                     }
                 }
+            memset(buf, 0, sizeof(buf));
             }
 
         }

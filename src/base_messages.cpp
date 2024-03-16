@@ -249,13 +249,16 @@ class BaseMessages
         // Find The Lenght Of Buffer
         size_t len = strlen(buffer);
 
+        printf("DEBUG INFO: RECEIVED: ");
         for (size_t i = 0; i < len; i++)
         {
             if (buffer[i] != '\r' && buffer[i] != '\n')
             {
                 msg.buffer.push_back(buffer[i]);
+                printf("%c",buffer[i]);
             }
         }
+        printf("\n");
         msg.buffer.push_back('\r'); //TODO: Check If It's Needed
         msg.buffer.push_back('\n'); //TODO: Check If It's Needed
 

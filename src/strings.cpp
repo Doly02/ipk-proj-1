@@ -14,14 +14,10 @@
  *  @date           13.03.2024
  *  @brief          Implements Handling Program Arguments.
  * ****************************/
-#include <string>
-#include <cstring>
-#include <vector>
-#include <algorithm>
-#include <regex>
 
-#ifndef STRINGS_H
-#define STRINGS_H
+
+#include "../include/strings.hpp"
+
     /**
      * @brief Compares Content Of Vector And String
      * @param vec Vector To Compare
@@ -29,10 +25,17 @@
      * 
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
-    /*bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
+    /*
+    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
     {
         std::string vecAsString(vec.begin(), vec.end());
         return vecAsString == str;
+    }
+
+    std::string convertToString(const std::vector<char>& inputVector)
+    {   
+    // Vytvoření stringu z vektoru
+    return std::string(inputVector.begin(), inputVector.end());
     }
 
     bool areAllDigitsOrLettersOrDash(const std::vector<char>& vec) {
@@ -56,7 +59,4 @@
         return std::regex_search(str, regexPattern);
     }
     */
-
-#endif // STRINGS_H
-
 
