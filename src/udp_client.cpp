@@ -434,11 +434,13 @@ public:
                             if (UdpMessages::COMMAND_JOIN == udpMessage.msg.type)
                             {
                                 // Command Join Should Not Be Sended To Client
+                                lastReceivedMessageID = udpMessage.messageID;
                                 exit(EXIT_FAILURE);
                             }
                             else if (UdpMessages::COMMAND_BYE == udpMessage.msg.type)
                             {
                                 // Stop The Loop
+                                lastReceivedMessageID = udpMessage.messageID;
                                 udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 printf("DEBUG INFO: SERVER CLOSED THE CONNECTION\n");
                                 break;
@@ -446,7 +448,10 @@ public:
                             else if (UdpMessages::MSG == udpMessage.msg.type)
                             {
                                 // Print The Message
+                                lastReceivedMessageID = udpMessage.messageID;
+                                printf("DEBUG INFO: RECEIVED MESSAGE: messageID=%d\n",udpMessage.messageID);
                                 udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
+                                printf("DEBUG INFO: CONFIRMATION SENT on messageID=%d\n",lastReceivedMessageID);
                                 std::string displayNameOutside(udpMessage.msg.displayNameOutside.begin(), udpMessage.msg.displayNameOutside.end());
                                 std::string content(udpMessage.msg.content.begin(), udpMessage.msg.content.end());
                                 printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
@@ -454,6 +459,7 @@ public:
                             else if (UdpMessages::ERROR == udpMessage.msgType)
                             {
                                 // Print The Error
+                                lastReceivedMessageID = udpMessage.messageID;
                                 udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 printf("DEBUG INFO: SHOULD PRINT ERROR\n");
                                 udpMessage.basePrintExternalError();
@@ -465,9 +471,9 @@ public:
                             }
                             
                             // Store Message ID of Message That Has To Be Confirmed
-                            lastReceivedMessageID = udpMessage.messageID;
+                            // lastReceivedMessageID = udpMessage.messageID;
                             // Send Confirmation
-                            udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
+                            // udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                             // Message Is Processed -> Clear The Buffer
                             memset(buf, 0, BUFSIZE);
                         }

@@ -254,12 +254,14 @@ public:
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
+        printf("DEBUG INFO: recvUdpMessage -> messageID=%d, internalId=%d\n",messageID,internalId);
         if (messageID == internalId)
         {
-            messageID++;
+            printf("DEBUG INFO: recvUdpMessage -> messageID == internalId\n");
             return SUCCESS;
             
         }
+        printf("DEBUG INFO: recvUdpMessage -> RECEIVE NORMAL MSG FAILED\n");
         return MSG_FAILED;
     }
 
