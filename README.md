@@ -24,7 +24,7 @@ The goal of first project for computer communications and networks project is to
 
 
 ### Project Organization 
-
+```
 ipk-proj-1/
 │
 ├── include/                # Header files for class declarations
@@ -57,7 +57,7 @@ ipk-proj-1/
 ├── Makefile                # Makefile for compiling the project
 │
 └── README.md               # Overview and documentation for the project
-
+```
 
 ## Implementation 
 
