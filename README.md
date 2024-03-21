@@ -28,28 +28,28 @@ The goal of first project for computer communications and networks project is to
 ipk-proj-1/
 │
 ├── include/                # Header files for class declarations
-│   ├── arguments.hpp
-│   ├── baseMessages.hpp         # Header file for MyClass
-│   ├── tcpMessages.hpp    # Header file for AnotherClass
-│   ├── udpMessages.hpp
-|   ├── baseClient.hpp
-│   ├── tcpClient.hpp
-│   └── udpClient.hpp
+│   ├── arguments.hpp       # Header file for Argument Processing Class
+│   ├── baseMessages.hpp    # Header file for Base Message Class
+│   ├── tcpMessages.hpp     # Header file for TCP Message Class
+│   ├── udpMessages.hpp     # Header file for UDP Message Class
+│   ├── baseClient.hpp      # Header file for Base Client Class
+│   ├── tcpClient.hpp       # Header file for TCP Client Class
+│   └── udpClient.hpp       # Header file for UDP Client Class
 │
 ├── src/                    # Source files containing class definitions and main application logic
 │   ├── arguments.cpp       # Implementation of Class For Argument Processing
 │   ├── baseMessages.cpp    # Implementation of Base Class For Messages
 │   ├── tcpMessages.cpp     # Implementation of Class For TCP Messages
 │   ├── udpMessages.cpp     # Implementation of Class For UDP Messages
-|   ├── baseClient.cpp      # Implementation of Base Class For Client
+│   ├── baseClient.cpp      # Implementation of Base Class For Client
 │   ├── tcpClient.cpp       # Implementation of Class For TCP Client
 │   ├── udpClient.cpp       # Implementation of Class For UDP Client
 │   └── main.cpp            # Main application entry point
 │
 ├── test/                   # Test files
-│   ├── unit-texts/         # Tests for routine operations over messages, inputs and arguments
-│   │   └── text_parseMessages.cpp
-│   └── tests-w-server/     # Tests of Communication With Server
+│   ├── unit-tests/         # Tests for routine operations over messages, inputs, and arguments
+│   │   └── test_parseMessages.cpp
+│   └── tests-with-server/  # Tests of Communication With Server
 │
 ├── doc/                    # Documentation files and resources
 │   └── doxygen/            # Directory of Doxygen Documentation
@@ -57,6 +57,7 @@ ipk-proj-1/
 ├── Makefile                # Makefile for compiling the project
 │
 └── README.md               # Overview and documentation for the project
+
 
 ## Implementation 
 
