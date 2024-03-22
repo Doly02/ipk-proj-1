@@ -106,6 +106,19 @@ Everything Else As The Previous Commands Are Interpreted As Regular Message.
 
 ### TCP Client
 
+#### Introduction To TCP Communication
+To establish a `TCP connection`, the initial step involves creating a socket, specifying it as a TCP socket with the `SOCK_STREAM` parameter within the socket function. Following socket creation, a three-way handshake is executed, setting up a dedicated connection socket on the server side for the client, a process that, though invisible to the client, occurs server-side and within the transport layer. Upon completing this setup, the connect function is engaged, allowing data exchange to commence.
+
+![Ilustration of TCP Communication](./docs/pics/tcp_communication.png)[2]
+
+In scenarios involving text-based communication, encoding or decoding special strings isn't necessary. Monitoring ensures the exchange of `HELLO` and `BYE` messages. Prior to receiving server messages, the sent string is cleared. Should the `BYE` message remain unsent, the program autonomously sends it, simultaneously notifying the user of the omission through an error indication.
+
+To conclude the session, the program invokes `shutdown` with the parameter `2`, signaling the cessation of both sending and receiving activities. On Windows systems, termination and shutdown actions are performed using `closesocket`. Following these steps, the close function is called to officially close the socket, thereby ending the interaction.
 
 
 ### UDP Client
+
+
+## Resources 
+[1] RFC 793 https://www.ietf.org/rfc/rfc793.txt
+[2] James F. Kurose,Keith W. Ross:Computer Networking: A Top Down Approach (Eight Edition) Figure 2.28 
