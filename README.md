@@ -109,7 +109,10 @@ Everything Else As The Previous Commands Are Interpreted As Regular Message.
 #### Introduction To TCP Communication
 To establish a `TCP connection`, the initial step involves creating a socket, specifying it as a TCP socket with the `SOCK_STREAM` parameter within the socket function. Following socket creation, a three-way handshake is executed, setting up a dedicated connection socket on the server side for the client, a process that, though invisible to the client, occurs server-side and within the transport layer. Upon completing this setup, the connect function is engaged, allowing data exchange to commence.
 
-<img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication [2]" width="300"/>
+<p align="center">
+  <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
+  <em>Ilustration of TCP Communication</em>
+</p>
 
 In scenarios involving text-based communication, encoding or decoding special strings isn't necessary. Monitoring ensures the exchange of `HELLO` and `BYE` messages. Prior to receiving server messages, the sent string is cleared. Should the `BYE` message remain unsent, the program autonomously sends it, simultaneously notifying the user of the omission through an error indication.
 
