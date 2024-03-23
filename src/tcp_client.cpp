@@ -142,10 +142,15 @@ public:
                             exit(AUTH_FAILED); 
                         }
                     }
-                } else if (bytesRx == 0) {
+                } 
+                else if (bytesRx == 0) 
+                {
                     break; // Server closed the connection
-                } else {
-                    std::cerr << "recv failed" << std::endl;
+                } 
+                else 
+                {
+                    tcpMessage.insertErrorMsgToContent("ERR: recv failed\n");
+                    tcpMessage.basePrintInternalError(0); // TODO
                 }
             memset(buf, 0, sizeof(buf));
             }
@@ -220,7 +225,6 @@ public:
                     {
                         if (!joinServerMsgSend)
                         {
-                            printf("DEBUG INFO: MSG\n");
                             retVal = tcpMessage.checkJoinReply();
                             if (SUCCESS != retVal)
                             {
@@ -274,8 +278,6 @@ public:
                         else
                         {
                             // TODO: Dve moznosti co to muze vratit -> je treba to osetrit!
-                            printf("WARNING Error: %d\n", retVal);
-                            //return retVal;
                         }
                     }
                     
@@ -285,14 +287,16 @@ public:
                 else if (bytesRx == 0) 
                 {
                     /* Server Closed The Connection */
-                    printf("DEBUG INFO: Server Closed The Connection\n");
+                    tcpMessage.insertErrorMsgToContent("Server Closed The Connection");
+                    tcpMessage.basePrintInternalError(0); //TODO:
                     break;
                 } 
                 else 
                 {
                     if (errno != EAGAIN && errno != EWOULDBLOCK) 
                     {
-                        std::cerr << "WARNING: recv failed: " << strerror(errno) << std::endl;
+                        tcpMessage.insertErrorMsgToContent("recv failed (EAGAIN/EWOULDBLOCK)");
+                        tcpMessage.basePrintInternalError(0); 
                     }
                 }
             memset(buf, 0, sizeof(buf));

@@ -24,6 +24,8 @@ static constexpr int8_t CONFIRM_FAILED      = 0x55;
 static constexpr int    OUT_OF_TIMEOUT      = 0x77;
 static constexpr int    SERVER_SAYS_BYE     = 1;    //!< Indicates That Server Sent BYE Message
 static constexpr int AUTHENTICATION_BYE     = 74;   //!< Indicates That User Send Bye During Authetication Process To Server
+static constexpr int ALREADY_PROCESSED_MSG  = 2;   //!< Indicates That Message Was Already Processed
+static constexpr int UNEXPECTED_MESSAGE     = 3;    //!< Indicates That Command Is Invalid
 
 static constexpr int AUTH_FAILED            = -1;   //!< Indicates That Authentication Did Not Proceed Properly
 static constexpr int JOIN_FAILED            = -2;   //!< Indicates That An Error Occurred During The Processing of The Join Command
@@ -32,7 +34,6 @@ static constexpr int MSG_PARSE_FAILED       = -4;   //!< Indicates That Parsing 
 static constexpr int FAIL                   = -5;   //!< Indicates That Operation FAILED During Run-Time
 static constexpr int EXTERNAL_ERROR         = -6;   //!< Indicates That An External Error Occurred
 static constexpr int NON_VALID_PARAM        = -7;   //!< Indicates That String Contains Non-Alphanumeric Characters
-
 /*****************************************************/
 /*                  Message Limits                   */
 /*****************************************************/

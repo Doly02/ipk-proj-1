@@ -122,6 +122,11 @@ class BaseMessages
             return std::isdigit(c) || std::isalpha(c) || c == '-'; 
         });
     }
+    bool areAllDigitsOrLettersOrDashOrDot(const std::vector<char>& vec) {
+        return std::all_of(vec.begin(), vec.end(), [](char c) { 
+            return std::isdigit(c) || std::isalpha(c) || c == '-'|| c == '.'; 
+        });
+    }
     bool areAllPrintableCharacters(const std::vector<char>& vec) 
     {
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x21 && c <= 0x7E; });
@@ -183,7 +188,7 @@ class BaseMessages
         if (msg.type == COMMAND_JOIN)
         {
             // Check Channel ID
-            if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDash(msg.channelID)))
+            if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDashOrDot(msg.channelID)))
             {
                 insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
                 basePrintInternalError(NON_VALID_PARAM);
