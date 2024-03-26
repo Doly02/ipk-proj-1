@@ -6,7 +6,7 @@
 The goal of first project for computer communications and networks project is to implement a client for chat server[ using IPK24-CHAT protocol ] (https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201/README.md) which can communicate with any server using  IPK24-CHAT protocol.
 
 ## Table of contents
--   [UML Diagram](#UML-diagram)
+-   [Requirements](#Requirements)
 -   [Project organization](#Project-organization)
 - [Implementation](#Implementation)
 -   [Arguments](#Arguments)
@@ -18,9 +18,32 @@ The goal of first project for computer communications and networks project is to
 -   [Extra functionality ](#Extra-functionality )
 -   [Resources](#Resources)
 
-# Project Requirements 
+## Requirements
+To build and run `ipk24chat-client`, you will need the following:
 
-### Installation
+### Compiler
+- **Clang++** with support for **C++17** standard. This project uses specific compiler flags to enforce code quality and standards. Make sure your compiler version supports `-std=c++17` along with the flags `-Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic`.
+
+### Libraries
+- **Google Test (gtest)**: Required for compiling and running the unit tests. Ensure you have Google Test installed on your system as it uses `-lgtest -lgtest_main -pthread` flags for linking.
+
+### Build Tools
+- **Make**: This project uses a `Makefile` for easy building and testing. Ensure you have Make installed on your system.
+
+### Operating System
+- The Makefile and C++ code were designed with Unix-like environments in mind (Linux, MacOS). While it may be possible to compile and run the project on Windows, using a Unix-like environment (or WSL for Windows users) is recommended.
+
+### Debugging (Optional)
+- For debugging, this project uses Clang++'s AddressSanitizer which requires `-fsanitize=address` flag. Ensure your development environment supports AddressSanitizer if you intend to use the debug build.
+
+## Installation
+1. Clone the repository to your local machine.
+2. Navigate to the project directory.
+3. Run `make` to build the client application. This will create the `ipk24chat-client` executable.
+4. (Optional) Run `make test` to build and run the unit tests. Ensure you have Google Test installed.
+5. (Optional) Run `make debug` to build the application with debug flags enabled.
+
+Please refer to the Makefile for additional targets and commands.
 
 
 ### Project Organization 
@@ -78,30 +101,30 @@ Arguments that are checked and verified:
 
 ### User's possibilities 
 
-# Authentication Command 
+#### Authentication Command 
 Authenticates the client. 
 ```
 /auth {Username} {Secret} {DisplayName}
 ```
 
-# Join Command
+#### Join Command
 Joins Client To Join Specific Channel.
 ```
 /join {ChannelID}
 ```
 
-# Rename Command 
+#### Rename Command 
 Sets Different Local Display Name. 
 ```
 /rename {DisplayName}
 ```
 
-# Command Print Help
+#### Command Print Help
 Prints Help Statement.
 ```
 /help
 ```
-# Messages
+#### Messages
 Everything Else As The Previous Commands Are Interpreted As Regular Message.
 
 ### TCP Client
@@ -121,7 +144,16 @@ To conclude the session, the program invokes `shutdown` with the parameter `2`, 
 
 ### UDP Client
 
+#### Introduction To UDP Communication
+
+UPD protocol provides a connectionless and unreliable communication service, meaning that it does not establish a dedicated connection between the sender and receiver and does not guarantee the delivery of data packets. Instead, UDP sends data packets, called datagrams, without any acknowledgment or error checking. These datagrams are transmitted independently and can arrive out of order, be duplicated, or even be lost during transmission. The lack of built-in reliability mechanisms in UDP allows fast, low-latency communication, making it ideal for that can tolerate lost packets, such as streaming audio or video, where speed is more crucial than perfect accuracy. [3] [4]
+
 
 ## Resources 
-[1] RFC 793 https://www.ietf.org/rfc/rfc793.txt
-[2] James F. Kurose,Keith W. Ross:Computer Networking: A Top Down Approach (Eight Edition) Figure 2.28 
+- [1] RFC 793 
+- Let's find more on https://www.ietf.org/rfc/rfc793.txt
+- [2] James F. Kurose, Keith W. Ross:Computer Networking: A Top Down Approach (Eight Edition) Figure 2.28
+- [3] 
+- Let's find more on https://www.erg.abdn.ac.uk/users/gorry/course/inet-pages/udp.html 
+- [4] Marek Majkowski, Everything you ever wanted to know about UDP sockets but were afraid to ask, part 1
+- Let's find more on https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1
