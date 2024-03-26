@@ -82,6 +82,11 @@ public:
         messageID = 1;
     }
 
+    uint16_t getUdpMsgId()
+    {
+        return messageID;
+    }
+
     void setUdpDisplayName(const std::vector<char>& displayNameVec)
     {
         msg.displayName.assign(displayNameVec.begin(), displayNameVec.end());

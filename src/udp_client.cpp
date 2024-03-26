@@ -410,7 +410,6 @@ public:
                         if (SUCCESS == retVal)
                         {
                             expectedConfirm = false; // Do not Expect Confirm Anymore
-                            udpMessage.incrementUdpMsgId(); // FIXME
                             counterId++;
                             if (lastMessage)
                                 return SUCCESS;
