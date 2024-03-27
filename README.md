@@ -51,27 +51,12 @@ Please refer to the Makefile for additional targets and commands.
 ipk-proj-1/
 │
 ├── include/                # Header files for class declarations
-│   ├── arguments.hpp       # Header file for Argument Processing Class
-│   ├── baseMessages.hpp    # Header file for Base Message Class
-│   ├── tcpMessages.hpp     # Header file for TCP Message Class
-│   ├── udpMessages.hpp     # Header file for UDP Message Class
-│   ├── baseClient.hpp      # Header file for Base Client Class
-│   ├── tcpClient.hpp       # Header file for TCP Client Class
-│   └── udpClient.hpp       # Header file for UDP Client Class
 │
 ├── src/                    # Source files containing class definitions and main application logic
-│   ├── arguments.cpp       # Implementation of Class For Argument Processing
-│   ├── baseMessages.cpp    # Implementation of Base Class For Messages
-│   ├── tcpMessages.cpp     # Implementation of Class For TCP Messages
-│   ├── udpMessages.cpp     # Implementation of Class For UDP Messages
-│   ├── baseClient.cpp      # Implementation of Base Class For Client
-│   ├── tcpClient.cpp       # Implementation of Class For TCP Client
-│   ├── udpClient.cpp       # Implementation of Class For UDP Client
-│   └── main.cpp            # Main application entry point
 │
 ├── test/                   # Test files
 │   ├── unit-tests/         # Tests for routine operations over messages, inputs, and arguments
-│   │   └── test_parseMessages.cpp
+│   │   
 │   └── tests-with-server/  # Tests of Communication With Server
 │
 ├── doc/                    # Documentation files and resources
@@ -148,6 +133,37 @@ To conclude the session, the program invokes `shutdown` with the parameter `2`, 
 
 UPD protocol provides a connectionless and unreliable communication service, meaning that it does not establish a dedicated connection between the sender and receiver and does not guarantee the delivery of data packets. Instead, UDP sends data packets, called datagrams, without any acknowledgment or error checking. These datagrams are transmitted independently and can arrive out of order, be duplicated, or even be lost during transmission. The lack of built-in reliability mechanisms in UDP allows fast, low-latency communication, making it ideal for that can tolerate lost packets, such as streaming audio or video, where speed is more crucial than perfect accuracy. [3] [4]
 
+### Testing
+This section is dedicated to testing the project, so what was tested?
+- unit tests on individual class methods
+- communication testing with fake server - NETCAT
+- bilateral communication with personal local UDP server
+- bilateral communication with reference server 
+The following subsections will explain the individual parts of the testing.
+
+#### Unit tests on individual class methods
+The aim of the unit test was to guarantee the correctness and expected behavior of the individual class methods. Testing was performed on critical methods that interact with either STDIN/STDOUT/STDERR or manipulate messages.
+**Note:** Not all methods were tasted by unit test, just the critical ones!
+
+#### Communication testing with fake server - NETCAT
+Netcat, often referred to as the "Swiss Army Knife of networking tools", is a computer tool used for networking. It allows reading from and writing to TCP or UDP network connections using the command line.
+
+Netcat was used to confirm the correctness of the communication based on the IPK24 protocol. Both TCP and UDP were tested for a variety of key situations that can occur in reality during client-server communication. Such as:
+
+    1. Client authentication with server rejection or acceptance
+    2. The client sends a message other than the authentication message after start of the application
+    3. Servers error occurs in authentication state
+    4. Multiple messages sent from server to client (Client just as a listener)
+    5. Client wants to join another channel and server rejects 
+    6. Client wants to join another channel and server accepts
+    7. Server in UDP variant sends error message instead of CONFIRM message
+    8. Server in UDP variant sends error message instead of REPLY message
+
+#### Bilateral communication with personal local UDP server
+Testing of the UDP client was conducted on a local chat server to ensure the correct implementation of basic and more complex functionalities. The primary focus was on the clients' ability to handle various communication scenarios that are typical in client-server interactions.
+
+#### Bilateral communication with reference server
+Due to the complexity of simulating situations on the reference server using test scripts (because of the interaction with other users contents), only the manual tests with scenarios were tested on the reference server. The test scenarios were described in chapter [Communication testing with fake server - NETCAT](#communication-testing-with-fake-server---netcat). The interaction in all scenarios went as expected i.e. as [specified](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/README.md)
 
 ## Resources 
 [RFC791]: Information Sciences Institute, University of Southern California. "Internet Protocol" [online]. September 1981. [cited 2024-03-26]. DOI: 10.17487/RFC791. Available at [https://www.ietf.org/rfc/rfc793.txt](https://www.ietf.org/rfc/rfc793.txt).
