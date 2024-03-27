@@ -18,7 +18,7 @@
 #ifndef BASE_MESSAGES_HPP
 #define BASE_MESSAGES_HPP
 
-#include "../include/macros.hpp"
+#include "macros.hpp"
 #include "strings.hpp"
 #include <string>
 #include <vector>
@@ -26,7 +26,8 @@
 
 class BaseMessages {
 public:
-    enum MessageType_t : uint8_t {
+    enum MessageType_t : uint8_t 
+    {
         CONFIRM = 0x00,
         REPLY = 0x01,
         COMMAND_AUTH = 0x02,
@@ -38,7 +39,8 @@ public:
         UNKNOWN_MSG_TYPE = 0x99,
     };
 
-    enum InputType_t {
+    enum InputType_t 
+    {
         INPUT_UNKNOWN,
         INPUT_AUTH,
         INPUT_JOIN,

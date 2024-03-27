@@ -81,6 +81,7 @@ using Milliseconds = std::chrono::milliseconds;
         int retVal = 0;
         bool checkReply = false;            //!< Indicates Whether It is Expected Reply Message
         const struct sockaddr_in& serverAddr = getServerAddr();
+        udpMessage.msg.type = BaseMessages::UNKNOWN_MSG_TYPE;
 
         /* Timers */
         TimePoint startWatch;               //!< Contains the Initial Measurement Time
@@ -136,7 +137,7 @@ using Milliseconds = std::chrono::milliseconds;
                 }
 
                 // Check Activity On Socket
-                if (FD_ISSET(sock, &readfds)) 
+                if (FD_ISSET(sock, &readfds) && checkReply) 
                 {
                     memset(buf, 0, BUFSIZE);
                     socklen_t slen = sizeof(si_other);
@@ -148,6 +149,7 @@ using Milliseconds = std::chrono::milliseconds;
                         {
                             perror("recvfrom() failed");
                         }
+                        printf("DEBUG: bytesRx = -1\n");
                         break; 
                     }
                     else 
@@ -207,6 +209,7 @@ using Milliseconds = std::chrono::milliseconds;
 
         if (currentRetries >= retryCount) 
         {
+            printf("DEBUG: Attempts Overrun\n");
             // Attempts Overrun
             return AUTH_FAILED;
         }
@@ -244,7 +247,7 @@ using Milliseconds = std::chrono::milliseconds;
         }
         else if (SUCCESS != retVal)
         {
-            udpMessage.insertErrorMsgToContent("ERR: Authentication Failed\n");
+            udpMessage.insertErrorMsgToContent("Authentication Failed\n");
             udpMessage.basePrintInternalError(retVal);
             return retVal;
         }

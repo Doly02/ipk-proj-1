@@ -85,6 +85,7 @@
         if (sock != NOT_CONNECTED)
         {
             close(sock);
+            std::cout << "Client destructor called -> Sock Closed" << std::endl;
         }
     }
 
