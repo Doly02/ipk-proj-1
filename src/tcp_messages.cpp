@@ -15,37 +15,23 @@
  *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
  * ****************************/
 
-#ifndef TCP_MESSAGES_H
-#define TCP_MESSAGES_H
-
-
 #define DEBUG_MACRO 0
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <string>
-#include <vector>
-#include <iostream>
-#include <regex>
-#include <cstring>
-#include <sys/socket.h>
-#include "../include/base_messages.hpp"
+#include "../include/tcp_messages.hpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
 
-class TcpMessages : public BaseMessages
-{
-public:
-    TcpMessages() : BaseMessages() {}
-    TcpMessages(MessageType_t type, const Message_t& content) : BaseMessages(type, content) {}
+    TcpMessages::TcpMessages() : BaseMessages() {}
 
     /**
     * @brief Sends Authentication Message.
     * @param client_socket Client Socket
     * @return None
     */
-    void sendAuthMessage(int client_socket)
+    void TcpMessages::sendAuthMessage(int client_socket)
     {
         std::string msgToSend = "AUTH " + std::string(msg.login.begin(), msg.login.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + " USING " + std::string(msg.secret.begin(), msg.secret.end()) + "\r\n";
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -61,7 +47,7 @@ public:
      * 
      * @return Returns BaseMessages::SUCCESS If Everything Went Well Otherwise Returns BaseMessages::JOIN_FAILED
     */
-    int checkJoinReply() {
+    int TcpMessages::checkJoinReply() {
         const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
         const std::string prefix = "^MSG FROM Server IS ";
         const std::string stdPrefixLenght = "MSG FROM Server IS ";
@@ -100,7 +86,7 @@ public:
      * Sends 'Join' Message
      * @return None
     */
-    void sendJoinMessage(int client_socket)
+    void TcpMessages::sendJoinMessage(int client_socket)
     {
         std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
         printf("DEBUG INFO: JOIN MSG: %s",msgToSend.c_str());
@@ -119,7 +105,7 @@ public:
      * Sends 'Bye' Message
      * @return None
     */
-    void sentByeMessage(int clientSocket)
+    void TcpMessages::sentByeMessage(int clientSocket)
     {
         std::string msgToSend = "BYE\r\n"; //TODO:  "\r\n" WARNING!
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -135,7 +121,7 @@ public:
      * Sends User's Message To Server
      * @return None
     */
-    void sentUsersMessage(int clientSocket)
+    void TcpMessages::sentUsersMessage(int clientSocket)
     {
         std::string msgToSend = "MSG FROM " + std::string(msg.displayName.begin(), msg.displayName.end()) + " IS " + std::string(msg.content.begin(), msg.content.end()) + "\r\n";
         ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
@@ -143,7 +129,7 @@ public:
             perror("ERROR in sendto");
     }
 
-    int checkIfErrorOrBye()
+    int TcpMessages::checkIfErrorOrBye()
     {
         size_t idx = 0;
     
@@ -206,7 +192,7 @@ public:
     }
 
 
-    void sendErrorMessage(int clientSocket, MessageType_t type)
+    void TcpMessages::sendErrorMessage(int clientSocket, MessageType_t type)
     {
         /* Variables */
         std::string errContent;
@@ -224,9 +210,4 @@ public:
         if (bytesTx < 0)
             perror("ERROR in sendto");        
     }
-
-};
-
-
-#endif
 

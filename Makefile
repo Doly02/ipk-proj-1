@@ -19,7 +19,7 @@ CFLAGS = -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic 
 DEBUG_CFLAGS = -fsanitize=address -g -std=c++17 -Wall -Wextra -Werror -Wshadow -Wnon-virtual-dtor -pedantic
 
 # Header Files
-HEADERS = include/macros.hpp include/strings.hpp include/arguments.hpp include/base_messages.hpp
+HEADERS = include/macros.hpp include/strings.hpp include/arguments.hpp include/base_messages.hpp include/base_client.hpp include/tcp_messages.hpp 
 
 # Source Files
 SOURCES = src/arguments.cpp src/base_client.cpp src/base_messages.cpp src/tcp_messages.cpp src/udp_messages.cpp src/tcp_client.cpp src/udp_client.cpp src/main.cpp

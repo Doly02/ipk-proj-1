@@ -29,8 +29,8 @@
 #include <unistd.h> 
 #include <csignal>     
 #include <vector>
-#include "tcp_messages.cpp"
-#include "base_client.cpp"
+#include "../include/tcp_messages.hpp"
+#include "../include/base_client.hpp"
 /************************************************/
 /*                  CLASS                       */
 /************************************************/

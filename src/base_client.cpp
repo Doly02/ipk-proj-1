@@ -15,24 +15,10 @@
  *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
  * ****************************/
 
-#ifndef CLIENT_H
-#define CLIENT_H
-
-
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <arpa/inet.h>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <iostream>
-#include <netinet/in.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <vector>
+#include "../include/base_client.hpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -42,21 +28,6 @@
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-class Client
-{
-private:
-
-    std::string _serverAddress;  //!< IP Address of The Server
-    int _port;                   //!< Port Number on Which The Server Is Listening
-    uint _protocol;
-
-public:
-    int sock;                 //!<  File Descriptor of The Socket Used For Communication
-    struct sockaddr_in server;  //!< Structure Containing Server's Address Information
-    static constexpr uint TCP = 99u;
-    static constexpr uint UDP = 100u;
-
-    static constexpr int NOT_CONNECTED = -1;
     /**
      * @brief Constructor of TcpClient Class 
      * @param addr Server's Address 
@@ -64,8 +35,8 @@ public:
      *
      * Constructor Initialize Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
-\     */
-    Client(const std::string& addr, int port, uint prot) 
+     */
+    Client::Client(const std::string& addr, int port, uint prot) 
         : _serverAddress(addr), _port(port), _protocol(prot), sock(NOT_CONNECTED)
     {
 
@@ -109,7 +80,7 @@ public:
      * Constructor Of Client With Server's Address And Port.
      * Default State of Socket Is Set To NOT_CONNECTED.
      */
-    virtual ~Client()
+    Client::~Client()
     {
         if (sock != NOT_CONNECTED)
         {
@@ -117,7 +88,7 @@ public:
         }
     }
 
-    void updateServerAddress(const std::string& newAddress) 
+    void Client::updateServerAddress(const std::string& newAddress) 
     {
         _serverAddress = newAddress;
     }
@@ -125,12 +96,12 @@ public:
      * @brief Determine If The Client Is Connected To The Server
      * @return True If The Client Is Connected, False Otherwise
      */
-    bool isConnected() {
+    bool Client::isConnected() {
         return sock != NOT_CONNECTED;
     }
 
     // Return server's struct 
-    const struct sockaddr_in& getServerAddr() const 
+    const struct sockaddr_in& Client::getServerAddr() const 
     {
         return server;
     }
@@ -138,9 +109,3 @@ public:
      * @brief Connects The Client To The Server
      * @return True If The Connection Was Successful, False Otherwise
      */
-
-
-};
-
-
-#endif // CLIENT_H
