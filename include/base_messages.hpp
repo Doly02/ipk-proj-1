@@ -1,18 +1,18 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      base_messages.cpp
+ *  File Name:      base_messages.hpp
  *  Author:         Tomas Dolak
  *  Date:           27.03.2024
- *  Description:    Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  Description:    Header File For Messages Base Class. 
  *
  * ****************************/
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           base_messages.cpp
+ *  @file           base_messages.hpp
  *  @author         Tomas Dolak
  *  @date           27.03.2024
- *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  @brief          Header File For Messages Base Class. 
  * ****************************/
 
 #ifndef BASE_MESSAGES_HPP
@@ -47,7 +47,8 @@ public:
         INPUT_HELP
     };
 
-    struct Message_t {
+    struct Message_t 
+    {
         MessageType_t type;
         std::vector<char> content;
         bool isCommand;
@@ -66,7 +67,7 @@ public:
     BaseMessages();
     BaseMessages(MessageType_t type, Message_t content);
     ~BaseMessages();
-    
+
     void insertErrorMsgToContent(const std::string& inputString);
     void cleanMessage();
     int checkLength();

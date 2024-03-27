@@ -3,7 +3,7 @@
  *  File Name:      arguments.hpp
  *  Author:         Tomas Dolak
  *  Date:           27.03.2024
- *  Description:    Implements Handling Program Arguments.
+ *  Description:    Header File For Implementation Handling Program Arguments.
  *
  * ****************************/
 
@@ -12,7 +12,7 @@
  *  @file           arguments.hpp
  *  @author         Tomas Dolak
  *  @date           27.03.2024
- *  @brief          Implements Handling Program Arguments.
+ *  @brief          Header File For Implementation Handling Program Arguments.
  * ****************************/
 
 

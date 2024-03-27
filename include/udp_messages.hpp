@@ -1,6 +1,6 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      udp_messages.cpp
+ *  File Name:      udp_messages.hpp
  *  Author:         Tomas Dolak
  *  Date:           27.03.2024
  *  Description:    Implements Functions That Handles Processing Of UDP Messages.
@@ -9,7 +9,7 @@
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           udp_messages.cpp
+ *  @file           udp_messages.hpp
  *  @author         Tomas Dolak
  *  @date           27.03.2024
  *  @brief          Implements Functions That Handles Processing Of UDP Messages.

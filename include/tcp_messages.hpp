@@ -1,18 +1,18 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      tcp_messages.cpp
+ *  File Name:      tcp_messages.hpp
  *  Author:         Tomas Dolak
- *  Date:           21.02.2024
- *  Description:    Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  Date:           27.03.2024
+ *  Description:    Implements Functions That Handles Processing Of TCP Messages.
  *
  * ****************************/
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           tcp_messages.cpp
+ *  @file           tcp_messages.hpp
  *  @author         Tomas Dolak
- *  @date           21.02.2024
- *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
+ *  @date           27.03.2024
+ *  @brief          Implements Functions That Handles Processing Of TCP Messages.
  * ****************************/
 #ifndef TCP_MESSAGES_HPP
 #define TCP_MESSAGES_HPP

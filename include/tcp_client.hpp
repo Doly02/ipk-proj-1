@@ -1,17 +1,17 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      tcp_client.cpp
+ *  File Name:      tcp_client.hpp
  *  Author:         Tomas Dolak
- *  Date:           21.02.2024
+ *  Date:           27.03.2024
  *  Description:    Implements Communication With Chat Server Thru TCP Protocol.
  *
  * ****************************/
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           tcp_client.cpp
+ *  @file           tcp_client.hpp
  *  @author         Tomas Dolak
- *  @date           21.02.2024
+ *  @date           27.03.2024
  *  @brief          Implements Communication With Chat Server Thru TCP Protocol.
  * ****************************/
 

@@ -2,8 +2,8 @@
  *  Project:        IPK Project 1 - Client for Chat Servers
  *  File Name:      strings.hpp
  *  Author:         Tomas Dolak
- *  Date:           13.03.2024
- *  Description:    Implements Handling Program Arguments.
+ *  Date:           27.03.2024
+ *  Description:    Implements Operations Over Strings And String Vector. 
  *
  * ****************************/
 
@@ -11,8 +11,8 @@
  *  @package        IPK Project 1 - Client for Chat Servers
  *  @file           strings.hpp
  *  @author         Tomas Dolak
- *  @date           13.03.2024
- *  @brief          Implements Handling Program Arguments.
+ *  @date           27.03.2024
+ *  @brief          Implements Operations Over Strings And String Vector.
  * ****************************/
 
 #ifndef STRINGS_H

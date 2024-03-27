@@ -3,7 +3,7 @@
  *  File Name:      base_client.hpp
  *  Author:         Tomas Dolak
  *  Date:           27.03.2024
- *  Description:    Defines Used Constants Such As Return Codes In Project.
+ *  Description:    Header File For Client Base Class. 
  *
  * ****************************/
 
@@ -12,7 +12,7 @@
  *  @file           base_client.hpp
  *  @author         Tomas Dolak
  *  @date           27.03.2024
- *  @brief          Defines Used Constants Such As Return Codes In Project.
+ *  @brief          Header File For Client Base Class. 
  * ****************************/
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
