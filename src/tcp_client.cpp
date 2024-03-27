@@ -1,6 +1,6 @@
 /******************************
  *  Project:        IPK Project 1 - Client for Chat Servers
- *  File Name:      tcp.cpp
+ *  File Name:      tcp_client.cpp
  *  Author:         Tomas Dolak
  *  Date:           21.02.2024
  *  Description:    Implements Communication With Chat Server Thru TCP Protocol.
@@ -9,53 +9,28 @@
 
 /******************************
  *  @package        IPK Project 1 - Client for Chat Servers
- *  @file           tcp.cpp
+ *  @file           tcp_client.cpp
  *  @author         Tomas Dolak
  *  @date           21.02.2024
  *  @brief          Implements Communication With Chat Server Thru TCP Protocol.
  * ****************************/
 
-#ifndef TCP_CLIENT_H
-#define TCP_CLIENT_H
-
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <cstdlib>
-#include <netinet/in.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <fcntl.h>
-#include <unistd.h> 
-#include <csignal>     
-#include <vector>
-#include "../include/tcp_messages.hpp"
-#include "../include/base_client.hpp"
+#include "../include/tcp_client.hpp"
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-class TcpClient : public Client {
-private:
-    fd_set readfds;
-    int max_sd;
-    struct timeval tv;
-    bool sendAuth = false;
-    bool checkReply = false;
-    bool authConfirmed = false;
-    const int BUFSIZE = 1536;
-    char buf[1536];
-    TcpMessages tcpMessage;
-
-public:
-    TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {
+    TcpClient::TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {
         // Constructor
     }
 
-    ~TcpClient() {
+    TcpClient::~TcpClient() {
         // Destructor
     }
 
-    void tcpHandleInterrupt(int signal)
+    void TcpClient::tcpHandleInterrupt(int signal)
     {
         if (signal == SIGINT || signal == SIGTERM)
         {   
@@ -68,7 +43,7 @@ public:
 
 
 
-    void checkAuthentication() 
+    void TcpClient::checkAuthentication() 
     {
         int retVal = 0;
         while (!authConfirmed) {
@@ -158,7 +133,7 @@ public:
     }
 
 
-    int runTcpClient()
+    int TcpClient::runTcpClient()
     {
         /* Variables */
         int retVal = 0;
@@ -364,11 +339,8 @@ public:
         return 0;
     };
 
-#endif // TCP_CLIENT_H
 
 // NOTES:
-/* Melo by fungovat odesilani zpravy AUTH 
- */
 /* Potreba dodelat -> Momentalne se pracuje se dvemi buffery je treba pouzit jen jeden
  *   -> pouziva se char Buf[1024] a <vector> Content -> Nejlepsi bude pouzivat Pouze Content a kdyz budes potrebovat tak si to prekonvertujes na Buf "ale jakoby pouze virtualne"
  */
@@ -384,4 +356,3 @@ public:
  * -> rozdelit CheckIfErrorOrBye
  */
 
-};

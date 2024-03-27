@@ -20,13 +20,8 @@
 /*******************************************************/
 /*                  Libraries                          */
 /*******************************************************/
-#include <iostream>
-#include <string>
-#include <vector>
-#include <cstring>
-
 #include "../include/arguments.hpp"
-#include "tcp_client.cpp"
+#include "../include/tcp_client.hpp"
 #include "udp_client.cpp"
 /*******************************************************/
 /*                  Global Variables                   */
