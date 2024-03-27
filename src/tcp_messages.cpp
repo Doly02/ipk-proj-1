@@ -29,7 +29,7 @@
 #include <regex>
 #include <cstring>
 #include <sys/socket.h>
-#include "base_messages.cpp"
+#include "../include/base_messages.hpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/

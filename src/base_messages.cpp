@@ -15,9 +15,6 @@
  *  @brief          Implements Serialization & Deserialization of Messages For TCP Protocol.
  * ****************************/
 
-#ifndef BASE_MESSAGES_H
-#define BASE_MESSAGES_H
-
 #define DEBUG_MACRO 0
 /************************************************/
 /*                  Libraries                   */
@@ -31,58 +28,13 @@
 #include <iostream>
 #include <regex>
 #include <sys/socket.h>
-#include "../include/macros.hpp"
+#include "../include/base_messages.hpp"
 //#include "strings.cpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
-class BaseMessages 
-{
-    public:
-    /* MESSAGE TYPES */
-    enum MessageType_t : uint8_t
-    {
-        CONFIRM          = 0x00,     //!< Confirm - Template: CONFIRM {MessageID}\r\n
-        REPLY            = 0x01,     //!< Reply - Template: REPLY IS {MessageContent}\r\n
-        COMMAND_AUTH     = 0x02,     //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
-        COMMAND_JOIN     = 0x03,     //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
-        MSG              = 0x04,     //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
-        COMMAND_HELP     = 0x05,
-        ERROR            = 0xFE,     //!< Error - Template: ERROR FROM {DisplayName} IS {MessageContent}\r\n
-        COMMAND_BYE      = 0xFF,     //!< Disconnect - Template: BYE\r\n
-        UNKNOWN_MSG_TYPE = 0x99,     //!< Unknown Message Type
 
-    };
-    enum InputType_t
-    {
-        INPUT_UNKNOWN,    //!< Unknown Input
-        INPUT_AUTH,       //!< Authentication - Template: AUTH {Username} USING {Secret}\r\n
-        INPUT_JOIN,       //!< Join - Template: JOIN {ChannelID} AS {DisplayName}\r\n
-        INPUT_RENAME,     //!< Rename - Template: RENAME {NewDisplayName}\r\n
-        INPUT_MSG,        //!< Message - Template: MSG FROM {DisplayName} IS {MessageContent}\r\n
-        INPUT_HELP        //!< Disconnect - Template: BYE\r\n
-    };
-
-    struct Message_t
-    {
-        /* data */
-        MessageType_t type;             //!< Type of The Message
-        std::vector<char> content;      //!< Content of The Message
-        bool isCommand;                 //!< Is The Message Command
-        std::vector<char> login;
-        std::vector<char> secret;
-        std::vector<char> displayName;
-        std::vector<char> channelID;
-        std::vector<char> displayNameOutside;
-        std::vector<char> buffer;
-        bool shouldReply;
-    };
-    
-
-    MessageType_t msgType;
-    Message_t msg;
-
-    BaseMessages() : msgType(UNKNOWN_MSG_TYPE) {
+    BaseMessages::BaseMessages() : msgType(UNKNOWN_MSG_TYPE) {
         // Initialize Attributes
         msg.shouldReply = false;
     }
@@ -93,14 +45,14 @@ class BaseMessages
      *
      * Constructor Initialize Message With Type And Content.
      */
-    BaseMessages(MessageType_t type, Message_t content) : msgType(type), msg(content) {}
+    BaseMessages::BaseMessages(MessageType_t type, Message_t content) : msgType(type), msg(content) {}
 
     /**
      * @brief Destructor of TcpMessages Class 
      * 
      * Destructor of TcpMessages Class.
      */
-    ~BaseMessages() {}
+    BaseMessages::~BaseMessages() {}
 
 
     /**
@@ -111,53 +63,53 @@ class BaseMessages
      * @return True If The Content Of Vector And String Are The Same, Otherwise False
     */
    
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
+    bool BaseMessages::compareVectorAndString(const std::vector<char>& vec, const std::string& str) 
     {
         std::string vecAsString(vec.begin(), vec.end());
         return vecAsString == str;
     }
 
-    bool areAllDigitsOrLettersOrDash(const std::vector<char>& vec) {
+    bool BaseMessages::areAllDigitsOrLettersOrDash(const std::vector<char>& vec) {
         return std::all_of(vec.begin(), vec.end(), [](char c) { 
             return std::isdigit(c) || std::isalpha(c) || c == '-'; 
         });
     }
-    bool areAllDigitsOrLettersOrDashOrDot(const std::vector<char>& vec) {
+    bool BaseMessages::areAllDigitsOrLettersOrDashOrDot(const std::vector<char>& vec) {
         return std::all_of(vec.begin(), vec.end(), [](char c) { 
             return std::isdigit(c) || std::isalpha(c) || c == '-'|| c == '.'; 
         });
     }
-    bool areAllPrintableCharacters(const std::vector<char>& vec) 
+    bool BaseMessages::areAllPrintableCharacters(const std::vector<char>& vec) 
     {
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x21 && c <= 0x7E; });
     }
 
-    bool areAllPrintableCharactersOrSpace(const std::vector<char>& vec) 
+    bool BaseMessages::areAllPrintableCharactersOrSpace(const std::vector<char>& vec) 
     {
         return std::all_of(vec.begin(), vec.end(), [](char c) { return c >= 0x20 && c <= 0x7E; });
     }
 
 
-    std::string convertToString(const std::vector<char>& inputVector)
+    std::string BaseMessages::convertToString(const std::vector<char>& inputVector)
     {   
     // Vytvoření stringu z vektoru
     return std::string(inputVector.begin(), inputVector.end());
     }
 
-    bool compare(const std::vector<char>& vec, const std::string& pattern) {
+    bool BaseMessages::compare(const std::vector<char>& vec, const std::string& pattern) {
         std::string str(vec.begin(), vec.end());
         std::regex regexPattern(pattern);
 
         return std::regex_search(str, regexPattern);
     }
     
-    void insertErrorMsgToContent(const std::string& inputString)
+    void BaseMessages::insertErrorMsgToContent(const std::string& inputString)
     {
         msg.content.clear();
         msg.content.assign(inputString.begin(), inputString.end());
     }
 
-    void cleanMessage()
+    void BaseMessages::cleanMessage()
     {
         msg.content.clear();
         //msg.login.clear();
@@ -173,7 +125,7 @@ class BaseMessages
      * 
      * @return SUCCESS If The Message Is Valid, Otherwise Returns NON_VALID_PARAM
      */
-    int checkLength()
+    int BaseMessages::checkLength()
     {
         if (msg.type == COMMAND_AUTH)
         {
@@ -246,7 +198,7 @@ class BaseMessages
      * Stores Chars From Buffer To Message Buffer
      * @return None
      */
-    void readAndStoreContent(const char* buffer)
+    void BaseMessages::readAndStoreContent(const char* buffer)
     {
         // Clear The Message Content
         msg.buffer.clear();
@@ -270,7 +222,7 @@ class BaseMessages
     }
 
 
-    void readAndStoreBytes(const char* buffer, size_t bytesRx)
+    void BaseMessages::readAndStoreBytes(const char* buffer, size_t bytesRx)
     {
         // Clear The Message Content
         msg.buffer.clear();
@@ -294,7 +246,7 @@ class BaseMessages
      * 
      * @return 0 If The Message Is Valid, Otherwise Returns -1
      */
-    int checkMessage()
+    int BaseMessages::checkMessage()
     {
         size_t idx = 0;
         int retVal = FAIL;
@@ -446,7 +398,7 @@ class BaseMessages
      * 
      * @return None, Exits If Something Goes Wrong
     */
-    int parseMessage()
+    int BaseMessages::parseMessage()
     {
         int retVal = 0;
         size_t idx = 0;
@@ -524,7 +476,7 @@ class BaseMessages
      * 
      * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
     */
-    int handleReply()
+    int BaseMessages::handleReply()
     {
         /* Preparation  */
         std::string bufferAsStr(msg.buffer.begin(), msg.buffer.end());
@@ -590,7 +542,7 @@ class BaseMessages
     }
 
 
-    void printMessage()
+    void BaseMessages::printMessage()
     {
         std::string content(msg.content.begin(), msg.content.end());
         std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
@@ -611,20 +563,20 @@ class BaseMessages
         }
     }
 
-    void PrintServeReply()
+    void BaseMessages::PrintServeReply()
     {
         std::string serverSay(msg.content.begin(),msg.content.end());
         fprintf(stdout,"server: %s\n",serverSay.c_str());
     }
 
-    void basePrintExternalError()
+    void BaseMessages::basePrintExternalError()
     {
         std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
         std::string errContent(msg.content.begin(),msg.content.end());
         fprintf(stderr,"ERR FROM: %s: %s\n",errDisplayName.c_str(),errContent.c_str());
     }
 
-    void basePrintInternalError(int retVal)
+    void BaseMessages::basePrintInternalError(int retVal)
     {
         std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
         std::string errContent(msg.content.begin(),msg.content.end());
@@ -632,7 +584,7 @@ class BaseMessages
     }
 
 
-    void printHelp()
+    void BaseMessages::printHelp()
     {
         printf("Commands:\n");
         printf("----------------------------------------------\n");
@@ -644,7 +596,3 @@ class BaseMessages
     }
 
 
-};
-
-
-#endif // BASE_MESSAGES_HWARNING
