@@ -15,57 +15,32 @@
  *  @brief          Implements Communication With Chat Server Thru UDP Protocol.
  * ****************************/
 
-#ifndef UDP_CLIENT_H
-#define UDP_CLIENT_H
-
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <csignal>          // For Signal Handling
-#include <unistd.h>         // For close
-#include "../include/udp_messages.hpp"
-#include "../include/base_client.hpp"
+#include "../include/udp_client.hpp"
 /*************************************************/
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::time_point<Clock>;
 using Milliseconds = std::chrono::milliseconds;
 
-
 /************************************************/
 /*                  Constants                   */
 /************************************************/
-class UdpClient : public Client {
-
-private: 
-    fd_set readfds;
-    const int BUFSIZE = 1536;
-    char buf[1536];
-    int retryCount;
-    int confirmationTimeout;
-    int currentRetries = 0;             //!< Actual Number Of Retries
-    bool receivedConfirm = false;
-    UdpMessages udpMessage;
-    struct sockaddr_in si_other;    // Struct For Storing Server (Sender) Address
-    struct sockaddr_in newServerAddr;
-
-    uint16_t lastSentMessageID       = 0;               // ID Last Sended Message  
-    uint16_t lastReceivedMessageID   = 0;               // ID Last Received Message
-
-
-
-public:
-    UdpClient(const std::string& addr, int port,int retryCnt,int confirmTimeOut) : Client(addr, port, UDP) // Inicialization By Contructor From Base Class
+    UdpClient::UdpClient(const std::string& addr, int port,int retryCnt,int confirmTimeOut) : Client(addr, port, UDP) // Inicialization By Contructor From Base Class
     {
         retryCount = retryCnt;
         confirmationTimeout = confirmTimeOut;
         newServerAddr = server;
+        lastSentMessageID       = 0;               // ID Last Sended Message  
+        lastReceivedMessageID   = 0;               // ID Last Received Message
     }
 
-    virtual ~UdpClient() {
+    UdpClient::~UdpClient() {
         // Destructor From Base Class [Calls close(sock)]
     }
 
-    void udpHandleInterrupt(int signal)
+    void UdpClient::udpHandleInterrupt(int signal)
     {
         if (SIGINT == signal || SIGTERM == signal)
         {
@@ -100,7 +75,7 @@ public:
 
 
 
-    int processAuthetification() 
+    int UdpClient::processAuthetification() 
     {
         /* Variables */
         int retVal = 0;
@@ -238,7 +213,7 @@ public:
         return SUCCESS;
     }
 
-    int runUdpClient()
+    int UdpClient::runUdpClient()
     {
         /*** Variables ***/
         int retVal              = 0;
@@ -487,10 +462,6 @@ public:
 
         return SUCCESS;
     }
-    
-};
-
-
 /*
     TODOs
 -----------------------------------------------
@@ -501,4 +472,3 @@ Nove otazky:
 - Co mam delat pokud mi prijde reply s NOK a nebo s result = 0?
 */
 
-#endif

@@ -22,7 +22,7 @@
 /*******************************************************/
 #include "../include/arguments.hpp"
 #include "../include/tcp_client.hpp"
-#include "udp_client.cpp"
+#include "../include/udp_client.hpp"
 /*******************************************************/
 /*                  Global Variables                   */
 /*******************************************************/
