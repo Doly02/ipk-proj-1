@@ -19,6 +19,7 @@
 #define BASE_MESSAGES_HPP
 
 #include "../include/macros.hpp"
+#include "strings.hpp"
 #include <string>
 #include <vector>
 #include <cstdint>
@@ -65,14 +66,7 @@ public:
     BaseMessages();
     BaseMessages(MessageType_t type, Message_t content);
     ~BaseMessages();
-
-    bool compareVectorAndString(const std::vector<char>& vec, const std::string& str);
-    bool areAllDigitsOrLettersOrDash(const std::vector<char>& vec);
-    bool areAllDigitsOrLettersOrDashOrDot(const std::vector<char>& vec);
-    bool areAllPrintableCharacters(const std::vector<char>& vec);
-    bool areAllPrintableCharactersOrSpace(const std::vector<char>& vec);
-    std::string convertToString(const std::vector<char>& inputVector);
-    bool compare(const std::vector<char>& vec, const std::string& pattern);
+    
     void insertErrorMsgToContent(const std::string& inputString);
     void cleanMessage();
     int checkLength();
