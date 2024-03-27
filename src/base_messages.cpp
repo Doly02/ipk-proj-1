@@ -450,18 +450,14 @@ class BaseMessages
     {
         int retVal = 0;
         size_t idx = 0;
+        std::regex msgIsRegex("^IS");
 
         // Prepaire Attributes
         msg.content.clear();
         msg.displayNameOutside.clear();
 
-        // Convert Vector To String
-        std::string bufferStr(msg.buffer.begin(), msg.buffer.end());
-        //std::string bufferStr = convertToString(msg.buffer); //FIXME:
-        std::regex msgIsRegex("^IS");
-        printf("DEBUG INFO: BUFFER: %s\n",bufferStr.c_str());
         // Check if Content Is a Message 
-        if (compare(msg.buffer,"^MSG FROM"))  //FIXME: Change To Internal Function 
+        if (compare(msg.buffer,"^MSG FROM")) 
         {
             size_t prefixLength = std::string("MSG FROM ").length();
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLength); 
@@ -577,7 +573,7 @@ class BaseMessages
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
             bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            std::cerr << bufferAsStr << std::endl;
+            std::cerr << bufferAsStr << std::endl; /// FIXME
             return AUTH_FAILED;
         }
         else 
