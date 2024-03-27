@@ -229,7 +229,7 @@ using Milliseconds = std::chrono::milliseconds;
         TimePoint stopWatch;
 
         const struct sockaddr_in& serverAddr = getServerAddr();
-
+        printf("Set Attempts: %d, Current Attempts: %d, Set Timeout: %d\n",currentRetries,retryCount,confirmationTimeout);
         /*** Code ***/
         if (!Client::isConnected())
         {
@@ -340,13 +340,14 @@ using Milliseconds = std::chrono::milliseconds;
 
                 socklen_t slen = sizeof(si_other);
                 int bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
-                if (bytesRx == -1) {
-                    // Zkontrolovat, zda došlo k chybě jiné než EWOULDBLOCK/EAGAIN
-                    if (errno != EWOULDBLOCK && errno != EAGAIN) {
+                if (bytesRx == -1) 
+                {
+                    // Check If Is Some Other Error Then EWOULDBLOCK/EAGAIN
+                    if (errno != EWOULDBLOCK && errno != EAGAIN) 
+                    {
                         perror("recvfrom() failed");
-                        // Ošetřit chybu
                     }
-                    break; // Žádná další data k dispozici
+                    break; // No Data Avalaible
                 }
                 else
                 {
@@ -378,7 +379,7 @@ using Milliseconds = std::chrono::milliseconds;
                     else if (true == joinSend)
                     {
                         retVal = udpMessage.recvUdpMessage(lastReceivedMessageID+1);
-                        if (UdpMessages::MSG == udpMessage.msg.type)
+                        if (UdpMessages::MSG == udpMessage.msg.type && (ALREADY_PROCESSED_MSG != retVal))
                         {
                                 // Print The Message
                                 lastReceivedMessageID = udpMessage.messageID;
@@ -386,7 +387,7 @@ using Milliseconds = std::chrono::milliseconds;
                                 udpMessage.sendUdpConfirm(sock,newServerAddr,lastReceivedMessageID);
                                 printf("DEBUG INFO: CONFIRMATION SENT on messageID=%d\n",lastReceivedMessageID);
                         }
-                        if (UdpMessages::REPLY == udpMessage.msg.type)
+                        if (UdpMessages::REPLY == udpMessage.msg.type && (ALREADY_PROCESSED_MSG != retVal))
                         {
                             retVal = udpMessage.recvUpdIncomingReply(lastSentMessageID);
                             if (SUCCESS == retVal)
@@ -431,6 +432,7 @@ using Milliseconds = std::chrono::milliseconds;
                             }
                             else if (expectedConfirm && lastMessage)
                             {
+                                printf("BYE From Server\n");
                                 return SUCCESS;
                             }
                             memset(buf, 0, BUFSIZE);
@@ -460,6 +462,7 @@ using Milliseconds = std::chrono::milliseconds;
         }
         if (currentRetries >= retryCount) {
             // Attempts Overrun
+            printf("Attemp Overrun -> runUdpClient()\n");
             return FAIL;
         }
 

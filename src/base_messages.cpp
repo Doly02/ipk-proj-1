@@ -467,8 +467,9 @@
             }         
             
             // Print buffer 
-            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            printf("Server: %s\n", bufferAsStr.c_str());
+            msg.content.clear();
+            msg.content = msg.buffer;
+            PrintServeReply();
             
             return SUCCESS;
         }

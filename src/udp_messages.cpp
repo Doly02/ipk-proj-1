@@ -140,7 +140,7 @@
             case UNKNOWN_MSG_TYPE:
                 exit(1);
         }
-        std::string login(msg.login.begin(),msg.login.end());
+        std::string login(msg.login.begin(),msg.login.end());           // FIXME
         std::string cont(msg.content.begin(),msg.content.end());
         std::string displ(msg.displayName.begin(),msg.displayName.end());
         if (msg.type == MSG)
@@ -167,6 +167,7 @@
 
         // Store Packet Into The UDP Message Struct
         msgType = (BaseMessages::MessageType_t)serializedMsg[0];
+
         if (CONFIRM != msgType)
             messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
         else
@@ -258,8 +259,8 @@
                     return ALREADY_PROCESSED_MSG;  // TODO
                 }
                 printf("DEBUG INFO: recvUpdIncomingReply -> REPLY SUCCESS (MessageID = %d)\n",messageID);
-                
                 receivedMessageIDs.insert(messageID);
+                PrintServeReply();
                 return SUCCESS;
                 
             }
@@ -292,7 +293,6 @@
         {
             perror("sendto failed");
         }
-        printf("DEBUG INFO: sendUdpMessage -> messageID=%d\n",messageID);
     }
 
     int UdpMessages::recvUdpMessage(int internalId)
@@ -306,7 +306,7 @@
 
         if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
             // Message With This ID Was Already Received
-            return MSG_FAILED;
+            return ALREADY_PROCESSED_MSG;
         }
 
         if (ERROR == msg.type)

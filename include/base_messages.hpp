@@ -28,15 +28,15 @@ class BaseMessages {
 public:
     enum MessageType_t : uint8_t 
     {
-        CONFIRM = 0x00,
-        REPLY = 0x01,
-        COMMAND_AUTH = 0x02,
-        COMMAND_JOIN = 0x03,
-        MSG = 0x04,
-        COMMAND_HELP = 0x05,
-        ERROR = 0xFE,
-        COMMAND_BYE = 0xFF,
-        UNKNOWN_MSG_TYPE = 0x99,
+        CONFIRM             = 0x00,
+        REPLY               = 0x01,
+        COMMAND_AUTH        = 0x02,
+        COMMAND_JOIN        = 0x03,
+        MSG                 = 0x04,
+        COMMAND_HELP        = 0x05,
+        ERROR               = 0xFE,
+        COMMAND_BYE         = 0xFF,
+        UNKNOWN_MSG_TYPE    = 0x99,
     };
 
     enum InputType_t 

@@ -40,7 +40,7 @@ private:
     char buf[BUFSIZE];
     int retryCount;
     int confirmationTimeout;
-    int currentRetries;
+    int currentRetries = 0;
     bool receivedConfirm;
     UdpMessages udpMessage;
     struct sockaddr_in si_other;
