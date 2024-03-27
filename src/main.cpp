@@ -25,7 +25,7 @@
 #include <vector>
 #include <cstring>
 
-#include "arguments.cpp"
+#include "../include/arguments.hpp"
 #include "tcp_client.cpp"
 #include "udp_client.cpp"
 /*******************************************************/

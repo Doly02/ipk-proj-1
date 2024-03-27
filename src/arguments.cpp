@@ -25,21 +25,12 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <cstdlib>
+#include "../include/arguments.hpp"
 /************************************************/
 /*                  Class                       */
 /************************************************/
-class arguments
-{
-public:
-    /*      Arguments             */
-    std::string transferProtocol;               //!< Transfer Protocol Used For Communication (1 - TCP, 2 - UDP)
-    std::string hostName;                       //!< Host Name of The Server
-    std::string ipAddress;                   //!< Structure For IP Address of The Server
-    uint16_t port                   = 4567u;    //!< Port Number on Which The Server Is Listening
-    uint16_t confirmTimeOutUDP      = 250u;     //!< Time Out For UDP Protocol
-    uint8_t confirmRetriesUDP       = 3u;       //!< Number of Retries For UDP Protocol
-
-    arguments(int argc, char* argv[]) {
+    arguments::arguments(int argc, char* argv[]) 
+    {
         processArguments(argc, argv);
     }
 
@@ -48,7 +39,7 @@ public:
      * 
      * Prints Help Message With Information About Arguments
     */
-    void printHelp()
+    void arguments::printHelp()
     {
         printf("Usage: ./client -t <Protocol> -s <HostName/IP> -p <Port> -d <Timeout> -r <MaxRetransmits> \n");
         printf("-help, help message, can not be combined with other arguments\n");
@@ -70,7 +61,7 @@ public:
     }
 
 
-    void processArguments(int argc, char* argv[]) {
+    void arguments::processArguments(int argc, char* argv[]) {
         if(false == parseArguments(argc, argv))
         {
             std::cerr << "Invalid Arguments" << std::endl;
@@ -89,7 +80,7 @@ public:
      * Parses Arguments From Command Line.
      * @return Arguments Are Not Valid,  Exits With Error Code 1, Otherwise Returns 0.
     */
-    bool parseArguments(int argc, char* argv[]) {
+    bool arguments::parseArguments(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) { // Změna typu na int pro kompatibilitu s argc
         std::string flag(argv[i]);
 
@@ -119,14 +110,12 @@ public:
     return true; // Všechny argumenty byly zpracovány úspěšně
 }
 
-private:
-
     /**
      * @brief Resolves Host Name
      * 
      * Resolves Host Name To IP Address
     */
-    void resolveHostName() {
+    void arguments::resolveHostName() {
         struct sockaddr_in sa;
         if (isIpAddress(hostName)) {
             // Korektní použití inet_pton
@@ -163,12 +152,9 @@ private:
      * Checks If The String Is IP Address
      * @return True If The String Is IP Address, Otherwise False
     */
-    bool isIpAddress(std::string& potentialAddress)
+    bool arguments::isIpAddress(std::string& potentialAddress)
     {
         struct sockaddr_in sa;
         return inet_pton(AF_INET, potentialAddress.c_str(), &(sa.sin_addr)) != 0;
     }
-
-};
-
 
