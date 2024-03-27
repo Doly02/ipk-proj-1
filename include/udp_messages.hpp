@@ -1,0 +1,62 @@
+/******************************
+ *  Project:        IPK Project 1 - Client for Chat Servers
+ *  File Name:      udp_messages.cpp
+ *  Author:         Tomas Dolak
+ *  Date:           27.03.2024
+ *  Description:    Implements Functions That Handles Processing Of UDP Messages.
+ *
+ * ****************************/
+
+/******************************
+ *  @package        IPK Project 1 - Client for Chat Servers
+ *  @file           udp_messages.cpp
+ *  @author         Tomas Dolak
+ *  @date           27.03.2024
+ *  @brief          Implements Functions That Handles Processing Of UDP Messages.
+ * ****************************/
+
+#ifndef UDP_MESSAGES_HPP
+#define UDP_MESSAGES_HPP
+
+#include <iostream>
+#include <string>
+#include <unistd.h>             // For close
+#include <unordered_set>
+#include <chrono>
+#include <thread>
+#include <netinet/in.h>         // For sockaddr_in, AF_INET, SOCK_DGRAM
+#include <arpa/inet.h>          // For Debug
+#include <iomanip> 
+#include "base_messages.hpp"
+
+class UdpMessages : public BaseMessages {
+public:
+    uint16_t messageID;
+    uint16_t refMessageID;
+    uint8_t result;
+    uint16_t internalMsgId;
+    std::unordered_set<uint16_t> receivedMessageIDs;
+    UdpMessages();
+    UdpMessages(MessageType_t type, Message_t content);
+
+    void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer);
+    int checkTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime);
+    void incrementUdpMsgId();
+    void setUdpMsgId();
+    uint16_t getUdpMsgId();
+    void setUdpDisplayName(const std::vector<char>& displayNameVec);
+    void setUdpChannelID(const std::vector<char>& channelIDVec);
+    std::vector<uint8_t> serializeMessage();
+    void deserializeMessage(const std::vector<char>& serializedMsg);
+    int recvUpdIncomingReply(int internalId);
+    void sendUdpAuthMessage(int sock, const struct sockaddr_in& server);
+    void sendUdpMessage(int sock, const struct sockaddr_in& server);
+    int recvUdpMessage(int internalId);
+    void sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId);
+    int recvUpdConfirm(int internalId);
+
+private:
+    static constexpr int8_t NULL_BYTE = 0x00;
+};
+
+#endif // UDP_MESSAGES_HPP

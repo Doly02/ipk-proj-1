@@ -15,47 +15,23 @@
  *  @brief          Implements Functions That Handles Processing Of UDP Messages.
  * ****************************/
 
-#ifndef UDP_MESSAGES_H
-#define UDP_MESSAGES_H
-
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <iostream>
-#include <string>
-#include <unistd.h>             // For close
-#include <unordered_set>
-#include <chrono>
-#include <thread>
-#include "../include/base_messages.hpp"
-#include <netinet/in.h>         // For sockaddr_in, AF_INET, SOCK_DGRAM
-#include <arpa/inet.h>          // For Debug
-#include <iomanip> 
+#include "../include/udp_messages.hpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
-class UdpMessages : public BaseMessages {
-private:
-    static constexpr int8_t NULL_BYTE           = 0x00;
+    UdpMessages::UdpMessages() : BaseMessages() {}
 
-public:
-    uint16_t messageID;         //!< ID of The Message
-    uint16_t refMessageID;      //!< ID of The Referenced Message
-    uint8_t  result;            //!< Result of The Message
-    uint16_t internalMsgId;
-
-    std::unordered_set<uint16_t> receivedMessageIDs;
-
-    UdpMessages() : BaseMessages() {}
-
-    UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
+    UdpMessages::UdpMessages(MessageType_t type, Message_t content) : BaseMessages(type, content) 
     {
         refMessageID = 1;
         result = 0;
         messageID = 1;
     }
 
-    void appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
+    void UdpMessages::appendContent(std::vector<uint8_t>& serialized, const std::vector<char>& contentBuffer) {
         
         // Serialize The Message Content To UDP Message 
         for (const auto& byte : contentBuffer) 
@@ -66,33 +42,33 @@ public:
     }
 
 
-    int checkTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
+    int UdpMessages::checkTimer(std::chrono::high_resolution_clock::time_point startTime, std::chrono::high_resolution_clock::time_point endTime)
     {
         auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(endTime - startTime);
         return duration.count();
     }
 
-    void incrementUdpMsgId()
+    void UdpMessages::incrementUdpMsgId()
     {
         messageID++;
     }
 
-    void setUdpMsgId()
+    void UdpMessages::setUdpMsgId()
     {
         messageID = 1;
     }
 
-    uint16_t getUdpMsgId()
+    uint16_t UdpMessages::getUdpMsgId()
     {
         return messageID;
     }
 
-    void setUdpDisplayName(const std::vector<char>& displayNameVec)
+    void UdpMessages::setUdpDisplayName(const std::vector<char>& displayNameVec)
     {
         msg.displayName.assign(displayNameVec.begin(), displayNameVec.end());
     }
 
-    void setUdpChannelID(const std::vector<char>& channelIDVec)
+    void UdpMessages::setUdpChannelID(const std::vector<char>& channelIDVec)
     {
         msg.channelID.assign(channelIDVec.begin(), channelIDVec.end());
     }
@@ -104,7 +80,7 @@ public:
      * Serialize The Message To Byte Array
      * @return Byte Array
     */
-    std::vector<uint8_t> serializeMessage() {
+    std::vector<uint8_t> UdpMessages::serializeMessage() {
         std::vector<uint8_t> serialized;
 
         std::string disp(msg.displayName.begin(),msg.displayName.end());
@@ -182,7 +158,7 @@ public:
      * Deserialize Byte Array To Message
      * @return Message
     */
-    void deserializeMessage(const std::vector<char>& serializedMsg)
+    void UdpMessages::deserializeMessage(const std::vector<char>& serializedMsg)
     {
         if (serializedMsg.size() < 3)
         {
@@ -261,7 +237,7 @@ public:
      * @param internalId ID Of The Message To Which The Reply Message Replies
      * @return int Returns SUCCESS If Everything Went Well, Otherwise It Returns Error Code
      */
-    int recvUpdIncomingReply(int internalId)
+    int UdpMessages::recvUpdIncomingReply(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -297,7 +273,7 @@ public:
     }
 
 
-    void sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
+    void UdpMessages::sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized = serializeMessage();
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
@@ -307,7 +283,7 @@ public:
         }
     }
 
-    void sendUdpMessage(int sock,const struct sockaddr_in& server)
+    void UdpMessages::sendUdpMessage(int sock,const struct sockaddr_in& server)
     {
         incrementUdpMsgId();
         std::vector<uint8_t> serialized = serializeMessage();
@@ -319,7 +295,7 @@ public:
         printf("DEBUG INFO: sendUdpMessage -> messageID=%d\n",messageID);
     }
 
-    int recvUdpMessage(int internalId)
+    int UdpMessages::recvUdpMessage(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -346,7 +322,7 @@ public:
         return SUCCESS;
     }
 
-    void sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId)
+    void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId)
     {
         std::vector<uint8_t> serialized;
 
@@ -362,7 +338,7 @@ public:
         }
     }
 
-    int recvUpdConfirm(int internalId)
+    int UdpMessages::recvUpdConfirm(int internalId)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -388,9 +364,4 @@ public:
         printf("DEBUG INFO: recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
-
-};
-
-
-#endif
 

@@ -21,14 +21,10 @@
 /************************************************/
 /*                  Libraries                   */
 /************************************************/
-#include <iostream>
-#include <string>
 #include <csignal>          // For Signal Handling
 #include <unistd.h>         // For close
-#include <unordered_set>
-#include <chrono>
-#include "udp_messages.cpp"
-#include "base_client.cpp"
+#include "../include/udp_messages.hpp"
+#include "../include/base_client.hpp"
 /*************************************************/
 using Clock = std::chrono::high_resolution_clock;
 using TimePoint = std::chrono::time_point<Clock>;
@@ -286,7 +282,7 @@ public:
             FD_ZERO(&readfds);
             FD_SET(STDIN_FILENO, &readfds);
             FD_SET(sock, &readfds);
-
+    
             int activity = select(sock + 1, &readfds, NULL, NULL, NULL); 
             if (-1 == activity) 
             { 
