@@ -137,9 +137,7 @@
         msg.displayNameOutside.clear();
         msg.content.clear();
         
-        std::string bufferStr(msg.buffer.begin(),msg.buffer.end());
-        printf("DEBUG INFO: BUFFER: %s\n",bufferStr.c_str());
-        if (msg.buffer.size() >= 9 && std::regex_search(bufferStr, std::regex("^ERR FROM ")))
+        if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM "))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
 
@@ -156,7 +154,7 @@
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
             }  
 
-            if (!std::regex_search(bufferStr, std::regex("^IS ")))
+            if (!compare(msg.buffer, "^IS "))
                 return MSG_PARSE_FAILED;
 
             /* PARSE MESSAGE CONTENT */
@@ -175,7 +173,7 @@
             exit(EXTERNAL_ERROR);            
 
         }
-        else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
+        else if (msg.buffer.size() < 6 && compare(msg.buffer, "^BYE\r\n"))
         {
             // FIXME Should Optimalize
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
