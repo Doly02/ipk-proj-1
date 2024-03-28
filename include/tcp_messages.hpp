@@ -38,6 +38,7 @@ class TcpMessages : public BaseMessages
         void sentUsersMessage(int clientSocket);
         int checkIfErrorOrBye();
         void sendErrorMessage(int clientSocket, MessageType_t type);
+        int handleAuthReply();
 };
 
 #endif // TCP_MESSAGES_HPP

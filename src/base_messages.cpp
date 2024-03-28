@@ -423,78 +423,6 @@
         return MSG_PARSE_FAILED;
     }
 
-    /**
-     * @brief Handles Reply From Server
-     * 
-     * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
-    */
-    int BaseMessages::handleReply()
-    {
-        /* Preparation  */
-        std::string bufferAsStr(msg.buffer.begin(), msg.buffer.end());
-        
-        std::string errorLenght     = "ERR FROM Server IS ";
-        std::string prefixLenght    = "REPLY ";
-        std::string okLenght        = "OK IS ";
-
-        /* Execution    */
-        if (msg.buffer.size() >= prefixLenght.length() && compare(msg.buffer,"^REPLY ")) 
-        {
-            // Delete Prefix
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + prefixLenght.length());
-
-            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());            //FIXME: Debug
-            printf("DEBUG INFO: Internal(1): %s\n", bufferAsStr.c_str());               //FIXME: Debug
-        }
-
-        if (compareVectorAndString(msg.buffer, "OK IS Auth successful.\r\n")) 
-        {
-            msg.shouldReply = false;
-            printf("DEBUG INFO: SUCCESS\n");
-            return SUCCESS;
-        }
-        else if (compare(msg.buffer,"^OK IS ")) 
-        {
-            // Erase The Ok From The Message 
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + okLenght.length());
-            
-            
-            /* Prepaire Message buffer -> Get Rid of '\n\r' */  
-            if (msg.buffer.size() > 2 || compareVectorAndString(msg.buffer,"\r\n")) 
-            {
-                msg.buffer.resize(msg.buffer.size() - 2);
-            }         
-            
-            // Print buffer 
-            msg.content.clear();
-            msg.content = msg.buffer;
-            PrintServeReply();
-            
-            return SUCCESS;
-        }
-
-        /*  ERROR MESSAGE HANDLING  */
-        else if (compare(msg.buffer,"^ERR FROM Server IS "))
-        {
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
-            bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-            std::cerr << bufferAsStr << std::endl; /// FIXME
-            return AUTH_FAILED;
-        }
-        else 
-        {
-            // Compare With Error Message Template   
-            if (compare(msg.buffer,"ˆNOK IS "))  
-            {
-                std::cerr << "Authentication Failed" << std::endl;
-                return AUTH_FAILED;
-            }
-            
-        }
-        return AUTH_FAILED;
-    }
-
-
     void BaseMessages::printMessage()
     {
         std::string content(msg.content.begin(), msg.content.end());
@@ -535,7 +463,6 @@
         std::string errContent(msg.content.begin(),msg.content.end());
         fprintf(stderr,"ERR: %s (Return Value: %d)\n",errContent.c_str(),retVal);
     }
-
 
     void BaseMessages::printHelp()
     {

@@ -37,12 +37,7 @@
 class TcpClient : public Client 
 {
 private:
-        fd_set readfds;
         struct pollfd fds[NUM_FILE_DESCRIPTORS];
-        int max_sd;
-        struct timeval tv;
-        bool sendAuth = false;
-        bool checkReply = false;
         bool authConfirmed = false;
         const int BUFSIZE = 1536;
         char buf[1536];
@@ -50,6 +45,15 @@ private:
         
 
     public:
+        enum ClientState 
+        {
+            Authentication,
+            Open,
+            RecvReply,
+            End,
+            Error
+        };
+        
         TcpClient(std::string addr, int port, uint protocol);
         virtual ~TcpClient();
 

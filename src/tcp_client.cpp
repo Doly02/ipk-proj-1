@@ -45,13 +45,10 @@
         }
     }
 
-
-
-
     void TcpClient::checkAuthentication() 
     {
         int retVal = 0;
-        
+    
         while (!authConfirmed) 
         {
             retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
@@ -91,7 +88,7 @@
 
                     tcpMessage.checkIfErrorOrBye();
 
-                    retVal = tcpMessage.handleReply();
+                    retVal = tcpMessage.handleAuthReply();
                     if(SUCCESS == retVal)
                     {
                         authConfirmed = true;
@@ -120,204 +117,86 @@
     {
         /* Variables */
         int retVal = 0;
-        bool joinSend = false;
-        bool joinServerMsgSend = false;
-        int RetValue = 0;
-
-        /* Code */
-        if (!Client::isConnected())
-        {
-            return NOT_CONNECTED;
-        }
-
-        // Set Socket To Non-blocking Mode
-        fcntl(sock, F_SETFL, O_NONBLOCK);
-        // Set Standard Input To Non-blocking Mode
-        fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
-        // First Handle Authentication
+        ClientState state = Authentication;
         checkAuthentication();
+        state = Open;
 
-        while (true) 
+        while (true)
         {
-            FD_ZERO(&readfds);
-            FD_SET(sock, &readfds);
-            FD_SET(STDIN_FILENO, &readfds);
-            max_sd = sock > STDIN_FILENO ? sock : STDIN_FILENO;
-
-            // Set Timeout
-            tv.tv_sec = 0;
-            tv.tv_usec = 500;
-
-            // Waiting For An Activity
-            int activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
-            if ((activity < 0) && (errno != EINTR)) 
+            retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
+            if (FAIL == retVal)
             {
-                std::cerr << "Select error" << std::endl;
-                break;
+                // Nejaka hlaska 
+                exit(FAIL);
             }
 
-            // Check Socket's Activity
-            if (FD_ISSET(sock, &readfds)) 
+            if (fds[STDIN].revents & POLLIN)
             {
-                
-                // Receive A Packet From Server
-                int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
-                if (bytesRx > 0) 
+                if (NULL!= fgets(buf,BUFSIZE,stdin))
                 {
-                    //buf[bytesRx]    = '\0'; //TODO: Check If This Is Right ("\r\n")
-                    buf[BUFSIZE-1]  = '\0';
-                    tcpMessage.readAndStoreContent(buf);  
-                    /* Check If Error Was Send */
-                    retVal = tcpMessage.checkIfErrorOrBye();
-                    if (EXTERNAL_ERROR == retVal)
+                    tcpMessage.readAndStoreContent(buf);
+                    retVal = tcpMessage.checkMessage();
+                    if (BaseMessages::COMMAND_BYE == tcpMessage.msg.type)
                     {
-                        // Upravit Tak ze se ERR Message Pridava uz ve funkci checkIfErrorOrBye
-                        return retVal;
+                        tcpMessage.sentByeMessage(sock);
+                        exit(SUCCESS);
                     }
-                    else if (SERVER_SAYS_BYE == retVal)
+                    else if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
                     {
-                        return SUCCESS;
+                        tcpMessage.sendJoinMessage(sock);
+                        state = RecvReply;
+                    }                
+                    else if (BaseMessages::MSG == tcpMessage.msg.type)
+                    {
+                        tcpMessage.sentUsersMessage(sock);
+                        state = Open;
                     }
-                    // Check If Is Alles Gute
-                    if (true == checkReply && true == joinSend)
+                    else if (BaseMessages::COMMAND_HELP == tcpMessage.msg.type)
                     {
-                        if (!joinServerMsgSend)
-                        {
-                            retVal = tcpMessage.checkJoinReply();
-                            if (SUCCESS != retVal)
-                            {
+                        tcpMessage.printHelp();
+                    }
+                }
+            }    
 
-                                tcpMessage.basePrintInternalError(retVal); //FIXME -> Zkotrolovat 
-                                tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
-                                return retVal;
-                            }
-                        }
-
-                        if (joinServerMsgSend)
-                        {
-
-                            retVal = tcpMessage.handleReply();
-                            if (SUCCESS != retVal)
-                            {
-                                tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
-                                tcpMessage.basePrintExternalError();    // FIXME -> Zkotrolovat
-                                return JOIN_FAILED;
-                            }
-                            checkReply = false;
-                            joinSend = false;
-                            joinServerMsgSend = false;
-                        }
-                        joinServerMsgSend = true;
-                    }
-                    else if (true == checkReply && false == joinSend) 
-                    {
-                        // Store The Content Of The Buffer Into Internal Vector
-                        // tcpMessage.readAndStoreContent(buf);       
-                        // Check If The Message Is REPLY
-                        retVal = tcpMessage.handleReply();
-                        if (retVal == 0)
-                        {
-                            checkReply = false;
-                        }
-                        else
-                        {   // FIXME Tady je to treba rozlisovat podle navratovych hodnot
-                            tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);      // Send Error Message
-                            //tcpMessage.printError();
-                            return -1;
-                        }
-                    }
-                    else
-                    {
-
-                        // Print The Content Of The Buffer
-                        retVal = tcpMessage.parseMessage();
-                        if (SUCCESS == retVal)
-                            tcpMessage.printMessage();
-                        else
-                        {
-                            // TODO: Dve moznosti co to muze vratit -> je treba to osetrit!
-                        }
-                    }
-                    
-                    // Clear The Buffer After All
-                    memset(buf, 0, sizeof(buf));
-                } 
-                else if (bytesRx == 0) 
+            if (fds[SOCKET].revents & POLLIN)
+            {
+                int bytesRx = recv(sock,buf,BUFSIZE-1,0);
+                if (0 >= bytesRx)
                 {
-                    /* Server Closed The Connection */
-                    tcpMessage.insertErrorMsgToContent("Server Closed The Connection");
-                    tcpMessage.basePrintInternalError(0); //TODO:
+                    exit(bytesRx); // TODO
+                }
+                tcpMessage.readAndStoreContent(buf);
+                tcpMessage.checkIfErrorOrBye();
+                switch (state)
+                {
+                case RecvReply:
+                    retVal = tcpMessage.checkJoinReply();
+                    if (SUCCESS != retVal)
+                    {
+                        tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
+                        state = Error;
+                    }
+                    if (BaseMessages::REPLY == tcpMessage.msg.type)
+                        state = Open;
                     break;
-                } 
-                else 
-                {
-                    if (errno != EAGAIN && errno != EWOULDBLOCK) 
+                case Open:
+                    retVal = tcpMessage.parseMessage();
+                    if (SUCCESS == retVal)
                     {
-                        tcpMessage.insertErrorMsgToContent("recv failed (EAGAIN/EWOULDBLOCK)");
-                        tcpMessage.basePrintInternalError(0); 
+                        tcpMessage.printMessage();
+                        state = Open;
                     }
+                    break;
+                case End:
+                    exit(0);
+                case Error:
+                    exit(FAIL);
+                case Authentication:
+                default:
+                    break;
                 }
-            memset(buf, 0, sizeof(buf));
-            }
 
-            // Check Activity On STDIN
-            if (FD_ISSET(STDIN_FILENO, &readfds)) 
-            {
-                memset(buf, 0, sizeof(buf));
-                // Wait For User's Input
-                if (fgets(buf, BUFSIZE, stdin) != NULL) 
-                {
-                    size_t len = strlen(buf);
-
-#if defined (_WIN64) || defined (_WIN32) 
-                    if (len > 1 && buffer[len - 2] == '\r' && buffer[len - 1] == '\n') 
-                    {    // Windows
-                        buffer[len - 2] = '\0';
-                        buffer[len - 1] = '\0';
-                    }
-#else
-                    if (buf[len - 1] == '\n') 
-                    {                                             // Unix
-                        buf[len - 1] = '\0';
-                    }
-#endif
-
-                    tcpMessage.msgType = TcpMessages::UNKNOWN_MSG_TYPE;
-                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
-                    RetValue = tcpMessage.checkMessage();   // Check Message
-                    if (0 == RetValue) 
-                    {
-                        if ((int)TcpMessages::COMMAND_JOIN == tcpMessage.msg.type && sendAuth)
-                        {
-                            // Sent To Server Join Message
-                            tcpMessage.sendJoinMessage(sock);
-                            joinSend = true;
-                            joinServerMsgSend = false;
-                            checkReply = true;
-                        }
-                        if ((int)TcpMessages::COMMAND_BYE == tcpMessage.msg.type )
-                        {
-                            // Sent To Server Bye Message
-                            tcpMessage.sentByeMessage(sock);
-                            exit(EXIT_SUCCESS);
-                        }
-                        // TODO: Missing Some Message Types
-                        if ((int)TcpMessages::MSG == tcpMessage.msg.type)
-                        {
-                            // Sent User's Message To Server
-                            tcpMessage.sentUsersMessage(sock); 
-                            memset(buf, 0, sizeof(buf));
-                        }
-                        /// TODO: Missing ERRORMSG
-                    }
-                    else
-                    {
-                        return RetValue;
-                    }
-                }
-            memset(buf, 0, sizeof(buf));
-            }
-
+            }       
         }
         return 0;
     };

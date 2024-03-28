@@ -47,12 +47,21 @@
      * 
      * @return Returns BaseMessages::SUCCESS If Everything Went Well Otherwise Returns BaseMessages::JOIN_FAILED
     */
-    int TcpMessages::checkJoinReply() {
+    int TcpMessages::checkJoinReply() 
+    {
+        bool confirmAcceppted = false;
         const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
         const std::string prefix = "^MSG FROM Server IS ";
         const std::string stdPrefixLenght = "MSG FROM Server IS ";
         const std::string errPrefixLenght = "ERR FROM Server IS ";
-
+        
+        /* Reply Join OK */
+        if (compare(msg.buffer,"^REPLY OK IS Join success\n\r") & !confirmAcceppted)
+        {
+            confirmAcceppted = true;
+            return SUCCESS;
+        }
+        /* Message From Server */
         if (compare(msg.buffer, "^MSG FROM Server IS ")) {
             if (msg.buffer.size() >= stdPrefixLenght.length()) 
             {
@@ -63,6 +72,10 @@
                 return SUCCESS;
             }
         }
+        /* Join Confirmed */
+
+
+        /* Error From Server */
         else if (compare(msg.buffer,"^ERR FROM Server IS "))
         {
             if (msg.buffer.size() >= errPrefixLenght.length()) 
@@ -71,7 +84,7 @@
                 msg.content.clear();
                 msg.content = msg.buffer;
                 basePrintExternalError();
-                return SUCCESS;
+                exit(ERROR);
             }
         }
         //TODO: Return Issue
@@ -134,42 +147,19 @@
         size_t idx = 0;
     
         /* HAS TO BE CLEANED -> WILL BE MODIFIED */
-        msg.displayNameOutside.clear();
         msg.content.clear();
         
-        if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM "))
+        if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM Server IS "))
         {
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
-
-            /* PARSE NAME OF SENDER */
-            while (idx < msg.buffer.size() && msg.buffer[idx] != ' ')
-            {
-                msg.displayNameOutside.push_back(msg.buffer[idx]);   
-                idx++;
-            }
-
-            if (idx < msg.buffer.size()) 
-            {  
-                // Clear The Username And Space 
-                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
-            }  
-
-            if (!compare(msg.buffer, "^IS "))
-                return MSG_PARSE_FAILED;
-
-            /* PARSE MESSAGE CONTENT */
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 3);
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 19);
 
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
                 msg.content.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            msgType = ERROR;
-
             /* PRINT ERROR MESSAGE */
             basePrintExternalError();
-
             exit(EXTERNAL_ERROR);            
 
         }
@@ -182,10 +172,9 @@
                 idx++;
             }
             PrintServeReply();
-            msgType = COMMAND_BYE;
-
             exit(SUCCESS);
         }
+        printf("SUCCESS\n");
         return SUCCESS;
     }
 
@@ -209,3 +198,53 @@
             perror("ERROR in sendto");        
     }
 
+    /**
+     * @brief Handles Reply From Server
+     * 
+     * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
+    */
+    int TcpMessages::handleAuthReply()
+    {
+        /* Preparation  */
+        std::string errorLenght     = "ERR FROM Server IS ";
+        std::string prefixLenght    = "REPLY ";
+        std::string okLenght        = "OK IS ";
+
+        /* Execution    */
+        if (compare(msg.buffer,"^REPLY OK IS Authentication successful.")) 
+        {
+            // Delete Prefix
+            return SUCCESS;      
+        }
+        else if (compare(msg.buffer,"^OK IS ")) 
+        {
+            // Erase The Ok From The Message 
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + okLenght.length());
+            // Print buffer 
+            msg.content.clear();
+            msg.content = msg.buffer;
+            PrintServeReply();
+            
+            return SUCCESS;
+        }
+
+        /*  ERROR MESSAGE HANDLING  */
+        else if (compare(msg.buffer,"^ERR FROM Server IS "))
+        {
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
+            //bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
+            //std::cerr << bufferAsStr << std::endl; /// FIXME
+            return AUTH_FAILED;
+        }
+        else 
+        {
+            // Compare With Error Message Template   
+            if (compare(msg.buffer,"ˆNOK IS "))  
+            {
+                std::cerr << "ERR: Authentication Failed" << std::endl;
+                return AUTH_FAILED;
+            }
+            
+        }
+        return AUTH_FAILED;
+    }

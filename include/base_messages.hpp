@@ -77,7 +77,6 @@ public:
     void readAndStoreBytes(const char* buffer, size_t bytesRx);
     int checkMessage();
     int parseMessage();
-    int handleReply();
     void printMessage();
     void PrintServeReply();
     void basePrintExternalError();
