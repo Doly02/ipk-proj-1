@@ -172,7 +172,7 @@
             /* PRINT ERROR MESSAGE */
             basePrintExternalError();
 
-            return EXTERNAL_ERROR;            
+            exit(EXTERNAL_ERROR);            
 
         }
         else if (msg.buffer.size() < 6 && std::regex_search(bufferStr, std::regex("^BYE\r\n")))
@@ -186,7 +186,7 @@
             PrintServeReply();
             msgType = COMMAND_BYE;
 
-            return SERVER_SAYS_BYE;
+            exit(SUCCESS);
         }
         return SUCCESS;
     }

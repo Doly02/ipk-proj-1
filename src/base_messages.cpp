@@ -423,7 +423,6 @@
         return MSG_PARSE_FAILED;
     }
 
-
     /**
      * @brief Handles Reply From Server
      * 

@@ -28,6 +28,8 @@
 #include <string>
 #include <vector>
 #include <csignal>     
+// ---
+#include <poll.h>
 #include "base_client.hpp"
 #include "tcp_messages.hpp"
 
@@ -44,6 +46,7 @@ private:
         const int BUFSIZE = 1536;
         char buf[1536];
         TcpMessages tcpMessage;
+        
 
     public:
         TcpClient(std::string addr, int port, uint protocol);

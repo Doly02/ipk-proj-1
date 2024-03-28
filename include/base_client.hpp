@@ -51,6 +51,7 @@ class Client
         void updateServerAddress(const std::string& newAddress);
         bool isConnected();
         const struct sockaddr_in& getServerAddr() const;
+
 };
 
 #endif // CLIENT_HPP

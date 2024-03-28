@@ -46,89 +46,74 @@
     void TcpClient::checkAuthentication() 
     {
         int retVal = 0;
-        while (!authConfirmed) {
-            // Get User's Authentication Message
-            if (!sendAuth) {
-                if (fgets(buf, BUFSIZE, stdin) != NULL) 
+        struct pollfd fds[NUM_FILE_DESCRIPTORS];
+        
+        fds[STDIN].fd = STDIN_FILENO;
+        fds[STDIN].events = POLLIN;
+        fds[SOCKET].fd = sock;
+        fds[SOCKET].events = POLLIN;
+
+
+        while (!authConfirmed) 
+        {
+            retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
+            if (FAIL == retVal)
+            {
+                // Nejaka hlaska 
+                exit(FAIL);
+            }
+
+            if (fds[STDIN].revents & POLLIN)
+            {
+                if (NULL!= fgets(buf,BUFSIZE,stdin))
                 {
-                    size_t len = strlen(buf);
-                    if (buf[len - 1] == '\n') {
-                        buf[len - 1] = '\0';
-                    }
-                    tcpMessage.readAndStoreContent(buf);    // Store Content To Vector                    
-                    retVal = tcpMessage.checkMessage();   // Check Message
-                    if (0 == retVal) 
+
+                    tcpMessage.readAndStoreContent(buf);
+                    retVal = tcpMessage.checkMessage();
+                    if (SUCCESS == retVal && TcpMessages::COMMAND_AUTH == tcpMessage.msg.type)
                     {
-                        if ((int)TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuth)
-                        {
-                            // Sent To Server Authentication Message
-                            tcpMessage.sendAuthMessage(sock);
-                            sendAuth = true;
-                            checkReply = true;
-                        }
+                        tcpMessage.sendAuthMessage(sock);
+                    }
+                    else if (NON_VALID_PARAM == retVal)
+                    {
+                        printf("ERR: Invalid Parameter/s In The Message\n");
+                    }
+
+                }
+                memset(buf,0,sizeof(buf));
+            }
+
+            if (fds[SOCKET].revents & POLLIN)
+            {
+                memset(buf,0,sizeof(buf));
+                int bytesRx = recv(sock,buf,BUFSIZE-1,0);
+                if (0 < bytesRx)
+                {
+                    tcpMessage.readAndStoreContent(buf);
+
+                    tcpMessage.checkIfErrorOrBye();
+
+                    retVal = tcpMessage.handleReply();
+                    if(SUCCESS == retVal)
+                    {
+                        authConfirmed = true;
+                        break;
                     }
                     else
                     {
-                        // TODO: Dej si pozor co ti to muze vratit! Treba osetrit
-                        exit(retVal);
+                        // TODO Message
+                        exit(AUTH_FAILED);
                     }
-                memset(buf, 0, sizeof(buf));
                 }
-            }
-
-            FD_ZERO(&readfds);
-            FD_SET(sock, &readfds);
-            max_sd = sock;
-
-            // Set Timeout
-            tv.tv_sec = 1;
-            tv.tv_usec = 0;
-
-            // Waiting For An Activity
-            int activity = select(max_sd + 1, &readfds, NULL, NULL, &tv);
-            if ((activity < 0) && (errno != EINTR)) {
-                exit(1);
-            }
-
-            if (FD_ISSET(sock, &readfds)) {
-                memset(buf, 0, BUFSIZE);
-                int bytesRx = recv(sock, buf, BUFSIZE - 1, 0);
-                if (bytesRx > 0) {
-                    buf[BUFSIZE - 1] = '\0';
-                    tcpMessage.readAndStoreContent(buf);
-
-                    /* Check If Error Was Send */
-                    retVal = tcpMessage.checkIfErrorOrBye();
-                    if (EXTERNAL_ERROR == retVal)
-                        exit(retVal);
-                    else if (SERVER_SAYS_BYE == retVal)
-                        exit(0);
-
-                    if (checkReply) {
-                        retVal = tcpMessage.handleReply();
-                        if (SUCCESS == retVal) 
-                        {
-                            authConfirmed = true;
-                            checkReply = false;
-                            break;
-                        } 
-                        else {
-                            // Reply Failed -> Exit
-                            exit(AUTH_FAILED); 
-                        }
-                    }
-                } 
-                else if (bytesRx == 0) 
+                else
                 {
-                    break; // Server closed the connection
-                } 
-                else 
-                {
-                    tcpMessage.insertErrorMsgToContent("ERR: recv failed\n");
-                    tcpMessage.basePrintInternalError(0); // TODO
+                    // TODO Message
+                    exit(AUTH_FAILED);
                 }
-            memset(buf, 0, sizeof(buf));
+                memset(buf,0,sizeof(buf));
             }
+
+
         }
     }
 
