@@ -22,8 +22,13 @@
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-    TcpClient::TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) {
+    TcpClient::TcpClient(std::string addr, int port, uint protocol) : Client(addr, port, protocol) 
+    {
         // Constructor
+        fds[STDIN].fd = STDIN_FILENO;
+        fds[STDIN].events = POLLIN;
+        fds[SOCKET].fd = sock;
+        fds[SOCKET].events = POLLIN;
     }
 
     TcpClient::~TcpClient() {
@@ -46,14 +51,7 @@
     void TcpClient::checkAuthentication() 
     {
         int retVal = 0;
-        struct pollfd fds[NUM_FILE_DESCRIPTORS];
         
-        fds[STDIN].fd = STDIN_FILENO;
-        fds[STDIN].events = POLLIN;
-        fds[SOCKET].fd = sock;
-        fds[SOCKET].events = POLLIN;
-
-
         while (!authConfirmed) 
         {
             retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);

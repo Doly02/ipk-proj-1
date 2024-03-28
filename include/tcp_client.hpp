@@ -38,6 +38,7 @@ class TcpClient : public Client
 {
 private:
         fd_set readfds;
+        struct pollfd fds[NUM_FILE_DESCRIPTORS];
         int max_sd;
         struct timeval tv;
         bool sendAuth = false;
