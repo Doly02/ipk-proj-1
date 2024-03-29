@@ -88,8 +88,8 @@
         /*  MESSAGE TYPE */
         serialized.push_back((uint8_t)msg.type);
         /*  MESSAGE ID   */
-        serialized.push_back((messageID >> 8) & 0xFF); // (MSB)
         serialized.push_back(messageID & 0xFF);        // (LSB)
+        serialized.push_back((messageID >> 8) & 0xFF); // (MSB)
 
 
         switch (msg.type)
@@ -99,8 +99,8 @@
                 /*  RESULT      */
                 serialized.push_back(result);
                 /*  REF. MESSAGE ID */
-                serialized.push_back((refMessageID >> 8) & 0xFF);   // (MSB)
                 serialized.push_back(refMessageID & 0xFF);          // (LSB)
+                serialized.push_back((refMessageID >> 8) & 0xFF);   // (MSB)
                 /*  MESSAGE CONTENT */
                 appendContent(serialized, msg.content);
                 break;
@@ -170,9 +170,9 @@
         msgType = (BaseMessages::MessageType_t)serializedMsg[0];
 
         if (CONFIRM != msgType)
-            messageID = static_cast<uint16_t>(serializedMsg[2]) | (static_cast<uint16_t>(serializedMsg[1]) << 8);
+            messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
         else
-            refMessageID = static_cast<uint16_t>(serializedMsg[2]) | (static_cast<uint16_t>(serializedMsg[1]) << 8);
+            refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
 
         size_t offset = 3;
         printf("DEBUG INFO: DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
@@ -186,7 +186,7 @@
                     throw std::runtime_error("Invalid Message Length"); //FIXME:
                 }
                 result = serializedMsg[offset++];
-                refMessageID = static_cast<uint16_t>(serializedMsg[offset+1]) | (static_cast<uint16_t>(serializedMsg[offset ]) << 8);
+                refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset+1]) << 8);
                 offset = offset + 2; // Used Two Bytes
 
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
@@ -339,8 +339,8 @@
         /*  MESSAGE TYPE */
         serialized.push_back(CONFIRM);
         /*  MESSAGE ID   */
-        serialized.push_back((lastReceivedMessageID >> 8) & 0xFF); // (MSB)
         serialized.push_back(lastReceivedMessageID & 0xFF);        // (LSB)
+        serialized.push_back((lastReceivedMessageID >> 8) & 0xFF); // (MSB)
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
