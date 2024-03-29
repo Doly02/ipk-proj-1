@@ -84,10 +84,12 @@
         }
 
 
-        /* Message From Server */
+        /* Catch Messages From Server */
         if (compare(msg.buffer, "^MSG FROM Server IS ")) {
             if (msg.buffer.size() >= stdPrefixLenght.length()) 
             {
+                msg.buffer.pop_back(); // Removes '\n'
+                msg.buffer.pop_back(); // Removes '\r'
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + stdPrefixLenght.length());
                 msg.content.clear();
                 msg.content = msg.buffer;
@@ -96,24 +98,8 @@
             }
         }
         /* Join Confirmed */
-
-
-        /* Error From Server */
-        else if (compare(msg.buffer,"^ERR FROM Server IS "))
-        {
-            if (msg.buffer.size() >= errPrefixLenght.length()) 
-            {
-                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errPrefixLenght.length());
-                msg.content.clear();
-                msg.content = msg.buffer;
-                basePrintExternalError();
-                exit(ERROR);
-            }
-        }
-        //TODO: Return Issue
         return JOIN_FAILED;
     }
-
 
     /**
      * @brief Sends 'Join' Message
@@ -200,7 +186,6 @@
         return SUCCESS;
     }
 
-
     void TcpMessages::sendErrorMessage(int clientSocket, MessageType_t type)
     {
         /* Variables */
@@ -229,25 +214,32 @@
     {
         /* Preparation  */
         std::string errorLenght     = "ERR FROM Server IS ";
-        std::string prefixLenght    = "REPLY ";
-        std::string okLenght        = "OK IS ";
+        std::string replyOkLenght   = "REPLY OK IS ";
+        std::string replyNokLenght   = "REPLY NOK IS ";
 
         /* Execution    */
-        if (compare(msg.buffer,"^REPLY OK IS Authentication successful.")) 
+        if (compare(msg.buffer,"^REPLY")) 
         {
-            // Delete Prefix
-            return SUCCESS;      
-        }
-        else if (compare(msg.buffer,"^OK IS ")) 
-        {
-            // Erase The Ok From The Message 
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + okLenght.length());
-            // Print buffer 
-            msg.content.clear();
-            msg.content = msg.buffer;
-            PrintServeReply();
-            
-            return SUCCESS;
+            if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
+            {
+                msg.buffer.pop_back(); // Removes '\n'
+                msg.buffer.pop_back(); // Removes '\r'
+                if (compare(msg.buffer,"^REPLY OK IS ")) 
+                {
+                    msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkLenght.length());
+                    std::string authContent(msg.buffer.begin(), msg.buffer.end());
+                    printf("Success: %s\n", authContent.c_str());
+
+                }
+                else if (compare(msg.buffer,"^REPLY NOK IS "))
+                {
+                    msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokLenght.length());
+                    std::string authContent(msg.buffer.begin(), msg.buffer.end());
+                    printf("Failure: %s\n", authContent.c_str());
+
+                } 
+                return SUCCESS;
+            }
         }
 
         /*  ERROR MESSAGE HANDLING  */

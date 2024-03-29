@@ -355,9 +355,9 @@
                 if (std::regex_search(currentSubStr, msgIsRegex)) {
                     break; // Exit the loop if "IN" is found at the beginning of the current substring
                 }
-                
                 msg.displayNameOutside.push_back(msg.buffer[idx]);
                 idx++;
+            
             }
 
             // Check and Remove the Last Character if Needed (It's a Space)
