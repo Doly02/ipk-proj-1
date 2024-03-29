@@ -223,7 +223,7 @@
                         udpMessage.printHelp();
                     else
                     {
-                        udpMessage.sendUdpMessage(sock,serverAddr);
+                        udpMessage.sendUdpMessage(sock,newServerAddr);
                         expectedConfirm = true;
                         startWatch = std::chrono::high_resolution_clock::now();
                         currentRetries++;
