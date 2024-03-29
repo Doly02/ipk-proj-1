@@ -20,16 +20,12 @@
 
 #include <cstdlib>
 #include <netinet/in.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <fcntl.h>
 #include <unistd.h> 
 #include <csignal>
 #include <string>
 #include <vector>
 #include <csignal>     
 // ---
-#include <poll.h>
 #include "base_client.hpp"
 #include "tcp_messages.hpp"
 

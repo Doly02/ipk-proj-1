@@ -48,15 +48,17 @@ public:
     void setUdpChannelID(const std::vector<char>& channelIDVec);
     std::vector<uint8_t> serializeMessage();
     void deserializeMessage(const std::vector<char>& serializedMsg);
-    int recvUpdIncomingReply(int internalId);
+    int recvUpdIncomingReply();
     void sendUdpAuthMessage(int sock, const struct sockaddr_in& server);
     void sendUdpMessage(int sock, const struct sockaddr_in& server);
-    int recvUdpMessage(int internalId);
-    void sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId);
-    int recvUpdConfirm(int internalId);
+    int recvUdpMessage();
+    void sendUdpConfirm(int sock, const struct sockaddr_in& server);
+    int recvUpdConfirm();
 
 private:
     static constexpr int8_t NULL_BYTE = 0x00;
+    uint16_t lastSentMessageID;
+    uint16_t lastReceivedMessageID;
 };
 
 #endif // UDP_MESSAGES_HPP

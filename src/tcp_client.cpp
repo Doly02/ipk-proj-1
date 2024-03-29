@@ -54,7 +54,7 @@
             retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
             if (FAIL == retVal)
             {
-                // Nejaka hlaska 
+                // TODO Nejaka hlaska 
                 exit(FAIL);
             }
 

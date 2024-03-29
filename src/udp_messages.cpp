@@ -238,7 +238,7 @@
      * @param internalId ID Of The Message To Which The Reply Message Replies
      * @return int Returns SUCCESS If Everything Went Well, Otherwise It Returns Error Code
      */
-    int UdpMessages::recvUpdIncomingReply(int internalId)
+    int UdpMessages::recvUpdIncomingReply()
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -252,7 +252,7 @@
             printf("DEBUG INFO: recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
             printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
-            if (refMessageID == internalId && result == 1)
+            if (refMessageID == lastSentMessageID && result == 1)
             {
                 if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
                     // Message With This ID Was Already Received
@@ -260,6 +260,7 @@
                 }
                 printf("DEBUG INFO: recvUpdIncomingReply -> REPLY SUCCESS (MessageID = %d)\n",messageID);
                 receivedMessageIDs.insert(messageID);
+                lastReceivedMessageID = messageID;
                 PrintServeReply();
                 return SUCCESS;
                 
@@ -276,6 +277,7 @@
 
     void UdpMessages::sendUdpAuthMessage(int sock,const struct sockaddr_in& server)
     {
+        lastSentMessageID = messageID;
         std::vector<uint8_t> serialized = serializeMessage();
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
@@ -293,10 +295,13 @@
         {
             perror("sendto failed");
         }
+        lastSentMessageID = messageID;
     }
 
-    int UdpMessages::recvUdpMessage(int internalId)
+    int UdpMessages::recvUdpMessage()
     {
+        
+        uint16_t internalId = lastReceivedMessageID + 1;
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
@@ -318,19 +323,19 @@
         receivedMessageIDs.insert(messageID);
 
         printf("DEBUG INFO: recvUdpMessage -> RECEIVED SUCCESS\n");
-        
+        lastReceivedMessageID = messageID;
         return SUCCESS;
     }
 
-    void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server, int internalId)
+    void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized;
 
         /*  MESSAGE TYPE */
         serialized.push_back(CONFIRM);
         /*  MESSAGE ID   */
-        serialized.push_back(internalId & 0xFF);
-        serialized.push_back((internalId >> 8) & 0xFF);
+        serialized.push_back(lastReceivedMessageID & 0xFF);
+        serialized.push_back((lastReceivedMessageID >> 8) & 0xFF);
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -338,16 +343,16 @@
         }
     }
 
-    int UdpMessages::recvUpdConfirm(int internalId)
+    int UdpMessages::recvUpdConfirm()
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
-            printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,internalId = %d) \n",refMessageID,internalId);
+            printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,lastSentMessageID = %d) \n",refMessageID,lastSentMessageID);
             // Check With Internal Message ID
-            if (refMessageID == internalId)
+            if (refMessageID == lastSentMessageID)
             {
                 printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
                 incrementUdpMsgId();

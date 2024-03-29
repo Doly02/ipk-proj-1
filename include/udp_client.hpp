@@ -24,6 +24,11 @@
 #include <chrono>
 #include "base_client.hpp"
 #include "udp_messages.hpp"
+/*************************************************/
+using Clock = std::chrono::high_resolution_clock;
+using TimePoint = std::chrono::time_point<Clock>;
+using Milliseconds = std::chrono::milliseconds;
+
 
 class UdpClient : public Client {
 public:
@@ -35,6 +40,13 @@ public:
     int runUdpClient();
 
 private:
+    struct pollfd fds[NUM_FILE_DESCRIPTORS];
+    /* Timers */
+    TimePoint startWatch;               //!< Contains the Initial Measurement Time
+    TimePoint stopWatch;                //!< Contains the Final Measurement Time
+    bool measureTime = false;           //!< Indicates That Time Should Be Measured
+
+
     fd_set readfds;
     static constexpr int BUFSIZE = 1536;
     char buf[BUFSIZE];
@@ -45,8 +57,6 @@ private:
     UdpMessages udpMessage;
     struct sockaddr_in si_other;
     struct sockaddr_in newServerAddr;
-    uint16_t lastSentMessageID;
-    uint16_t lastReceivedMessageID;
 
     void setSocketOptions();
     void initializeConnection();
