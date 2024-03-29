@@ -99,8 +99,8 @@
                 /*  RESULT      */
                 serialized.push_back(result);
                 /*  REF. MESSAGE ID */
-                serialized.push_back(refMessageID & 0xFF);
-                serialized.push_back((refMessageID >> 8) & 0xFF);
+                serialized.push_back((refMessageID >> 8) & 0xFF);   // (MSB)
+                serialized.push_back(refMessageID & 0xFF);          // (LSB)
                 /*  MESSAGE CONTENT */
                 appendContent(serialized, msg.content);
                 break;
@@ -186,7 +186,7 @@
                     throw std::runtime_error("Invalid Message Length"); //FIXME:
                 }
                 result = serializedMsg[offset++];
-                refMessageID = static_cast<uint16_t>(serializedMsg[offset+1]) | (static_cast<uint16_t>(serializedMsg[offset]) << 8);
+                refMessageID = static_cast<uint16_t>(serializedMsg[offset+1]) | (static_cast<uint16_t>(serializedMsg[offset ]) << 8);
                 offset = offset + 2; // Used Two Bytes
 
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
