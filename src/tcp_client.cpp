@@ -86,7 +86,7 @@
                 {
                     tcpMessage.readAndStoreContent(buf);
 
-                    tcpMessage.checkIfErrorOrBye();
+                    tcpMessage.checkIfErrorOrBye(sock);
 
                     retVal = tcpMessage.handleAuthReply();
                     if(SUCCESS == retVal)
@@ -163,7 +163,7 @@
                     exit(bytesRx); // TODO
                 }
                 tcpMessage.readAndStoreContent(buf);
-                tcpMessage.checkIfErrorOrBye();
+                tcpMessage.checkIfErrorOrBye(sock);
                 switch (state)
                 {
                     case RecvReply:

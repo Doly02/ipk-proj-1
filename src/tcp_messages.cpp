@@ -142,7 +142,7 @@
             perror("ERROR in sendto");
     }
 
-    int TcpMessages::checkIfErrorOrBye()
+    int TcpMessages::checkIfErrorOrBye(int clientSocket)
     {
         size_t idx = 0;
     
@@ -158,6 +158,8 @@
                 msg.content.push_back(msg.buffer[idx]);   
                 idx++;
             }
+            /* SEND BYE */
+            sentByeMessage(clientSocket);
             /* PRINT ERROR MESSAGE */
             basePrintExternalError();
             exit(EXTERNAL_ERROR);            

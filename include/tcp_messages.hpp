@@ -36,7 +36,7 @@ class TcpMessages : public BaseMessages
         void sendJoinMessage(int client_socket);
         void sentByeMessage(int clientSocket);
         void sentUsersMessage(int clientSocket);
-        int checkIfErrorOrBye();
+        int checkIfErrorOrBye(int clientSocket);
         void sendErrorMessage(int clientSocket, MessageType_t type);
         int handleAuthReply();
 };
