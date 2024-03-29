@@ -88,8 +88,9 @@
         /*  MESSAGE TYPE */
         serialized.push_back((uint8_t)msg.type);
         /*  MESSAGE ID   */
-        serialized.push_back(messageID & 0xFF);
-        serialized.push_back((messageID >> 8) & 0xFF);
+        serialized.push_back((messageID >> 8) & 0xFF); // (MSB)
+        serialized.push_back(messageID & 0xFF);        // (LSB)
+
 
         switch (msg.type)
         {
@@ -185,7 +186,7 @@
                     throw std::runtime_error("Invalid Message Length"); //FIXME:
                 }
                 result = serializedMsg[offset++];
-                refMessageID = static_cast<uint16_t>(serializedMsg[offset]) | (static_cast<uint16_t>(serializedMsg[offset + 1]) << 8);
+                refMessageID = static_cast<uint16_t>(serializedMsg[offset+1]) | (static_cast<uint16_t>(serializedMsg[offset]) << 8);
                 offset = offset + 2; // Used Two Bytes
 
                 while (offset < serializedMsg.size() && serializedMsg[offset] != NULL_BYTE)
@@ -249,7 +250,6 @@
 
         if (REPLY == msg.type)
         {
-            printf("DEBUG INFO: recvUpdIncomingReply -> REPLY MESSAGE\n");
             // Check With Internal Message ID
             printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (refMessageID == lastSentMessageID && result == 1)
@@ -262,8 +262,11 @@
                 receivedMessageIDs.insert(messageID);
                 lastReceivedMessageID = messageID;
                 PrintServeReply();
-                return SUCCESS;
-                
+                return SUCCESS;         
+            }
+            else if (refMessageID == lastSentMessageID && result == 0)
+            {
+                return EXTERNAL_ERROR;
             }
         }
         else if (ERROR == msg.type)
@@ -271,6 +274,7 @@
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
         }
+        printf("DEBUG INFO: recvUpdIncomingReply -> UNEXPECTED_MESSAGE\n");
         return UNEXPECTED_MESSAGE; 
     }
 
@@ -295,6 +299,7 @@
         {
             perror("sendto failed");
         }
+        printf("DEBUG INFO: sendUdpMessage -> messageID=%d\n",messageID);
         lastSentMessageID = messageID;
     }
 
@@ -316,12 +321,12 @@
 
         if (ERROR == msg.type)
         {
+            // TODO udpMessage.sendUdpConfirm(sock,newServerAddr);
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
         }
         // Přidání messageID do seznamu přijatých ID
         receivedMessageIDs.insert(messageID);
-
         printf("DEBUG INFO: recvUdpMessage -> RECEIVED SUCCESS\n");
         lastReceivedMessageID = messageID;
         return SUCCESS;
@@ -330,12 +335,12 @@
     void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized;
-
+        printf("DEBUG INFO: sendUdpConfirm -> lastReceivedMessageID = %d\n",lastReceivedMessageID);
         /*  MESSAGE TYPE */
         serialized.push_back(CONFIRM);
         /*  MESSAGE ID   */
-        serialized.push_back(lastReceivedMessageID & 0xFF);
-        serialized.push_back((lastReceivedMessageID >> 8) & 0xFF);
+        serialized.push_back((lastReceivedMessageID >> 8) & 0xFF); // (MSB)
+        serialized.push_back(lastReceivedMessageID & 0xFF);        // (LSB)
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {

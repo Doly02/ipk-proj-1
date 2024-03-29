@@ -41,14 +41,6 @@ private:
         
 
     public:
-        enum ClientState 
-        {
-            Authentication,
-            Open,
-            RecvReply,
-            End,
-            Error
-        };
         
         TcpClient(std::string addr, int port, uint protocol);
         virtual ~TcpClient();

@@ -46,6 +46,16 @@ class Client
         static constexpr uint UDP = 100u;
         static constexpr int NOT_CONNECTED = -1;
 
+        enum ClientState 
+        {
+            Authentication,
+            Open,
+            RecvReply,
+            End,
+            Error
+        };
+
+
         Client(const std::string& addr, int port, uint protocol);
         virtual ~Client();
 

@@ -260,8 +260,6 @@
                 msg.login.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            std::string log(msg.login.begin(),msg.login.end());
-            printf("DEBUG INFO: login->|%s|\n",log.c_str());
             if (idx < msg.buffer.size()) {  
                 // Clear The Username And Space 
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + std::min(idx + 1, msg.buffer.size()));
@@ -283,8 +281,6 @@
                 msg.displayName.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            std::string disp(msg.displayName.begin(),msg.displayName.end());
-            printf("DEBUG INFO: DisplayName->|%s|\n",disp.c_str());
             msg.type = COMMAND_AUTH;
         }
         else if (inputType == INPUT_JOIN) 

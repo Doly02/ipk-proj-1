@@ -46,8 +46,6 @@ private:
     TimePoint stopWatch;                //!< Contains the Final Measurement Time
     bool measureTime = false;           //!< Indicates That Time Should Be Measured
 
-
-    fd_set readfds;
     static constexpr int BUFSIZE = 1536;
     char buf[BUFSIZE];
     int retryCount;
