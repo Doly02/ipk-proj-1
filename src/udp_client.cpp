@@ -248,7 +248,6 @@
                 {
                     return FAIL;
                 }
-                printf("DEBUG INFO: Waiting For Incomming Message (Bytes In BUF = %d\n",bytesRx);
                 newServerAddr = si_other;   // Set Server's New Port 
                 buf[BUFSIZE - 1] = '\0'; 
                 udpMessage.readAndStoreBytes(buf,bytesRx);
