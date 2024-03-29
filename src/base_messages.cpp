@@ -313,7 +313,7 @@
             }
         }
         // Otherwise Message Is Already Stored In The Content    
-        else if (compareVectorAndString(msg.buffer, "BYE\r\n")) 
+        else if (compare(msg.buffer, "^BYE\r\n")) 
         {
             idx = 0;
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 

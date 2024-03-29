@@ -326,6 +326,7 @@
         if (ERROR == msg.type)
         {
             // TODO udpMessage.sendUdpConfirm(sock,newServerAddr);
+            
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
         }
@@ -335,7 +336,7 @@
         }
         // Přidání messageID do seznamu přijatých ID
         receivedMessageIDs.insert(messageID);
-        printf("DEBUG INFO: recvUdpMessage -> RECEIVED SUCCESS\n");
+        printMessage();
         lastReceivedMessageID = messageID;
         return SUCCESS;
     }
