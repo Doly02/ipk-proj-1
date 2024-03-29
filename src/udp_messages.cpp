@@ -198,7 +198,6 @@
                 break;
             case COMMAND_AUTH: /* Should Not Be Sended To Client */
             case COMMAND_JOIN: /* Should Not Be Sended To Client */
-                printf("WARNING: Invalid Message Type\n"); //TODO:
                 break;
             case MSG: 
             case ERROR:
