@@ -49,18 +49,41 @@
     */
     int TcpMessages::checkJoinReply() 
     {
-        bool confirmAcceppted = false;
         const std::string joinServerMsg(msg.buffer.begin(), msg.buffer.end());
         const std::string prefix = "^MSG FROM Server IS ";
         const std::string stdPrefixLenght = "MSG FROM Server IS ";
         const std::string errPrefixLenght = "ERR FROM Server IS ";
+        const std::string replyOkPrefix = "REPLY OK IS ";
+        const std::string replyNokPrefix = "REPLY OK IS "; 
         
         /* Reply Join OK */
-        if (compare(msg.buffer,"^REPLY OK IS Join success\n\r") & !confirmAcceppted)
+        if (compare(msg.buffer,"^REPLY OK IS"))
         {
-            confirmAcceppted = true;
-            return SUCCESS;
+            if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
+            {
+                msg.buffer.pop_back(); // Removes '\n'
+                msg.buffer.pop_back(); // Removes '\r'
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkPrefix.length());
+
+                std::string replyContent(msg.buffer.begin(), msg.buffer.end());
+                printf("Success: %s\n", replyContent.c_str());
+                return SUCCESS;
+            }
         }
+        if (compare(msg.buffer,"^REPLY NOK IS"))
+        {
+            if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
+            {
+                msg.buffer.pop_back(); // Removes '\n'
+                msg.buffer.pop_back(); // Removes '\r'
+                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokPrefix.length());
+                std::string replyContent(msg.buffer.begin(), msg.buffer.end());
+                printf("Failure: %s\n", replyContent.c_str());
+                return SUCCESS;
+            }
+        }
+
+
         /* Message From Server */
         if (compare(msg.buffer, "^MSG FROM Server IS ")) {
             if (msg.buffer.size() >= stdPrefixLenght.length()) 
@@ -147,12 +170,10 @@
         size_t idx = 0;
     
         /* HAS TO BE CLEANED -> WILL BE MODIFIED */
-        msg.content.clear();
-        
+        msg.content.clear(); 
         if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM Server IS "))
         {
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 19);
-
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
                 msg.content.push_back(msg.buffer[idx]);   
@@ -176,7 +197,6 @@
             PrintServeReply();
             exit(SUCCESS);
         }
-        printf("SUCCESS\n");
         return SUCCESS;
     }
 
