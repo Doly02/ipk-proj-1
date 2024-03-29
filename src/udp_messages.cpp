@@ -169,9 +169,9 @@
         msgType = (BaseMessages::MessageType_t)serializedMsg[0];
 
         if (CONFIRM != msgType)
-            messageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+            messageID = static_cast<uint16_t>(serializedMsg[2]) | (static_cast<uint16_t>(serializedMsg[1]) << 8);
         else
-            refMessageID = static_cast<uint16_t>(serializedMsg[1]) | (static_cast<uint16_t>(serializedMsg[2]) << 8);
+            refMessageID = static_cast<uint16_t>(serializedMsg[2]) | (static_cast<uint16_t>(serializedMsg[1]) << 8);
 
         size_t offset = 3;
         printf("DEBUG INFO: DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
