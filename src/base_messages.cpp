@@ -170,8 +170,7 @@
         }
         printf("\n");
         msg.buffer.push_back('\r'); //TODO: Check If It's Needed
-        msg.buffer.push_back('\n'); //TODO: Check If It's Needed
-
+        msg.buffer.push_back('\n'); 
     }
 
 
@@ -230,11 +229,6 @@
             // delete first 5 characters + 1 space
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
             inputType = INPUT_HELP;
-        }
-        else if (msg.buffer.size() >= 5 && compare(msg.buffer,"^BYE\r\n")) 
-        {
-            msg.type = COMMAND_BYE;
-            return SUCCESS;
         }
         else 
         {
@@ -297,9 +291,9 @@
             msg.type = COMMAND_JOIN;
 
         }
-        else if (inputType == INPUT_HELP) {
+        else if (inputType == INPUT_HELP) 
+        {
             msg.type = COMMAND_HELP;
-
         }
         else if (inputType == INPUT_RENAME)
         {
@@ -311,18 +305,6 @@
                 msg.displayName.push_back(msg.displayName[idx]);   
                 idx++;
             }
-        }
-        // Otherwise Message Is Already Stored In The Content    
-        else if (compare(msg.buffer, "^BYE\r\n")) 
-        {
-            idx = 0;
-            while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
-            {
-                msg.content.push_back(msg.buffer[idx]);   
-                idx++;
-            }            
-            msg.type = COMMAND_BYE;
-
         }
         else 
         {
@@ -396,11 +378,14 @@
                 msg.content.push_back(msg.buffer[idx]);
                 idx++;
             }
-            std::string realContent(msg.content.begin(),msg.content.end());
-
             // Check The Message And User Name Length
             retVal = checkLength();
             msgType = MSG;
+
+            std::string msgContent(msg.content.begin(), msg.content.end());
+            std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
+            printf("DEBUG INFO: MSG FROM: %s: %s\n", displayNameOutside.c_str(), msgContent.c_str());
+
             return retVal;
         }
         else if (compare(msg.buffer, "^BYE\r\n"))

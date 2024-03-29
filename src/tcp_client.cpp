@@ -136,12 +136,7 @@
                 {
                     tcpMessage.readAndStoreContent(buf);
                     retVal = tcpMessage.checkMessage();
-                    if (BaseMessages::COMMAND_BYE == tcpMessage.msg.type)
-                    {
-                        tcpMessage.sentByeMessage(sock);
-                        exit(SUCCESS);
-                    }
-                    else if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
+                    if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
                     {
                         tcpMessage.sendJoinMessage(sock);
                         state = RecvReply;
@@ -156,10 +151,12 @@
                         tcpMessage.printHelp();
                     }
                 }
+                memset(buf,0,sizeof(buf));
             }    
 
             if (fds[SOCKET].revents & POLLIN)
             {
+                tcpMessage.cleanMessage();
                 int bytesRx = recv(sock,buf,BUFSIZE-1,0);
                 if (0 >= bytesRx)
                 {
@@ -169,33 +166,33 @@
                 tcpMessage.checkIfErrorOrBye();
                 switch (state)
                 {
-                case RecvReply:
-                    retVal = tcpMessage.checkJoinReply();
-                    if (SUCCESS != retVal)
-                    {
-                        tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
-                        state = Error;
-                    }
-                    if (BaseMessages::REPLY == tcpMessage.msg.type)
-                        state = Open;
-                    break;
-                case Open:
-                    retVal = tcpMessage.parseMessage();
-                    if (SUCCESS == retVal)
-                    {
-                        tcpMessage.printMessage();
-                        state = Open;
-                    }
-                    break;
-                case End:
-                    exit(0);
-                case Error:
-                    exit(FAIL);
-                case Authentication:
-                default:
-                    break;
+                    case RecvReply:
+                        retVal = tcpMessage.checkJoinReply();
+                        if (SUCCESS != retVal)
+                        {
+                            tcpMessage.sendErrorMessage(sock,BaseMessages::REPLY);
+                            state = Error;
+                        }
+                        if (BaseMessages::REPLY == tcpMessage.msg.type)
+                            state = Open;
+                        break;
+                    case Open:
+                        retVal = tcpMessage.parseMessage();
+                        if (SUCCESS == retVal)
+                        {
+                            tcpMessage.printMessage();
+                            state = Open;
+                        }
+                        break;
+                    case End:
+                        exit(0);
+                    case Error:
+                        exit(FAIL);
+                    case Authentication:
+                    default:
+                        break;
                 }
-
+                memset(buf,0,sizeof(buf));
             }       
         }
         return 0;
