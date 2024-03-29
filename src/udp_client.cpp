@@ -254,14 +254,23 @@
                 switch (state)
                 {
                     case Open:
+                        /* CONFIRM MESSAGE */
                         retVal = udpMessage.recvUpdConfirm();
                         if (SUCCESS == retVal)   
                         {
                             expectedConfirm = false;
                             currentRetries = 0;
                             break;
-                        }   
-                        printf("DEBUG INFO: messageID=%d of Incomming Reply\n",udpMessage.messageID);
+                        }  
+                        else if (NON_VALID_MSG_TYPE == retVal)
+                        {
+                            udpMessage.sendUdpError(sock,newServerAddr,"Unexpected Message Type");
+                            expectedConfirm = true;
+                            state = Error;
+                            break;
+                        }
+
+                        /* REPLY MESSAGE */
                         retVal = udpMessage.recvUpdIncomingReply();
                         if (SUCCESS == retVal)
                         {
@@ -274,18 +283,36 @@
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             break;
                         }
+
+                        /* MESSAGE */
                         retVal = udpMessage.recvUdpMessage();
                         if (SUCCESS == retVal)
                         {
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             break;
                         }
+
                         break;
                     case End:
-                        udpMessage.sendUdpConfirm(sock,newServerAddr);
-                        return SUCCESS;
+                        retVal =udpMessage.recvUpdConfirm();
+                        if (SUCCESS == retVal)
+                        {
+                            return SUCCESS;
+                        }
+                    
                     case Authentication:
                     case Error:
+
+                        retVal = udpMessage.recvUpdConfirm();       // Receive Confirmation on Send Error Message
+                        if (SUCCESS == retVal)
+                        {
+                            expectedConfirm = false;
+                            currentRetries = 0;
+                            udpMessage.sendByeMessage(sock,newServerAddr);
+                            expectedConfirm = true;
+                            state = End;
+                        }
+                        break;
                     default:
                         break;
 

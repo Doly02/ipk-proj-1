@@ -54,6 +54,8 @@ public:
     int recvUdpMessage();
     void sendUdpConfirm(int sock, const struct sockaddr_in& server);
     int recvUpdConfirm();
+    void sendUdpError(int sock, const struct sockaddr_in& server, const std::string& errorMsg);
+    void sendByeMessage(int sock,const struct sockaddr_in& server);
 
 private:
     static constexpr int8_t NULL_BYTE = 0x00;

@@ -224,7 +224,8 @@
             case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:  /* Unused */
             default:
-                exit(1);    // Tadu to mozna opravit tak at program pokracuje akorat nic nedela 
+                msg.type = UNKNOWN_MSG_TYPE;
+                break; 
             
         
         }
@@ -272,6 +273,10 @@
         {
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
+        }
+        else if (UNKNOWN_MSG_TYPE == msg.type)
+        {
+            return NON_VALID_MSG_TYPE;
         }
         printf("DEBUG INFO: recvUpdIncomingReply -> UNEXPECTED_MESSAGE\n");
         return UNEXPECTED_MESSAGE; 
@@ -324,6 +329,10 @@
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
         }
+        if (UNKNOWN_MSG_TYPE == msg.type)
+        {
+            return NON_VALID_MSG_TYPE;
+        }
         // Přidání messageID do seznamu přijatých ID
         receivedMessageIDs.insert(messageID);
         printf("DEBUG INFO: recvUdpMessage -> RECEIVED SUCCESS\n");
@@ -340,6 +349,31 @@
         /*  MESSAGE ID   */
         serialized.push_back((lastReceivedMessageID >> 8) & 0xFF); // (MSB)
         serialized.push_back(lastReceivedMessageID & 0xFF);        // (LSB)
+        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
+        if (bytesTx < 0) 
+        {
+            perror("sendto failed");
+        }
+    }
+
+    void UdpMessages::sendUdpError(int sock, const struct sockaddr_in& server, const std::string& errorMsg)
+    {
+        incrementUdpMsgId();
+        msg.type = ERROR;
+        msg.content.assign(errorMsg.begin(), errorMsg.end());
+        std::vector<uint8_t> serialized = serializeMessage();
+        ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
+        if (bytesTx < 0) 
+        {
+            perror("sendto failed");
+        }
+    }
+
+    void UdpMessages::sendByeMessage(int sock,const struct sockaddr_in& server)
+    {
+        incrementUdpMsgId();
+        msg.type = COMMAND_BYE;
+        std::vector<uint8_t> serialized = serializeMessage();
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));
         if (bytesTx < 0) 
         {
@@ -369,8 +403,13 @@
             // TODO Musim na to odpovidat?
             exit(EXTERNAL_ERROR);
         }
+        else if (UNKNOWN_MSG_TYPE == msg.type)
+        {
+            return NON_VALID_MSG_TYPE;
+        }
 
         printf("DEBUG INFO: recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
+
 

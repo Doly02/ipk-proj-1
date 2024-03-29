@@ -34,6 +34,7 @@ static constexpr int MSG_PARSE_FAILED       = -4;   //!< Indicates That Parsing 
 static constexpr int AUTH_FAILED            = -5;   //!< Indicates That Authentication Did Not Proceed Properly
 static constexpr int EXTERNAL_ERROR         = -6;   //!< Indicates That An External Error Occurred
 static constexpr int NON_VALID_PARAM        = -7;   //!< Indicates That String Contains Non-Alphanumeric Characters
+static constexpr int NON_VALID_MSG_TYPE     = -8;   //!< Indicates That Command Is Invalid
 /*****************************************************/
 /*                  Message Limits                   */
 /*****************************************************/

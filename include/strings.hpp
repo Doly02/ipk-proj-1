@@ -33,10 +33,10 @@
     */
     bool compareVectorAndString(const std::vector<char>& vec, const std::string& str); 
 
-
     bool areAllDigitsOrLettersOrDash(const std::vector<char>& vec);
     
     bool areAllDigitsOrLettersOrDashOrDot(const std::vector<char>& vec);
+    
     bool areAllPrintableCharacters(const std::vector<char>& vec);
 
     bool areAllPrintableCharactersOrSpace(const std::vector<char>& vec);
