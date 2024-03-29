@@ -283,7 +283,7 @@
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             break;
                         }
-
+                        
                         /* MESSAGE */
                         retVal = udpMessage.recvUdpMessage();
                         if (SUCCESS == retVal)
@@ -302,7 +302,7 @@
                     
                     case Authentication:
                     case Error:
-
+ 
                         retVal = udpMessage.recvUpdConfirm();       // Receive Confirmation on Send Error Message
                         if (SUCCESS == retVal)
                         {
