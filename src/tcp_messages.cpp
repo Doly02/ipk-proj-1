@@ -176,7 +176,7 @@
                 msg.content.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            PrintServeReply();
+            printf("BYE\n");
             exit(SUCCESS);
         }
         return SUCCESS;

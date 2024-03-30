@@ -48,11 +48,14 @@ private:
 
     static constexpr int BUFSIZE = 1536;
     char buf[BUFSIZE];
-    int retryCount;
+
     int confirmationTimeout;
     int currentRetries = 0;
+    int retryCount;
+    
     bool receivedConfirm;
     UdpMessages udpMessage;
+    UdpMessages udpMessageBackUp;       //!< Contains Backup of Last Sent Message (For Situation When Confirmation Was Not Received And Message Needs To Be Resent)
     struct sockaddr_in si_other;
     struct sockaddr_in newServerAddr;
 

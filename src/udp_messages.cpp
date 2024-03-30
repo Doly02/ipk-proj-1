@@ -63,6 +63,11 @@
         return messageID;
     }
 
+    void UdpMessages::setExpectReply(bool expect)
+    {
+        expectReply = expect;
+    }
+
     void UdpMessages::setUdpDisplayName(const std::vector<char>& displayNameVec)
     {
         msg.displayName.assign(displayNameVec.begin(), displayNameVec.end());
@@ -71,6 +76,11 @@
     void UdpMessages::setUdpChannelID(const std::vector<char>& channelIDVec)
     {
         msg.channelID.assign(channelIDVec.begin(), channelIDVec.end());
+    }
+
+    bool UdpMessages::getExpectReply()
+    {
+        return expectReply;
     }
 
     /**
@@ -112,12 +122,14 @@
                 appendContent(serialized, msg.displayName);
                 /*  SECRET          */
                 appendContent(serialized, msg.secret);
+                expectReply = true;
                 break;
             case COMMAND_JOIN:
                 /*  CHANNEL ID      */
                 appendContent(serialized, msg.channelID);
                 /*  DISPLAY NAME    */
                 appendContent(serialized, msg.displayName);
+                expectReply = true;
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
@@ -134,6 +146,7 @@
                 break;
             case COMMAND_BYE:
                 /* MSG TYPE & IN ALREADY THERE */
+                printf("DEBUG INFO: BYE MESSAGE SERIALIZED WELL\n");
                 break;
             case CONFIRM:
                 break;
