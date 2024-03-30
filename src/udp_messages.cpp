@@ -139,6 +139,7 @@
                 break;
             case CONFIRM:
                 break;
+            case COMMAND_RENAME:
             case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:
                 exit(1);
@@ -225,6 +226,7 @@
                 break;
             case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:  /* Unused */
+            case COMMAND_RENAME:    /* Unused */
             default:
                 msg.type = UNKNOWN_MSG_TYPE;
                 break; 

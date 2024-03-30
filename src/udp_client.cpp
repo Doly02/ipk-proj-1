@@ -230,9 +230,9 @@
                     if (SUCCESS != retVal)
                         printf("ERR: Invalid Parameters\n");
 
-                    if (udpMessage.msg.type == UdpMessages::COMMAND_HELP)
+                    if (UdpMessages::COMMAND_HELP == udpMessage.msg.type)
                         udpMessage.printHelp();
-                    else
+                    else if (UdpMessages::COMMAND_RENAME != udpMessage.msg.type)
                     {
                         if (expectedConfirm || !messageQueue.empty())
                         {

@@ -34,6 +34,7 @@ public:
         COMMAND_JOIN        = 0x03,
         MSG                 = 0x04,
         COMMAND_HELP        = 0x05,
+        COMMAND_RENAME      = 0x06,
         ERROR               = 0xFE,
         COMMAND_BYE         = 0xFF,
         UNKNOWN_MSG_TYPE    = 0x99,

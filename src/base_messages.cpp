@@ -302,9 +302,12 @@
             // Process New Display Name
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r')  // '\n' should not be in content
             {
-                msg.displayName.push_back(msg.displayName[idx]);   
+                msg.displayName.push_back(msg.buffer[idx]);   
                 idx++;
             }
+            std::string newDisplayName(msg.displayName.begin(), msg.displayName.end());
+            printf("DEBUG INFO: NEW DISPLAY NAME: %s\n", newDisplayName.c_str());
+            msg.type = COMMAND_RENAME;
         }
         else 
         {
