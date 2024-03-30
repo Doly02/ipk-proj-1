@@ -428,7 +428,7 @@
     void BaseMessages::PrintServeReply()
     {
         std::string serverSay(msg.content.begin(),msg.content.end());
-        fprintf(stdout,"server: %s\n",serverSay.c_str());
+        fprintf(stdout,"Server: %s\n",serverSay.c_str());
     }
 
     void BaseMessages::basePrintExternalError()

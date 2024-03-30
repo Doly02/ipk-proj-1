@@ -160,6 +160,7 @@
                 int bytesRx = recv(sock,buf,BUFSIZE-1,0);
                 if (0 >= bytesRx)
                 {
+                    printf("Server Disconnected\n");
                     exit(bytesRx); // TODO
                 }
                 tcpMessage.readAndStoreContent(buf);
@@ -185,8 +186,10 @@
                         }
                         break;
                     case End:
+                        printf("End State\n");
                         exit(0);
                     case Error:
+                        printf("Error State\n");
                         exit(FAIL);
                     case Authentication:
                     default:

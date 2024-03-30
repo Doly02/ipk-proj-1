@@ -88,12 +88,8 @@
         if (compare(msg.buffer, "^MSG FROM Server IS ")) {
             if (msg.buffer.size() >= stdPrefixLenght.length()) 
             {
-                msg.buffer.pop_back(); // Removes '\n'
-                msg.buffer.pop_back(); // Removes '\r'
-                msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + stdPrefixLenght.length());
-                msg.content.clear();
-                msg.content = msg.buffer;
-                PrintServeReply();
+                parseMessage();
+                printMessage();
                 return SUCCESS;
             }
         }
