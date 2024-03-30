@@ -58,7 +58,7 @@
             }
             newServerAddr = si_other; 
             udpMessage.readAndStoreBytes(buf,bytesRx);
-            retVal = udpMessage.recvUpdConfirm();
+            retVal = udpMessage.recvUpdConfirm(sock,newServerAddr);
             if (SUCCESS != retVal)
             {
                 udpMessage.insertErrorMsgToContent("ERR: CONFIRMATION RECEIVED\n");
@@ -128,7 +128,7 @@
                 buf[BUFSIZE - 1] = '\0'; 
                 udpMessage.readAndStoreBytes(buf,bytesRx);
                 
-                retVal = udpMessage.recvUpdConfirm();
+                retVal = udpMessage.recvUpdConfirm(sock,newServerAddr);
                 if (retVal == SUCCESS)      
                     measureTime = false;   
                 
@@ -173,7 +173,6 @@
         bool expectedConfirm    = false;
         ClientState state       = Authentication;
 
-        const struct sockaddr_in& serverAddr = getServerAddr();
         printf("Set Attempts: %d, Current Attempts: %d, Set Timeout: %d\n",currentRetries,retryCount,confirmationTimeout);
         /*** Code ***/
         if (!Client::isConnected())
@@ -255,7 +254,7 @@
                 {
                     case Open:
                         /* CONFIRM MESSAGE */
-                        retVal = udpMessage.recvUpdConfirm();
+                        retVal = udpMessage.recvUpdConfirm(sock,newServerAddr);
                         if (SUCCESS == retVal)   
                         {
                             expectedConfirm = false;
@@ -267,6 +266,12 @@
                             udpMessage.sendUdpError(sock,newServerAddr,"Unexpected Message Type");
                             expectedConfirm = true;
                             state = Error;
+                            break;
+                        }
+                        else if (EXTERNAL_ERROR == retVal)
+                        {
+                            // Error Message Was Send From Server And Client Just Send BYE Message So Just Wait For Confirmation
+                            state = End;
                             break;
                         }
 
@@ -294,7 +299,7 @@
 
                         break;
                     case End:
-                        retVal =udpMessage.recvUpdConfirm();
+                        retVal =udpMessage.recvUpdConfirm(sock,newServerAddr);
                         if (SUCCESS == retVal)
                         {
                             return SUCCESS;
@@ -302,8 +307,8 @@
                     
                     case Authentication:
                     case Error:
- 
-                        retVal = udpMessage.recvUpdConfirm();       // Receive Confirmation on Send Error Message
+
+                        retVal = udpMessage.recvUpdConfirm(sock,newServerAddr);       // Receive Confirmation on Send Error Message
                         if (SUCCESS == retVal)
                         {
                             expectedConfirm = false;
@@ -331,7 +336,7 @@
                     if (UdpMessages::REPLY != udpMessage.msg.type)
                     {
                         //TODO Same As In AUTH! udpMessage.messageID = lastSentMessageID;
-                        udpMessage.sendUdpMessage(sock,serverAddr);
+                        udpMessage.sendUdpMessage(sock,newServerAddr);
                         currentRetries++;
                     }
                 }

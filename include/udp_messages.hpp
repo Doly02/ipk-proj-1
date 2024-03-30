@@ -53,7 +53,7 @@ public:
     void sendUdpMessage(int sock, const struct sockaddr_in& server);
     int recvUdpMessage();
     void sendUdpConfirm(int sock, const struct sockaddr_in& server);
-    int recvUpdConfirm();
+    int recvUpdConfirm(int socket, const struct sockaddr_in& server);
     void sendUdpError(int sock, const struct sockaddr_in& server, const std::string& errorMsg);
     void sendByeMessage(int sock,const struct sockaddr_in& server);
 

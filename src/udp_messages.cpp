@@ -326,7 +326,7 @@
         if (ERROR == msg.type)
         {
             // TODO udpMessage.sendUdpConfirm(sock,newServerAddr);
-            
+
             basePrintExternalError();
             exit(EXTERNAL_ERROR);
         }
@@ -382,7 +382,7 @@
         }
     }
 
-    int UdpMessages::recvUpdConfirm()
+    int UdpMessages::recvUpdConfirm(int socket, const struct sockaddr_in& server)
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -402,7 +402,8 @@
         {
             basePrintExternalError();
             // TODO Musim na to odpovidat?
-            exit(EXTERNAL_ERROR);
+            sendUdpConfirm(socket,server);
+            return EXTERNAL_ERROR;
         }
         else if (UNKNOWN_MSG_TYPE == msg.type)
         {
