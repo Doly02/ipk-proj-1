@@ -31,6 +31,8 @@
 
 class UdpMessages : public BaseMessages {
 public:
+
+
     uint16_t messageID;
     uint16_t refMessageID;
     uint8_t result;
@@ -44,8 +46,6 @@ public:
     void incrementUdpMsgId();
     void setUdpMsgId();
     uint16_t getUdpMsgId();
-    void setExpectReply(bool expect);
-    bool getExpectReply();
     void setUdpDisplayName(const std::vector<char>& displayNameVec);
     void setUdpChannelID(const std::vector<char>& channelIDVec);
     std::vector<uint8_t> serializeMessage();
@@ -63,7 +63,6 @@ private:
     static constexpr int8_t NULL_BYTE = 0x00;
     uint16_t lastSentMessageID;
     uint16_t lastReceivedMessageID;
-    bool expectReply = false;           //!< Indicates That Reply Is Expected (For Block User's Input From STDIN To Be Send When Reply Is Expected)
 };
 
 #endif // UDP_MESSAGES_HPP

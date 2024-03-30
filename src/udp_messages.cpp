@@ -63,10 +63,6 @@
         return messageID;
     }
 
-    void UdpMessages::setExpectReply(bool expect)
-    {
-        expectReply = expect;
-    }
 
     void UdpMessages::setUdpDisplayName(const std::vector<char>& displayNameVec)
     {
@@ -76,11 +72,6 @@
     void UdpMessages::setUdpChannelID(const std::vector<char>& channelIDVec)
     {
         msg.channelID.assign(channelIDVec.begin(), channelIDVec.end());
-    }
-
-    bool UdpMessages::getExpectReply()
-    {
-        return expectReply;
     }
 
     /**
@@ -122,14 +113,12 @@
                 appendContent(serialized, msg.displayName);
                 /*  SECRET          */
                 appendContent(serialized, msg.secret);
-                expectReply = true;
                 break;
             case COMMAND_JOIN:
                 /*  CHANNEL ID      */
                 appendContent(serialized, msg.channelID);
                 /*  DISPLAY NAME    */
                 appendContent(serialized, msg.displayName);
-                expectReply = true;
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
@@ -258,9 +247,6 @@
         cleanMessage();
         deserializeMessage(serialized);
         
-        std::string contentReply(msg.content.begin(),msg.content.end());
-        printf("DEBUG INFO: recvUpdIncomingReply -> contentReply: %s\n",contentReply.c_str());
-
         if (REPLY == msg.type)
         {
             // Check With Internal Message ID
@@ -331,7 +317,7 @@
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
-        printf("DEBUG INFO: recvUdpMessage -> messageID=%d, internalId=%d\n",messageID,internalId);
+        printf("DEBUG INFO: recvUdpMessage -> messageID=%d, expected=%d\n",messageID,internalId);
         if (REPLY == msg.type)
             return MSG_FAILED;
 
@@ -376,7 +362,7 @@
 
     void UdpMessages::sendUdpError(int sock, const struct sockaddr_in& server, const std::string& errorMsg)
     {
-        incrementUdpMsgId();
+        //incrementUdpMsgId();
         msg.type = ERROR;
         msg.content.assign(errorMsg.begin(), errorMsg.end());
         std::vector<uint8_t> serialized = serializeMessage();
@@ -389,7 +375,7 @@
 
     void UdpMessages::sendByeMessage(int sock,const struct sockaddr_in& server)
     {
-        incrementUdpMsgId();
+        //incrementUdpMsgId();
         msg.type = COMMAND_BYE;
         std::vector<uint8_t> serialized = serializeMessage();
         ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));

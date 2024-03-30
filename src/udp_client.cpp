@@ -86,7 +86,7 @@
                 exit(FAIL);
             }
 
-            if ((fds[STDIN].revents & POLLIN) && !udpMessage.getExpectReply())
+            if ((fds[STDIN].revents & POLLIN))
             {
                 // Capture Activity on STDIN
                 // Note: Block The User's Input From STDIN To Be Send When Reply Is Expected
@@ -101,7 +101,6 @@
                     if (udpMessage.msg.type == UdpMessages::COMMAND_AUTH)       // Authentication Message
                     {
                         udpMessage.sendUdpAuthMessage(sock,serverAddr);
-                        udpMessageBackUp = udpMessage;                          // Backup Message For Resending Message
                         // Set Timer
                         startWatch = std::chrono::high_resolution_clock::now();
                         measureTime = true;
@@ -137,7 +136,6 @@
                 if (SUCCESS == retVal)
                 {
                     printf("DEBUG INFO: messageID=%d of Incomming Reply\n",udpMessage.messageID);
-                    udpMessage.setExpectReply(false);
                     udpMessage.sendUdpConfirm(sock,newServerAddr);
                     break;
                 }
@@ -152,7 +150,7 @@
                 {
                     // TODO GetLastSentMessageID: udpMessage.messageID = lastSentMessageID;
                     // TODO ukladat si docacne nekde odeslanou zpravu muze totiz prijit neco jineho 
-                    udpMessageBackUp.sendUdpAuthMessage(sock,newServerAddr);
+                    udpMessage.sendUdpAuthMessage(sock,newServerAddr);
                     currentRetries++;
                 }
             }
@@ -205,6 +203,17 @@
         /* Main Loop */
         while (currentRetries < retryCount)
         {
+
+            if (!messageQueue.empty() && !expectedConfirm)
+            {
+                UdpMessages frontMessage = messageQueue.front();
+                messageQueue.pop();
+                udpMessage.sendUdpMessage(sock,newServerAddr);
+                expectedConfirm = true;
+                startWatch = std::chrono::high_resolution_clock::now();
+                currentRetries++;
+            }
+
             retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
             if (FAIL == retVal)
             {
@@ -212,7 +221,7 @@
                 exit(FAIL);
             }
             // Capture Activity on STDIN
-            if ((fds[STDIN].revents & POLLIN) && !udpMessage.getExpectReply())
+            if ((fds[STDIN].revents & POLLIN))
             {
                 if (fgets(buf, BUFSIZE, stdin) != NULL)
                 {
@@ -225,12 +234,18 @@
                         udpMessage.printHelp();
                     else
                     {
-                        udpMessage.sendUdpMessage(sock,newServerAddr);
-                        printf("DEBUG INFO: expectReply=%d\n",udpMessage.getExpectReply());
-                        udpMessageBackUp = udpMessage;                // Backup Message For Resending Message
-                        expectedConfirm = true;
-                        startWatch = std::chrono::high_resolution_clock::now();
-                        currentRetries++;
+                        if (expectedConfirm || !messageQueue.empty())
+                        {
+                            UdpMessages toQueueMessage = udpMessage;
+                            messageQueue.push(toQueueMessage);
+                        }
+                        else
+                        {
+                            udpMessage.sendUdpMessage(sock,newServerAddr);
+                            expectedConfirm = true; 
+                            startWatch = std::chrono::high_resolution_clock::now();
+                            currentRetries++;
+                        }
                     }
 
                     if (BaseMessages::COMMAND_BYE == udpMessage.msg.type)
@@ -246,7 +261,6 @@
             if (fds[SOCKET].revents & POLLIN)
             {
                 memset(buf, 0, BUFSIZE);
-                printf("DEBUG INFO: expectReply=%d\n",udpMessage.getExpectReply());
                 socklen_t slen = sizeof(si_other);
                 ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
                 if (bytesRx <= 0)
@@ -263,7 +277,6 @@
                         retVal = udpMessage.recvUpdConfirm();
                         if (SUCCESS == retVal)   
                         {
-                            udpMessageBackUp.cleanMessage();   // Clean Backup Message For Sure
                             expectedConfirm = false;
                             currentRetries = 0;
                             break;
@@ -287,8 +300,6 @@
                         retVal = udpMessage.recvUpdIncomingReply();
                         if (SUCCESS == retVal)
                         {
-                            udpMessage.setExpectReply(false);
-                            printf("DEBUG INFO: expectReply=%d\n",udpMessage.getExpectReply());
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             break;
                         }
@@ -346,7 +357,7 @@
                     if (UdpMessages::REPLY != udpMessage.msg.type)
                     {
                         //TODO Same As In AUTH! udpMessage.messageID = lastSentMessageID;
-                        udpMessageBackUp.sendUdpMessage(sock,newServerAddr);
+                        udpMessage.sendUdpMessage(sock,newServerAddr);
                         currentRetries++;
                     }
                 }

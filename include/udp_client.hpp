@@ -22,6 +22,7 @@
 #include <csignal>  // For Signal Handling
 #include <unistd.h>         // For close
 #include <chrono>
+#include <queue>
 #include "base_client.hpp"
 #include "udp_messages.hpp"
 /*************************************************/
@@ -32,6 +33,11 @@ using Milliseconds = std::chrono::milliseconds;
 
 class UdpClient : public Client {
 public:
+
+
+
+
+
     UdpClient(const std::string& addr, int port, int retryCnt, int confirmTimeOut);
     virtual ~UdpClient();
 
@@ -45,6 +51,8 @@ private:
     TimePoint startWatch;               //!< Contains the Initial Measurement Time
     TimePoint stopWatch;                //!< Contains the Final Measurement Time
     bool measureTime = false;           //!< Indicates That Time Should Be Measured
+    
+    std::queue<UdpMessages> messageQueue;
 
     static constexpr int BUFSIZE = 1536;
     char buf[BUFSIZE];
@@ -55,7 +63,6 @@ private:
     
     bool receivedConfirm;
     UdpMessages udpMessage;
-    UdpMessages udpMessageBackUp;       //!< Contains Backup of Last Sent Message (For Situation When Confirmation Was Not Received And Message Needs To Be Resent)
     struct sockaddr_in si_other;
     struct sockaddr_in newServerAddr;
 
