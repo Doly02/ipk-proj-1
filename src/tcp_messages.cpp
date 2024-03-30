@@ -107,7 +107,6 @@
     void TcpMessages::sendJoinMessage(int client_socket)
     {
         std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
-        printf("DEBUG INFO: JOIN MSG: %s",msgToSend.c_str());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");

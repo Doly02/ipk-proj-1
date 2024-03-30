@@ -135,7 +135,6 @@
                 retVal = udpMessage.recvUpdIncomingReply();
                 if (SUCCESS == retVal)
                 {
-                    printf("DEBUG INFO: messageID=%d of Incomming Reply\n",udpMessage.messageID);
                     udpMessage.sendUdpConfirm(sock,newServerAddr);
                     break;
                 }
@@ -197,8 +196,6 @@
             return retVal;
         }
         state = Open;
-        printf("DEBUG INFO: AUTHENTICATION DONE (runUdpClient)\n");
-        printf("------------------------------------------------\n");
 
         /* Main Loop */
         while (currentRetries < retryCount)
@@ -353,7 +350,6 @@
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > confirmationTimeout) 
                 {   
-                    printf("DEBUG INFO: OUT OF TIMEOUT!\n");
                     if (UdpMessages::REPLY != udpMessage.msg.type)
                     {
                         //TODO Same As In AUTH! udpMessage.messageID = lastSentMessageID;

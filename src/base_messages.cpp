@@ -159,16 +159,13 @@
         // Find The Lenght Of Buffer
         size_t len = strlen(buffer);
 
-        printf("DEBUG INFO: RECEIVED: ");
         for (size_t i = 0; i < len; i++)
         {
             if (buffer[i] != '\r' && buffer[i] != '\n')
             {
                 msg.buffer.push_back(buffer[i]);
-                printf("%c",buffer[i]);
             }
         }
-        printf("\n");
         msg.buffer.push_back('\r'); //TODO: Check If It's Needed
         msg.buffer.push_back('\n'); 
     }
@@ -178,18 +175,10 @@
     {
         // Clear The Message Content
         msg.buffer.clear();
-        printf("DEBUG INFO: READING BYTES: ");
         for (size_t i = 0; i < bytesRx; i++)
         {
-            
             msg.buffer.push_back(buffer[i]);
-            if (i > 2)
-            {
-                printf("%c",buffer[i]);
-            }
-
         }
-        printf("\nDEBUG INFO: BYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
     }
 
     /**
@@ -381,11 +370,6 @@
             // Check The Message And User Name Length
             retVal = checkLength();
             msgType = MSG;
-
-            std::string msgContent(msg.content.begin(), msg.content.end());
-            std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
-            printf("DEBUG INFO: MSG FROM: %s: %s\n", displayNameOutside.c_str(), msgContent.c_str());
-
             return retVal;
         }
         else if (compare(msg.buffer, "^BYE\r\n"))
