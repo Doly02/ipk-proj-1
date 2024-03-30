@@ -252,21 +252,25 @@
         {
             // Check With Internal Message ID
             printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
+            if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
+                // Message With This ID Was Already Received
+                return ALREADY_PROCESSED_MSG;  // TODO
+            }
+
             if (refMessageID == lastSentMessageID && result == 1)
             {
-                if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
-                    // Message With This ID Was Already Received
-                    return ALREADY_PROCESSED_MSG;  // TODO
-                }
                 printf("DEBUG INFO: recvUpdIncomingReply -> REPLY SUCCESS (MessageID = %d)\n",messageID);
                 receivedMessageIDs.insert(messageID);
                 lastReceivedMessageID = messageID;
-                PrintServeReply();
+                PrintServerOkReply();
                 return SUCCESS;         
             }
             else if (refMessageID == lastSentMessageID && result == 0)
             {
-                return EXTERNAL_ERROR;
+                receivedMessageIDs.insert(messageID);
+                lastReceivedMessageID = messageID;
+                PrintServerNokReply();
+                return SUCCESS;
             }
         }
         else if (ERROR == msg.type)
@@ -382,7 +386,7 @@
         }
     }
 
-    int UdpMessages::recvUpdConfirm(int socket, const struct sockaddr_in& server)
+    int UdpMessages::recvUpdConfirm()
     {
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
@@ -402,7 +406,6 @@
         {
             basePrintExternalError();
             // TODO Musim na to odpovidat?
-            sendUdpConfirm(socket,server);
             return EXTERNAL_ERROR;
         }
         else if (UNKNOWN_MSG_TYPE == msg.type)

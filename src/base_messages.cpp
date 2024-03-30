@@ -425,10 +425,16 @@
         }
     }
 
-    void BaseMessages::PrintServeReply()
+    void BaseMessages::PrintServerOkReply()
     {
         std::string serverSay(msg.content.begin(),msg.content.end());
-        fprintf(stdout,"Server: %s\n",serverSay.c_str());
+        fprintf(stdout,"Success: %s\n",serverSay.c_str());
+    }
+
+    void BaseMessages::PrintServerNokReply()
+    {
+        std::string serverSay(msg.content.begin(),msg.content.end());
+        fprintf(stdout,"Failure: %s\n",serverSay.c_str());
     }
 
     void BaseMessages::basePrintExternalError()

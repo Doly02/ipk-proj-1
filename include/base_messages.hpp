@@ -78,7 +78,8 @@ public:
     int checkMessage();
     int parseMessage();
     void printMessage();
-    void PrintServeReply();
+    void PrintServerOkReply();
+    void PrintServerNokReply();
     void basePrintExternalError();
     void basePrintInternalError(int retVal);
     void printHelp();
