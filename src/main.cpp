@@ -36,19 +36,19 @@ TcpClient* globalTcpClientInstance = nullptr;
 
 void globalUdpHandleInterrupt(int signal) 
 {
-    if (globalUdpClientInstance) 
-    {
-        globalUdpClientInstance->udpHandleInterrupt(signal);
-    }
+if (globalUdpClientInstance) 
+{
+    globalUdpClientInstance->udpHandleInterrupt(signal);
+}
 }
 
 
 void globalTcpHandleInterrupt(int signal) 
 {
-    if (globalTcpClientInstance) 
-    {
-        globalTcpClientInstance->tcpHandleInterrupt(signal);
-    }
+if (globalTcpClientInstance) 
+{
+    globalTcpClientInstance->tcpHandleInterrupt(signal);
+}
 }
 
 /*******************************************************/
@@ -56,46 +56,46 @@ void globalTcpHandleInterrupt(int signal)
 /*******************************************************/
 int main(int argc, char *argv[])
 {
-    try {
-        /*** Variables ****/
-        int retVal = FAIL;
+try {
+    /*** Variables ****/
+    int retVal = FAIL;
 
 
-        /****** Code ******/
+    /****** Code ******/
 
-        // Parse Arguments
-        arguments args(argc, argv); 
+    // Parse Arguments
+    arguments args(argc, argv); 
 
-        if ("tcp" == args.transferProtocol)
-        {
-            TcpClient client(args.ipAddress, args.port, Client::TCP);
-            
-            // Set Global Instance Of TcpClient For Signal Handling
-            globalTcpClientInstance = &client;
-            // Set Signal Handler
-            signal(SIGINT, globalTcpHandleInterrupt);
-            
-            // Run Tcp Client
-            retVal = client.runTcpClient();
-            return retVal;   
-        }
-        else if ("udp" == args.transferProtocol)
-        {
-            UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
-            
-            // Set Global Instance Of UdpClient For Signal Handling
-            globalUdpClientInstance = &client;          
-            // Set Signal Handler
-            signal(SIGINT, globalUdpHandleInterrupt);
-            
-            // Run Udp Client
-            retVal = client.runUdpClient();
-            return retVal;
-        }
-    }
-    catch (const std::exception &e)
+    if ("tcp" == args.transferProtocol)
     {
-        std::cerr << e.what() << std::endl;
-        return 1;
+        TcpClient client(args.ipAddress, args.port, Client::TCP);
+        
+        // Set Global Instance Of TcpClient For Signal Handling
+        globalTcpClientInstance = &client;
+        // Set Signal Handler
+        signal(SIGINT, globalTcpHandleInterrupt);
+        
+        // Run Tcp Client
+        retVal = client.runTcpClient();
+        return retVal;   
     }
+    else if ("udp" == args.transferProtocol)
+    {
+        UdpClient client(args.ipAddress, args.port, args.confirmRetriesUDP, args.confirmTimeOutUDP);
+        
+        // Set Global Instance Of UdpClient For Signal Handling
+        globalUdpClientInstance = &client;          
+        // Set Signal Handler
+        signal(SIGINT, globalUdpHandleInterrupt);
+        
+        // Run Udp Client
+        retVal = client.runUdpClient();
+        return retVal;
+    }
+}
+catch (const std::exception &e)
+{
+    std::cerr << e.what() << std::endl;
+    return 1;
+}
 }

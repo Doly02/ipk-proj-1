@@ -28,87 +28,87 @@
 /************************************************/
 /*                  CLASS                       */
 /************************************************/
-    /**
-     * @brief Constructor of TcpClient Class 
-     * @param addr Server's Address 
-     * @param port Server's Port
-     *
-     * Constructor Initialize Client With Server's Address And Port.
-     * Default State of Socket Is Set To NOT_CONNECTED.
-     */
-    Client::Client(const std::string& addr, int port, uint prot) 
-        : _serverAddress(addr), _port(port), _protocol(prot), sock(NOT_CONNECTED)
+/**
+ * @brief Constructor of TcpClient Class 
+ * @param addr Server's Address 
+ * @param port Server's Port
+ *
+ * Constructor Initialize Client With Server's Address And Port.
+ * Default State of Socket Is Set To NOT_CONNECTED.
+ */
+Client::Client(const std::string& addr, int port, uint prot) 
+    : _serverAddress(addr), _port(port), _protocol(prot), sock(NOT_CONNECTED)
+{
+
+    if (TCP == _protocol)
     {
-
-        if (TCP == _protocol)
-        {
-            sock = socket(AF_INET, SOCK_STREAM, 0);
-        }
-        else if (UDP == _protocol)
-        {
-            sock = socket(AF_INET, SOCK_DGRAM, 0);
-        }
-    
-        if (NOT_CONNECTED == sock)
-        {
-            std::cerr << "Not Possible To Create Socket: " << strerror(errno) << std::endl;
-        }
-
-        // Set Server's Address Information
-        memset(&server, 0, sizeof(server));
-        server.sin_family = AF_INET;
-        server.sin_port = htons(this->_port);
-
-        if (inet_pton(AF_INET, _serverAddress.c_str(), &server.sin_addr) <= 0)
-        {
-            throw std::runtime_error("Invalid address/ Address not supported");
-        }
-
-        if (TCP == _protocol)
-        {
-            if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
-            {
-                throw std::runtime_error("Socket creation failed");
-            }            
-        }
-
-        // Connection Was Successful
+        sock = socket(AF_INET, SOCK_STREAM, 0);
     }
-    /**
-     * @brief Destructor of TcpClient Class 
-     * 
-     * Constructor Of Client With Server's Address And Port.
-     * Default State of Socket Is Set To NOT_CONNECTED.
-     */
-    Client::~Client()
+    else if (UDP == _protocol)
     {
-        if (sock != NOT_CONNECTED)
+        sock = socket(AF_INET, SOCK_DGRAM, 0);
+    }
+
+    if (NOT_CONNECTED == sock)
+    {
+        std::cerr << "Not Possible To Create Socket: " << strerror(errno) << std::endl;
+    }
+
+    // Set Server's Address Information
+    memset(&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(this->_port);
+
+    if (inet_pton(AF_INET, _serverAddress.c_str(), &server.sin_addr) <= 0)
+    {
+        throw std::runtime_error("Invalid address/ Address not supported");
+    }
+
+    if (TCP == _protocol)
+    {
+        if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
         {
-            close(sock);
-            std::cout << "Client destructor called -> Sock Closed" << std::endl;
-        }
+            throw std::runtime_error("Socket creation failed");
+        }            
     }
 
-    void Client::updateServerAddress(const std::string& newAddress) 
+    // Connection Was Successful
+}
+/**
+ * @brief Destructor of TcpClient Class 
+ * 
+ * Constructor Of Client With Server's Address And Port.
+ * Default State of Socket Is Set To NOT_CONNECTED.
+ */
+Client::~Client()
+{
+    if (sock != NOT_CONNECTED)
     {
-        _serverAddress = newAddress;
+        close(sock);
+        std::cout << "Client destructor called -> Sock Closed" << std::endl;
     }
-    /**
-     * @brief Determine If The Client Is Connected To The Server
-     * @return True If The Client Is Connected, False Otherwise
-     */
-    bool Client::isConnected() {
-        return sock != NOT_CONNECTED;
-    }
+}
 
-    // Return server's struct 
-    const struct sockaddr_in& Client::getServerAddr() const 
-    {
-        return server;
-    }
-    /**
-     * @brief Connects The Client To The Server
-     * @return True If The Connection Was Successful, False Otherwise
-     */
+void Client::updateServerAddress(const std::string& newAddress) 
+{
+    _serverAddress = newAddress;
+}
+/**
+ * @brief Determine If The Client Is Connected To The Server
+ * @return True If The Client Is Connected, False Otherwise
+ */
+bool Client::isConnected() {
+    return sock != NOT_CONNECTED;
+}
+
+// Return server's struct 
+const struct sockaddr_in& Client::getServerAddr() const 
+{
+    return server;
+}
+/**
+ * @brief Connects The Client To The Server
+ * @return True If The Connection Was Successful, False Otherwise
+ */
 
 
