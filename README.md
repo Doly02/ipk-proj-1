@@ -112,10 +112,16 @@ Prints Help Statement.
 #### Messages
 Everything Else As The Previous Commands Are Interpreted As Regular Message.
 
+**Note:** Be aware that there are limitations for `{ChannelID}`, `{DisplayName}`, and similar fields. For instance, packets should not exceed the default Ethernet MTU of 1500 octets as defined by [RFC 894](https://tools.ietf.org/html/rfc894). Exceeding this limit could result in packet fragmentation, potentially affecting communication efficiency and reliability.
+
+### Unblocking Communication With poll()
+In programming, when implementing chat client is better to use unblocking communication with poll() rather than busy-waiting for data on the socket. Client can fluently check activity on stadart input and socket using poll(), which is a more efficient and elegant solution. The benefits of poll() are that it allows the program to efficiently check multiple sockets for activity simultaneously without wasting CPU time. An alternative to the poll() function is the select() function, which is also commonly used for checking multiple sockets for activity, but may have some limitations in terms of scalability and performance. 
+
 ### TCP Client
 
 #### Introduction To TCP Communication
-To establish a `TCP connection`, the initial step involves creating a socket, specifying it as a TCP socket with the `SOCK_STREAM` parameter within the socket function. Following socket creation, a three-way handshake is executed, setting up a dedicated connection socket on the server side for the client, a process that, though invisible to the client, occurs server-side and within the transport layer. Upon completing this setup, the connect function is engaged, allowing data exchange to commence.
+
+TCP is a reliable and connection-oriented protocol that operates at the transport layer of the TCP/IP protocol suite (T, 2016). It provides reliable, ordered, and error-checked delivery of data packets over an IP network (Meghanathan, 2014). TCP works by establishing a reliable and ordered connection between two devices, typically a client and a server. During the connection establishment phase, a three-way handshake process is used, where the client and server exchange SYN (synchronize) and ACK (acknowledge) packets to confirm the connection (Postel et al., 1995). Once the connection is established, TCP segments the data into small packets and adds sequence numbers to each packet.
 
 <p align="center">
   <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
@@ -143,6 +149,7 @@ The following subsections will explain the individual parts of the testing.
 
 #### Unit tests on individual class methods
 The aim of the unit test was to guarantee the correctness and expected behavior of the individual class methods. Testing was performed on critical methods that interact with either STDIN/STDOUT/STDERR or manipulate messages.
+
 **Note:** Not all methods were tasted by unit test, just the critical ones!
 
 #### Communication testing with fake server - NETCAT
@@ -169,6 +176,10 @@ Due to the complexity of simulating situations on the reference server using tes
 [RFC791]: Information Sciences Institute, University of Southern California. "Internet Protocol" [online]. September 1981. [cited 2024-03-26]. DOI: 10.17487/RFC791. Available at [https://www.ietf.org/rfc/rfc793.txt](https://www.ietf.org/rfc/rfc793.txt).
 
 James F. Kurose, Keith W. Ross: *Computer Networking: A Top Down Approach* (Eighth Edition). Figure 2.28 [cited 2024-03-20].
+
+"Difference Between TCP/IP and OSI Model" [online]. [cited 2024-03-29]. Available at [https://techdifferences.com/difference-between-tcp-ip-and-osi-model.html](https://techdifferences.com/difference-between-tcp-ip-and-osi-model.html).
+
+Natarajan Meghanathan: "A Tutorial on Network Security: Attacks and Controls" [online]. [cited 2024-03-29]. Available at [https://arxiv.org/pdf/1412.6017v1.pdf](https://arxiv.org/pdf/1412.6017v1.pdf)
 
 Gorry Fairhurst: "The User Datagram Protocol (UDP)" [online]. 19.11.2008. [cited 2024-03-20]. Available at [https://www.erg.abdn.ac.uk/users/gorry/course/inet-pages/udp.html](https://www.erg.abdn.ac.uk/users/gorry/course/inet-pages/udp.html).
 
