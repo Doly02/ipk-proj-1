@@ -159,7 +159,7 @@ int TcpClient::runTcpClient()
             int bytesRx = recv(sock,buf,BUFSIZE-1,0);
             if (0 >= bytesRx)
             {
-                fprintf(stderr,"Server Disconnected\n");
+                fprintf(stderr,"ERR: Server Disconnected\n");
                 exit(FAIL); 
             }
             tcpMessage.readAndStoreContent(buf);
@@ -206,20 +206,4 @@ int TcpClient::runTcpClient()
     return 0;
 };
 
-
-// NOTES:
-/* Potreba dodelat -> Momentalne se pracuje se dvemi buffery je treba pouzit jen jeden
-*   -> pouziva se char Buf[1024] a <vector> Content -> Nejlepsi bude pouzivat Pouze Content a kdyz budes potrebovat tak si to prekonvertujes na Buf "ale jakoby pouze virtualne"
-*/
-/* Co je potreba dodelat?
-* - Osetrit chyby pri odesilani zprav                  -> SHOULD BE DONE
-* - Osetrit chyby pri prijimani zprav                  -> ??? (Muze ti prijit ERROR, ktery rovnou posilas)
-* - Dopracovat odesilani vsech moznych zprav v TCP     -> ???
-* - Rozpracovat a dodelat UDP                          -> ???
-* - Testovat Testovat                                  -> ???
-* 
-* TODO: Zbavit se vsech TODOs                          -> ???
-* -> Co se ma dit pokud ti podruhe prijde autentifikace-> ???
-* -> rozdelit CheckIfErrorOrBye
-*/
 

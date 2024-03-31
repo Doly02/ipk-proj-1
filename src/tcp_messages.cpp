@@ -83,9 +83,8 @@ int TcpMessages::checkJoinReply()
         }
     }
 
-
     /* Catch Messages From Server */
-    if (compare(msg.buffer, "^MSG FROM Server IS ")) {
+    if (compare(msg.buffer, "^MSG FROM ")) {
         if (msg.buffer.size() >= stdPrefixLenght.length()) 
         {
             parseMessage();
@@ -153,10 +152,12 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
 
     /* HAS TO BE CLEANED -> WILL BE MODIFIED */
     msg.content.clear(); 
-    if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM Server IS "))
+    if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM "))
     {
+        // Erase "ERR FROM " 
         msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
 
+        // Get Display Name
         while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
         {
             std::string currentSubStr(msg.buffer.begin() + idx, msg.buffer.end());
@@ -166,6 +167,7 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
             msg.displayNameOutside.push_back(msg.buffer[idx]);
             idx++;
         }
+
         // Check and Remove the Last Character if Needed (It's a Space)
         if (!msg.displayNameOutside.empty()) 
         {
@@ -175,6 +177,7 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
         int isPlusSpace = 3;                                                    // 1. Get Rid of "IS "
         msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + idx + isPlusSpace);
 
+        /* Get Content */
         idx = 0;
         while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
         {
