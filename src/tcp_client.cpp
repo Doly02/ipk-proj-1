@@ -164,8 +164,8 @@ int TcpClient::runTcpClient()
             int bytesRx = recv(sock,buf,BUFSIZE-1,0);
             if (0 >= bytesRx)
             {
-                printf("Server Disconnected\n");
-                exit(bytesRx); // TODO
+                fprintf(stderr,"Server Disconnected\n");
+                exit(FAIL); 
             }
             tcpMessage.readAndStoreContent(buf);
             tcpMessage.checkIfErrorOrBye(sock);
@@ -188,12 +188,18 @@ int TcpClient::runTcpClient()
                         tcpMessage.printMessage();
                         state = Open;
                     }
+                    if (NON_VALID_PARAM == retVal)
+                    {
+                        tcpMessage.insertErrorMsgToContent("Non Valid Parameters");
+                        tcpMessage.sendErrorMessage(sock,BaseMessages::UNKNOWN_MSG_TYPE);
+                        state = Error;
+                    }
                     break;
                 case End:
                     printf("End State\n");
                     exit(0);
                 case Error:
-                    printf("Error State\n");
+                    tcpMessage.sentByeMessage(sock);
                     exit(FAIL);
                 case Authentication:
                 default:

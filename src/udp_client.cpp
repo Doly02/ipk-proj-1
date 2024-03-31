@@ -257,7 +257,6 @@ int UdpClient::runUdpClient()
             }
         }
 
-
         // Capture Activity on Socket
         if (fds[SOCKET].revents & POLLIN)
         {
