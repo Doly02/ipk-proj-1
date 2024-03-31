@@ -135,7 +135,6 @@
                 retVal = udpMessage.recvUpdIncomingReply();
                 if (SUCCESS == retVal)
                 {
-                    printf("DEBUG INFO: messageID=%d of Incomming Reply\n",udpMessage.messageID);
                     udpMessage.sendUdpConfirm(sock,newServerAddr);
                     break;
                 }
@@ -159,7 +158,7 @@
 
         if (currentRetries >= retryCount) 
         {
-            printf("DEBUG: Attempts Overrun\n");
+            printf("ERR: Attempts Overrun\n");
             // Attempts Overrun
             return AUTH_FAILED;
         }
@@ -197,8 +196,6 @@
             return retVal;
         }
         state = Open;
-        printf("DEBUG INFO: AUTHENTICATION DONE (runUdpClient)\n");
-        printf("------------------------------------------------\n");
 
         /* Main Loop */
         while (currentRetries < retryCount)
@@ -208,7 +205,8 @@
             {
                 UdpMessages frontMessage = messageQueue.front();
                 messageQueue.pop();
-                udpMessage.sendUdpMessage(sock,newServerAddr);
+                frontMessage.sendUdpMessage(sock,newServerAddr);
+                udpBackUpMessage = frontMessage;
                 expectedConfirm = true;
                 startWatch = std::chrono::high_resolution_clock::now();
                 currentRetries++;
@@ -242,6 +240,7 @@
                         else
                         {
                             udpMessage.sendUdpMessage(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;
                             expectedConfirm = true; 
                             startWatch = std::chrono::high_resolution_clock::now();
                             currentRetries++;
@@ -291,7 +290,6 @@
                         else if (EXTERNAL_ERROR == retVal)
                         {
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
-                            // Error Message Was Send From Server And Client Just Send BYE Message So Just Wait For Confirmation
                             state = End;
                             break;
                         }
@@ -353,11 +351,10 @@
                 int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
                 if (elapsedTime > confirmationTimeout) 
                 {   
-                    printf("DEBUG INFO: OUT OF TIMEOUT!\n");
                     if (UdpMessages::REPLY != udpMessage.msg.type)
                     {
                         //TODO Same As In AUTH! udpMessage.messageID = lastSentMessageID;
-                        udpMessage.sendUdpMessage(sock,newServerAddr);
+                        udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
                         currentRetries++;
                     }
                 }
@@ -367,7 +364,7 @@
         }
         if (currentRetries >= retryCount) {
             // Attempts Overrun
-            printf("Attemp Overrun -> runUdpClient()\n");
+            printf("ERR: Attemp Overrun -> runUdpClient()\n");
             return FAIL;
         }
 

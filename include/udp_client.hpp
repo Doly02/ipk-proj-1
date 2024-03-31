@@ -18,7 +18,6 @@
 #ifndef UDP_CLIENT_HPP
 #define UDP_CLIENT_HPP
 
-#include <string>
 #include <csignal>  // For Signal Handling
 #include <unistd.h>         // For close
 #include <chrono>
@@ -63,6 +62,7 @@ private:
     
     bool receivedConfirm;
     UdpMessages udpMessage;
+    UdpMessages udpBackUpMessage;
     struct sockaddr_in si_other;
     struct sockaddr_in newServerAddr;
 

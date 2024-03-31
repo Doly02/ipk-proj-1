@@ -122,7 +122,6 @@
                 break;
             case MSG:
                 /*  DISPLAY NAME    */
-                printf("DEBUG INFO: DisplayName->|%s|\n",disp.c_str());
                 appendContent(serialized, msg.displayName);
                 /*  MESSAGE CONTENT */
                 appendContent(serialized, msg.content);
@@ -135,7 +134,6 @@
                 break;
             case COMMAND_BYE:
                 /* MSG TYPE & IN ALREADY THERE */
-                printf("DEBUG INFO: BYE MESSAGE SERIALIZED WELL\n");
                 break;
             case CONFIRM:
                 break;
@@ -143,13 +141,6 @@
             case COMMAND_HELP:
             case UNKNOWN_MSG_TYPE:
                 exit(1);
-        }
-        std::string login(msg.login.begin(),msg.login.end());           // FIXME
-        std::string cont(msg.content.begin(),msg.content.end());
-        std::string displ(msg.displayName.begin(),msg.displayName.end());
-        if (msg.type == MSG)
-        {
-            printf("DEBUG INFO: SER.MSG: %02x %d %s 0x00 %s 0x00\n",static_cast<unsigned char>(msg.type),messageID,displ.c_str(),cont.c_str());
         }
         return serialized;
     }
@@ -178,7 +169,6 @@
             refMessageID = static_cast<uint16_t>(serializedMsg[2]) | (static_cast<uint16_t>(serializedMsg[1]) << 8);
 
         size_t offset = 3;
-        printf("DEBUG INFO: DESERIALIZED: type = %d, messageID = %d\n",msgType,messageID);
         switch (msgType)
         {
             case CONFIRM:
@@ -252,7 +242,6 @@
         if (REPLY == msg.type)
         {
             // Check With Internal Message ID
-            printf("DEBUG INFO: recvUpdIncomingReply -> refMessageID: %d, result: %d\n",refMessageID,result);
             if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
                 // Message With This ID Was Already Received
                 return ALREADY_PROCESSED_MSG;  // TODO
@@ -260,7 +249,6 @@
 
             if (refMessageID == lastSentMessageID && result == 1)
             {
-                printf("DEBUG INFO: recvUpdIncomingReply -> REPLY SUCCESS (MessageID = %d)\n",messageID);
                 receivedMessageIDs.insert(messageID);
                 lastReceivedMessageID = messageID;
                 PrintServerOkReply();
@@ -283,7 +271,6 @@
         {
             return NON_VALID_MSG_TYPE;
         }
-        printf("DEBUG INFO: recvUpdIncomingReply -> UNEXPECTED_MESSAGE\n");
         return UNEXPECTED_MESSAGE; 
     }
 
@@ -308,18 +295,14 @@
         {
             perror("sendto failed");
         }
-        printf("DEBUG INFO: sendUdpMessage -> messageID=%d\n",messageID);
         lastSentMessageID = messageID;
     }
 
     int UdpMessages::recvUdpMessage()
     {
-        
-        uint16_t internalId = lastReceivedMessageID + 1;
         std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
         cleanMessage();
         deserializeMessage(serialized);
-        printf("DEBUG INFO: recvUdpMessage -> messageID=%d, expected=%d\n",messageID,internalId);
         if (REPLY == msg.type)
             return MSG_FAILED;
 
@@ -349,7 +332,6 @@
     void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server)
     {
         std::vector<uint8_t> serialized;
-        printf("DEBUG INFO: sendUdpConfirm -> lastReceivedMessageID = %d\n",lastReceivedMessageID);
         /*  MESSAGE TYPE */
         serialized.push_back(CONFIRM);
         /*  MESSAGE ID   */
@@ -394,11 +376,9 @@
         deserializeMessage(serialized);
         if (CONFIRM == msg.type)
         {
-            printf("DEBUG INFO: recvUdpConfirm -> CONFIRM MESSAGE (refMessageID = %d,lastSentMessageID = %d) \n",refMessageID,lastSentMessageID);
             // Check With Internal Message ID
             if (refMessageID == lastSentMessageID)
             {
-                printf("DEBUG INFO: recvUdpConfirm -> refMessageID == internalId\n");
                 incrementUdpMsgId();
                 return SUCCESS;
             }
@@ -413,8 +393,6 @@
         {
             return NON_VALID_MSG_TYPE;
         }
-
-        printf("DEBUG INFO: recvUdpConfirm -> CONFIRM_FAILED\n");
         return CONFIRM_FAILED;
     }
 

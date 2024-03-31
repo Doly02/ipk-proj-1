@@ -107,7 +107,6 @@
     void TcpMessages::sendJoinMessage(int client_socket)
     {
         std::string msgToSend = "JOIN " + std::string(msg.channelID.begin(), msg.channelID.end()) + " AS " + std::string(msg.displayName.begin(), msg.displayName.end()) + "\r\n";
-        printf("DEBUG INFO: JOIN MSG: %s",msgToSend.c_str());
         ssize_t bytesTx = send(client_socket, msgToSend.c_str(), msgToSend.length(), 0);
         if (bytesTx < 0) {
             std::perror("ERROR: sendto");
@@ -150,12 +149,33 @@
     int TcpMessages::checkIfErrorOrBye(int clientSocket)
     {
         size_t idx = 0;
+        std::regex msgIsRegex("^IS");
     
         /* HAS TO BE CLEANED -> WILL BE MODIFIED */
         msg.content.clear(); 
         if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM Server IS "))
         {
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 19);
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
+
+            while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
+            {
+                std::string currentSubStr(msg.buffer.begin() + idx, msg.buffer.end());
+                if (std::regex_search(currentSubStr, msgIsRegex)) {
+                    break; // Exit the loop if "IN" is found at the beginning of the current substring
+                }
+                msg.displayNameOutside.push_back(msg.buffer[idx]);
+                idx++;
+            }
+            // Check and Remove the Last Character if Needed (It's a Space)
+            if (!msg.displayNameOutside.empty()) 
+            {
+                msg.displayNameOutside.pop_back();
+            }
+            /* Process The Content */
+            int isPlusSpace = 3;                                                    // 1. Get Rid of "IS "
+            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + idx + isPlusSpace);
+
+            idx = 0;
             while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
             {
                 msg.content.push_back(msg.buffer[idx]);   

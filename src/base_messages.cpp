@@ -159,16 +159,13 @@
         // Find The Lenght Of Buffer
         size_t len = strlen(buffer);
 
-        printf("DEBUG INFO: RECEIVED: ");
         for (size_t i = 0; i < len; i++)
         {
             if (buffer[i] != '\r' && buffer[i] != '\n')
             {
                 msg.buffer.push_back(buffer[i]);
-                printf("%c",buffer[i]);
             }
         }
-        printf("\n");
         msg.buffer.push_back('\r'); //TODO: Check If It's Needed
         msg.buffer.push_back('\n'); 
     }
@@ -178,18 +175,12 @@
     {
         // Clear The Message Content
         msg.buffer.clear();
-        printf("DEBUG INFO: READING BYTES: ");
         for (size_t i = 0; i < bytesRx; i++)
         {
             
             msg.buffer.push_back(buffer[i]);
-            if (i > 2)
-            {
-                printf("%c",buffer[i]);
-            }
 
         }
-        printf("\nDEBUG INFO: BYTES READ: %zu byte[0]=%02x\n", bytesRx, static_cast<unsigned char>(buffer[0]));
     }
 
     /**
@@ -305,8 +296,6 @@
                 msg.displayName.push_back(msg.buffer[idx]);   
                 idx++;
             }
-            std::string newDisplayName(msg.displayName.begin(), msg.displayName.end());
-            printf("DEBUG INFO: NEW DISPLAY NAME: %s\n", newDisplayName.c_str());
             msg.type = COMMAND_RENAME;
         }
         else 
@@ -385,10 +374,6 @@
             retVal = checkLength();
             msgType = MSG;
 
-            std::string msgContent(msg.content.begin(), msg.content.end());
-            std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
-            printf("DEBUG INFO: MSG FROM: %s: %s\n", displayNameOutside.c_str(), msgContent.c_str());
-
             return retVal;
         }
         else if (compare(msg.buffer, "^BYE\r\n"))
@@ -444,7 +429,7 @@
     {
         std::string errDisplayName(msg.displayNameOutside.begin(),msg.displayNameOutside.end());
         std::string errContent(msg.content.begin(),msg.content.end());
-        fprintf(stderr,"ERR FROM: %s: %s\n",errDisplayName.c_str(),errContent.c_str());
+        fprintf(stderr,"ERR FROM %s: %s\n",errDisplayName.c_str(),errContent.c_str());
     }
 
     void BaseMessages::basePrintInternalError(int retVal)
