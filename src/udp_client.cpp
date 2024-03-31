@@ -74,8 +74,11 @@ int UdpClient::processAuthetification()
 {
     /* Variables */
     int retVal = 0;
+    int watchDog = 0;
     const struct sockaddr_in& serverAddr = getServerAddr();
     udpMessage.msg.type = BaseMessages::UNKNOWN_MSG_TYPE;
+    ClientState state = Authentication;
+
 
     while (currentRetries < retryCount) 
     {   
@@ -104,7 +107,7 @@ int UdpClient::processAuthetification()
                     // Set Timer
                     startWatch = std::chrono::high_resolution_clock::now();
                     measureTime = true;
-                    currentRetries++;
+                    udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                 }
                 else if (udpMessage.msg.type == UdpMessages::COMMAND_HELP)  // Help Command
                 {
@@ -124,19 +127,88 @@ int UdpClient::processAuthetification()
             {
                 return FAIL;
             }
-            newServerAddr = si_other;   // Set Server's New Port 
+            newServerAddr = si_other;                           // Set Server's New Port 
             buf[BUFSIZE - 1] = '\0'; 
             udpMessage.readAndStoreBytes(buf,bytesRx);
-            
-            retVal = udpMessage.recvUpdConfirm();
-            if (retVal == SUCCESS)      
-                measureTime = false;   
-            
-            retVal = udpMessage.recvUpdIncomingReply();
-            if (SUCCESS == retVal)
+            BaseMessages::MessageType_t type = (BaseMessages::MessageType_t)buf[0];
+            switch(state)
             {
-                udpMessage.sendUdpConfirm(sock,newServerAddr);
-                break;
+                case Authentication:
+                    if (BaseMessages::CONFIRM == type)
+                    {
+                        retVal = udpMessage.recvUpdConfirm();
+                        if (retVal == SUCCESS) 
+                        {
+                            measureTime = false;   
+                            currentRetries = 0;
+                        }     
+                    }
+                    else if (BaseMessages::REPLY == type)
+                    {
+                        retVal = udpMessage.recvUpdIncomingReply();
+                        if (SUCCESS == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                            return SUCCESS;
+                        }
+                    }
+                    else if (BaseMessages::COMMAND_BYE == type)
+                    {
+                        udpMessage.sendUdpConfirm(sock,newServerAddr);
+                        udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                        exit(SUCCESS);
+                    }
+                    else if (BaseMessages::ERROR == type)
+                    {
+                        udpMessage.recvUdpError();
+                        udpMessage.sendUdpConfirm(sock,newServerAddr);
+                        udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                        state = Error;
+                        watchDog = -1;
+                    }
+                    else if (BaseMessages::MSG == type)
+                    {
+                        /* MESSAGE */
+                        retVal = udpMessage.recvUdpMessage();
+                        if (SUCCESS == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                            break;
+                        }
+                        else
+                        {
+                            state = Error;
+                            udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
+                            measureTime = true;
+                            watchDog = -1;
+                        }
+                        break;
+                    }
+                    break;
+                case Error:
+                    retVal = udpMessage.recvUpdConfirm();                       // Receive Confirmation on Send Error Message
+                    if (SUCCESS == retVal)
+                    {
+                        measureTime = false;
+                        currentRetries = 0;
+                        udpMessage.sendByeMessage(sock,newServerAddr);
+                        udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                        measureTime = true;
+                        state = End;
+                    }
+                    break;
+                case End:
+                    retVal =udpMessage.recvUpdConfirm();
+                    if (SUCCESS == retVal)
+                    {
+                        return watchDog;
+                    }
+                    break;
+                case Open:
+                default:
+                    break;
             }
         }
 
@@ -147,9 +219,7 @@ int UdpClient::processAuthetification()
             int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
             if (elapsedTime > confirmationTimeout) 
             {
-                // TODO GetLastSentMessageID: udpMessage.messageID = lastSentMessageID;
-                // TODO ukladat si docacne nekde odeslanou zpravu muze totiz prijit neco jineho 
-                udpMessage.sendUdpAuthMessage(sock,newServerAddr);
+                udpBackUpMessage.sendUdpAuthMessage(sock,newServerAddr);
                 currentRetries++;
             }
         }
@@ -158,7 +228,7 @@ int UdpClient::processAuthetification()
 
     if (currentRetries >= retryCount) 
     {
-        printf("ERR: Attempts Overrun\n");
+        fprintf(stderr,"ERR: Attempts Overrun\n");
         // Attempts Overrun
         return AUTH_FAILED;
     }
@@ -168,11 +238,10 @@ int UdpClient::processAuthetification()
 int UdpClient::runUdpClient()
 {
     /*** Variables ***/
+    int watchDog            = -1;
     int retVal              = 0;
     bool expectedConfirm    = false;
     ClientState state       = Authentication;
-
-    printf("Set Attempts: %d, Current Attempts: %d, Set Timeout: %d\n",currentRetries,retryCount,confirmationTimeout);
     
     /*** Code ***/
     if (!Client::isConnected())
@@ -206,10 +275,9 @@ int UdpClient::runUdpClient()
             UdpMessages frontMessage = messageQueue.front();
             messageQueue.pop();
             frontMessage.sendUdpMessage(sock,newServerAddr);
-            udpBackUpMessage = frontMessage;
-            expectedConfirm = true;
             startWatch = std::chrono::high_resolution_clock::now();
-            currentRetries++;
+            expectedConfirm = true;
+            udpBackUpMessage = frontMessage;                                    // Store Message For Case When Sending Again
         }
 
         retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
@@ -225,13 +293,16 @@ int UdpClient::runUdpClient()
             {
                 udpMessage.readAndStoreContent(buf);    
                 retVal = udpMessage.checkMessage();
+
                 if (SUCCESS != retVal)
                     printf("ERR: Invalid Parameters\n");
 
                 if (UdpMessages::COMMAND_HELP == udpMessage.msg.type)
                     udpMessage.printHelp();
+                
                 else if (UdpMessages::COMMAND_AUTH == udpMessage.msg.type)
                     fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
+                
                 else if (UdpMessages::COMMAND_RENAME != udpMessage.msg.type)
                 {
                     if (expectedConfirm || !messageQueue.empty())
@@ -242,13 +313,11 @@ int UdpClient::runUdpClient()
                     else
                     {
                         udpMessage.sendUdpMessage(sock,newServerAddr);
-                        udpBackUpMessage = udpMessage;
+                        udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                         expectedConfirm = true; 
                         startWatch = std::chrono::high_resolution_clock::now();
-                        currentRetries++;
                     }
                 }
-
                 if (BaseMessages::COMMAND_BYE == udpMessage.msg.type)
                 {
                     state = End;
@@ -270,59 +339,72 @@ int UdpClient::runUdpClient()
             newServerAddr = si_other;   // Set Server's New Port 
             buf[BUFSIZE - 1] = '\0'; 
             udpMessage.readAndStoreBytes(buf,bytesRx);
+            BaseMessages::MessageType_t type = (BaseMessages::MessageType_t)buf[0];
             switch (state)
             {
                 case Open:
                     /* CONFIRM MESSAGE */
-                    retVal = udpMessage.recvUpdConfirm();
-                    if (SUCCESS == retVal)   
+                    if (BaseMessages::CONFIRM == type)
                     {
-                        expectedConfirm = false;
-                        currentRetries = 0;
-                        break;
+                        retVal = udpMessage.recvUpdConfirm();
+                        if (SUCCESS == retVal)   
+                        {
+                            expectedConfirm = false;
+                            currentRetries = 0;
+                        }  
                     }  
-                    else if (NON_VALID_MSG_TYPE == retVal)
+                    else if (BaseMessages::ERROR == type)
                     {
-                        udpMessage.sendUdpError(sock,newServerAddr,"Unexpected Message Type");
-                        expectedConfirm = true;
+                        udpMessage.recvUdpError();
+                        udpMessage.sendUdpConfirm(sock,newServerAddr);
                         state = Error;
+                        watchDog = -1;
                         break;
                     }
-                    else if (EXTERNAL_ERROR == retVal)
+                    else if (BaseMessages::REPLY == type)
                     {
-                        udpMessage.sendUdpConfirm(sock,newServerAddr);
-                        state = End;
+                        /* REPLY MESSAGE */
+                        retVal = udpMessage.recvUpdIncomingReply();
+                        if (SUCCESS == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                            break;
+                        }
+                        else        // TODO Unexpected Message?
+                        {
+                            state = Error;
+                            udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
+                            expectedConfirm = true;
+                            watchDog = -1;
+                        }
                         break;
                     }
-
-                    /* REPLY MESSAGE */
-                    retVal = udpMessage.recvUpdIncomingReply();
-                    if (SUCCESS == retVal)
+                    else if (BaseMessages::MSG == type)
                     {
-                        udpMessage.sendUdpConfirm(sock,newServerAddr);
+                        /* MESSAGE */
+                        retVal = udpMessage.recvUdpMessage();
+                        if (SUCCESS == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                            break;
+                        }
+                        else
+                        {
+                            state = Error;
+                            udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
+                            expectedConfirm = true;
+                            watchDog = -1;
+                        }
                         break;
                     }
-                    else if (EXTERNAL_ERROR == retVal)
-                    {
-                        udpMessage.basePrintInternalError(retVal);
-                        udpMessage.sendUdpConfirm(sock,newServerAddr);
-                        break;
-                    }
-
-                    /* MESSAGE */
-                    retVal = udpMessage.recvUdpMessage();
-                    if (SUCCESS == retVal)
-                    {
-                        udpMessage.sendUdpConfirm(sock,newServerAddr);
-                        break;
-                    }
-
                     break;
                 case End:
                     retVal =udpMessage.recvUpdConfirm();
                     if (SUCCESS == retVal)
                     {
-                        return SUCCESS;
+                        return watchDog;
                     }
                     break;
                 case Authentication:
@@ -334,6 +416,7 @@ int UdpClient::runUdpClient()
                         expectedConfirm = false;
                         currentRetries = 0;
                         udpMessage.sendByeMessage(sock,newServerAddr);
+                        udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                         expectedConfirm = true;
                         state = End;
                     }
@@ -352,12 +435,9 @@ int UdpClient::runUdpClient()
             int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
             if (elapsedTime > confirmationTimeout) 
             {   
-                if (UdpMessages::REPLY != udpMessage.msg.type)
-                {
-                    //TODO Same As In AUTH! udpMessage.messageID = lastSentMessageID;
-                    udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
-                    currentRetries++;
-                }
+                printf("Elapsed Time");
+                udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
+                currentRetries++;
             }
             elapsedTime = 0;
         }
@@ -371,13 +451,4 @@ int UdpClient::runUdpClient()
 
     return SUCCESS;
 }
-/*
-TODOs
------------------------------------------------
-- Implementovat resand message (uzivatel ma zde tri pokusy)
-- Mozna pouzit jeste kopii Transmit aby se poslala ta zprava kterou opavdu chceme
-- Musim umet potvrdit i errror message
-Nove otazky:
-- Co mam delat pokud mi prijde reply s NOK a nebo s result = 0?
-*/
 

@@ -262,15 +262,6 @@ int UdpMessages::recvUpdIncomingReply()
             return SUCCESS;
         }
     }
-    else if (ERROR == msg.type)
-    {
-        basePrintExternalError();
-        exit(EXTERNAL_ERROR);
-    }
-    else if (UNKNOWN_MSG_TYPE == msg.type)
-    {
-        return NON_VALID_MSG_TYPE;
-    }
     return UNEXPECTED_MESSAGE; 
 }
 
@@ -300,28 +291,21 @@ void UdpMessages::sendUdpMessage(int sock,const struct sockaddr_in& server)
 
 int UdpMessages::recvUdpMessage()
 {
+    int retVal;
     std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
     cleanMessage();
     deserializeMessage(serialized);
-    if (REPLY == msg.type)
-        return MSG_FAILED;
 
-    if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) {
+    if (receivedMessageIDs.find(messageID) != receivedMessageIDs.end()) 
+    {
         // Message With This ID Was Already Received
         return ALREADY_PROCESSED_MSG;
     }
 
-    if (ERROR == msg.type)
-    {
-        // TODO udpMessage.sendUdpConfirm(sock,newServerAddr);
+    retVal = checkLength();
+    if (retVal != SUCCESS)
+        return retVal;
 
-        basePrintExternalError();
-        exit(EXTERNAL_ERROR);
-    }
-    if (UNKNOWN_MSG_TYPE == msg.type)
-    {
-        return NON_VALID_MSG_TYPE;
-    }
     // Přidání messageID do seznamu přijatých ID
     receivedMessageIDs.insert(messageID);
     printMessage();
@@ -383,17 +367,15 @@ int UdpMessages::recvUpdConfirm()
             return SUCCESS;
         }
     }
-    else if (ERROR == msg.type)
-    {
-        basePrintExternalError();
-        // TODO Musim na to odpovidat?
-        return EXTERNAL_ERROR;
-    }
-    else if (UNKNOWN_MSG_TYPE == msg.type)
-    {
-        return NON_VALID_MSG_TYPE;
-    }
     return CONFIRM_FAILED;
 }
 
+
+void UdpMessages::recvUdpError()
+{
+    std::vector<char> serialized(msg.buffer.begin(), msg.buffer.end());
+    cleanMessage();
+    deserializeMessage(serialized);    
+    basePrintExternalError();
+}
 
