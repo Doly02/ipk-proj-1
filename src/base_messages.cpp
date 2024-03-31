@@ -400,7 +400,7 @@
         {
             if (!displayNameOutside.empty() && !content.empty())
             {
-                printf("%s: %s\n", displayNameOutside.c_str(), content.c_str());
+                fprintf(stdout,"%s: %s\n", displayNameOutside.c_str(), content.c_str());
             }
 
         }
@@ -408,7 +408,7 @@
         {
             if (!content.empty())
             {
-                printf("%s\n", content.c_str());
+                fprintf(stdout,"%s\n", content.c_str());
             }
         }
     }

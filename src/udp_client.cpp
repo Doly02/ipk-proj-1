@@ -364,7 +364,7 @@
         }
         if (currentRetries >= retryCount) {
             // Attempts Overrun
-            printf("ERR: Attemp Overrun -> runUdpClient()\n");
+            fprintf(stderr,"ERR: Attemp Overrun -> runUdpClient()\n");
             return FAIL;
         }
 
