@@ -29,12 +29,12 @@ class arguments
 {
     public:
         
-        std::string transferProtocol;               // Transfer Protocol Used For Communication (1 - TCP, 2 - UDP)
-        std::string hostName;                       // Host Name of The Server
-        std::string ipAddress;                      // IP Address of The Server
-        uint16_t port;                              // Port Number on Which The Server Is Listening
-        uint16_t confirmTimeOutUDP = 250;           // Time Out For UDP Protocol
-        uint8_t confirmRetriesUDP  = 3;             // Number of Retries For UDP Protocol
+        std::string transferProtocol;               //!< Transfer Protocol Used For Communication (1 - TCP, 2 - UDP)
+        std::string hostName;                       //!< Host Name of The Server
+        std::string ipAddress;                      //!< IP Address of The Server
+        uint16_t port               = 4567;         //!< Port Number on Which The Server Is Listening
+        uint16_t confirmTimeOutUDP  = 250;          //!< Time Out For UDP Protocol
+        uint8_t confirmRetriesUDP   = 3;            //!< Number of Retries For UDP Protocol
 
         arguments(int argc, char* argv[]);          // Constructor Declaration
 
