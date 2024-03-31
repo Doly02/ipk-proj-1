@@ -245,6 +245,7 @@ int TcpMessages::handleAuthReply()
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkLenght.length());
                 std::string authContent(msg.buffer.begin(), msg.buffer.end());
                 printf("Success: %s\n", authContent.c_str());
+                return SUCCESS;
 
             }
             else if (compare(msg.buffer,"^REPLY NOK IS "))
@@ -252,9 +253,8 @@ int TcpMessages::handleAuthReply()
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokLenght.length());
                 std::string authContent(msg.buffer.begin(), msg.buffer.end());
                 printf("Failure: %s\n", authContent.c_str());
-
+                return AUTH_FAILED;
             } 
-            return SUCCESS;
         }
     }
 
@@ -265,16 +265,6 @@ int TcpMessages::handleAuthReply()
         //bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
         //std::cerr << bufferAsStr << std::endl; /// FIXME
         return AUTH_FAILED;
-    }
-    else 
-    {
-        // Compare With Error Message Template   
-        if (compare(msg.buffer,"ˆNOK IS "))  
-        {
-            std::cerr << "ERR: Authentication Failed" << std::endl;
-            return AUTH_FAILED;
-        }
-        
     }
     return AUTH_FAILED;
 }

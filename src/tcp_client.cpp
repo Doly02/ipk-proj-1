@@ -93,12 +93,7 @@ void TcpClient::checkAuthentication()
                 {
                     authConfirmed = true;
                     break;
-                }
-                else
-                {
-                    // TODO Message
-                    exit(AUTH_FAILED);
-                }
+                }     
             }
             else
             {
