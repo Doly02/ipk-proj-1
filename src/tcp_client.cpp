@@ -150,6 +150,10 @@ int TcpClient::runTcpClient()
                 {
                     tcpMessage.printHelp();
                 }
+                else if (BaseMessages::COMMAND_AUTH == tcpMessage.msg.type)
+                {
+                    fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
+                }
             }
             memset(buf,0,sizeof(buf));
         }    

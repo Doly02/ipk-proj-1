@@ -230,6 +230,8 @@ int UdpClient::runUdpClient()
 
                 if (UdpMessages::COMMAND_HELP == udpMessage.msg.type)
                     udpMessage.printHelp();
+                else if (UdpMessages::COMMAND_AUTH == udpMessage.msg.type)
+                    fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
                 else if (UdpMessages::COMMAND_RENAME != udpMessage.msg.type)
                 {
                     if (expectedConfirm || !messageQueue.empty())
