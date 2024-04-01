@@ -229,7 +229,7 @@ Program was also tested on student tests created by [Tomáš Hobza](https://www.
 
 [2] James F. Kurose, Keith W. Ross: *Computer Networking: A Top Down Approach* (Eighth Edition). Figure 2.28 [cited 2024-03-20].
 
-[3] poll(2) — Linux manual page. Linux Documentation [online].[cited 2024-03-29]. Available at [https://man7.org/linux/man-pages/man2/poll.2.html](https://man7.org/linux/man-pages/man2/poll.2.html)
+[3] poll(2) — Linux manual page. Linux Documentation [online]. [cited 2024-03-29]. Available at [https://man7.org/linux/man-pages/man2/poll.2.html](https://man7.org/linux/man-pages/man2/poll.2.html)
 
 [4] "Difference Between TCP/IP and OSI Model" [online]. [cited 2024-03-29]. Available at [https://techdifferences.com/difference-between-tcp-ip-and-osi-model.html](https://techdifferences.com/difference-between-tcp-ip-and-osi-model.html).
 
@@ -239,7 +239,7 @@ Program was also tested on student tests created by [Tomáš Hobza](https://www.
 
 [7] Marek Majkowski: "Everything you ever wanted to know about UDP sockets but were afraid to ask, part 1" [online]. 25.11.2021. [cited 2024-03-26]. Available at [https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1](https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1).
 
-[8] Andrew T. Campbell: "Socket Programming" [online]. December 2023. Available at [https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html).
+[8] Andrew T. Campbell: "Socket Programming" [online]. December 2023. [cited 2024-03-25]. Available at [https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html).
 
 [9] "https://cs.wikipedia.org/wiki/Netcat" [online]. [cited 2024-04-01]. Available at [https://cs.wikipedia.org/wiki/Netcat](https://cs.wikipedia.org/wiki/Netcat)
 
