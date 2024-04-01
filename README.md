@@ -133,15 +133,15 @@ For TCP connection, we its needed first to establish the socket and then the con
 
 <p align="center">
   <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
-  <em>Ilustration of TCP communication</em>
+  <em>Ilustration of TCP communication</em><br>
   <em>Figure 2.28 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition</em>
 </p>
 
 The string which is sent is cleared before receiving the message from the server. If the "BYE" message wasn't sent the program will send it anyway and inform the user via error sign, that he forgot to send "BYE". Before closing the socket, the program shuts down the communication in both directions, function `shutdown` and parameter `2` (enum value for shutting down writing and reading). In Windows systems both closing and shutting down are done by `closesocket` After this procedure the socket can be closed (function `close`) and the interaction ends. [1] [2]
 
 <p align="center">
-  <img src="doc/pics/tcp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
-  <em>Ilustration of client-server communication using TCP</em>
+  <img src="doc/pics/tcp_example_client-server-application.png" alt="Ilustration of client-server communication using TCP" width="450"/><br>
+  <em>Ilustration of client-server communication using TCP</em><br>
   <em>Figure 2.29 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition</em>
 </p>
 
@@ -155,8 +155,8 @@ UPD protocol provides a connectionless and unreliable communication service, mea
 For establishing the UDP socket, there is a important parameter of `socket` function - `SOCK_DGRAM`, which specifies UDP socket. Additionally, to send data using UDP, the `sendto` function is used, which allows the client to specify the destination IP address and port number and for receiveing data, the `recvfrom` function is used, which provides the source IP address and port number of the incoming datagram. After the successful establishment of communication, the program processed the input relays from stdin and received messages from the server. Each received message must be confirmed to the CONFIRM server by a message that the message was successfully received and each sent message must be confirmed again by the server. The program also checks the length of received messages from the user and from the server, because the protocol has its limitations defined by the IPK24-protocol. If this limit is exceeded the program sends an ERR message and the program is terminated correctly.
 
 <p align="center">
-  <img src="doc/pics/udp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
-  <em>Ilustration of Client-Server Communication Using UDP </em>
+  <img src="doc/pics/udp_example_client-server-application.png" alt="Ilustration of Client-Server Communication Using UDP" width="450"/><br>
+  <em>Ilustration of Client-Server Communication Using UDP </em><br>
   <em>Figure 2.27 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition</em>
 </p>
 
