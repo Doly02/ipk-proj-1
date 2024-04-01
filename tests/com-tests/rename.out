@@ -1,0 +1,7 @@
+/auth test1 PASSWORD MyDisplayName
+Success: Authentication successful.
+Server: MyDisplayName joined discord.general.
+/rename hallo 
+/join secondChannel
+Server: hallo joined secondChannel.
+Success: Channel secondChannel successfully joined.

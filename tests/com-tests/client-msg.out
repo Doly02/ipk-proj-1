@@ -1,0 +1,4 @@
+/auth test1 PASSWORD MyDisplayName
+Success: Authentication successful.
+Server: MyDisplayName joined discord.general.
+Hello World!

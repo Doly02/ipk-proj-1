@@ -1,0 +1,7 @@
+Commands:
+----------------------------------------------
+AUTHENTICATION CMD:  /auth [username] [password] [displayname]
+JOIN CMD:            /join [channel]
+RENAME CMD:          /rename [displayname]
+HELP CMD:            /help
+To Exit The Program Correctly, Type CTRL + C
