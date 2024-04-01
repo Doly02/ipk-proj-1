@@ -43,28 +43,39 @@ void UdpClient::udpHandleInterrupt(int signal)
     if (SIGINT == signal || SIGTERM == signal)
     {
         int retVal = 0;
+        bool confirmed = false;
+        currentRetries = 0;
         udpMessage.msg.type = UdpMessages::COMMAND_BYE;
         /* Send Message */
         udpMessage.sendUdpMessage(sock,newServerAddr);
         /* Receive CONFIRM */
-        socklen_t slen = sizeof(si_other);
-        ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
-        if (-1 == bytesRx) 
+        while ((currentRetries < retryCount) && !confirmed)
         {
-            // Chyba při příjmu dat
-            perror("ERR: recvfrom() failed"); // FIXME
-            exit(EXIT_FAILURE);
+            socklen_t slen = sizeof(si_other);
+            ssize_t bytesRx = recvfrom(sock, buf, BUFSIZE, 0, (struct sockaddr *) &si_other, &slen);
+            if (-1 == bytesRx) 
+            {
+                // Chyba při příjmu dat
+                fprintf(stderr,"ERR: recvfrom() failed\n"); // FIXME
+                exit(EXIT_FAILURE);
+            }
+            newServerAddr = si_other; 
+            udpMessage.readAndStoreBytes(buf,bytesRx);
+            retVal = udpMessage.recvUpdConfirm();
+            if (SUCCESS != retVal)
+            {
+                udpMessage.msg.type = UdpMessages::COMMAND_BYE;
+                udpMessage.sendUdpMessage(sock,newServerAddr);
+                currentRetries++;
+            }
+            else
+            {
+                confirmed = true;
+                exit(SUCCESS);
+            }
+
         }
-        newServerAddr = si_other; 
-        udpMessage.readAndStoreBytes(buf,bytesRx);
-        retVal = udpMessage.recvUpdConfirm();
-        if (SUCCESS != retVal)
-        {
-            udpMessage.insertErrorMsgToContent("ERR: CONFIRMATION NOT RECEIVED\n");
-            udpMessage.basePrintInternalError(retVal);
-            exit(retVal);
-        }
-        exit(SUCCESS);
+        exit(FAIL);
     }
 
 }
@@ -131,7 +142,6 @@ int UdpClient::processAuthetification()
             buf[BUFSIZE - 1] = '\0'; 
             udpMessage.readAndStoreBytes(buf,bytesRx);
             BaseMessages::MessageType_t type = (BaseMessages::MessageType_t)buf[0];
-            printf("Received type = %d\n",type);
             switch(state)
             {
                 case Authentication:
@@ -300,7 +310,6 @@ int UdpClient::runUdpClient()
             {
                 udpMessage.readAndStoreContent(buf);    
                 retVal = udpMessage.checkMessage();
-
                 if (SUCCESS != retVal)
                     fprintf(stderr,"ERR: Invalid Parameters\n");
 
@@ -310,7 +319,7 @@ int UdpClient::runUdpClient()
                 else if (UdpMessages::COMMAND_AUTH == udpMessage.msg.type)
                     fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
                 
-                else if (UdpMessages::COMMAND_RENAME != udpMessage.msg.type)
+                else if (UdpMessages::COMMAND_RENAME != udpMessage.msg.type && SUCCESS == retVal)
                 {
                     if (expectedConfirm || !messageQueue.empty())
                     {
@@ -413,9 +422,17 @@ int UdpClient::runUdpClient()
                         }
                         break;
                     }
+                    else // Unknown Message
+                    {
+                        state = Error;
+                        udpMessage.sendUdpConfirm(sock,newServerAddr);
+                        udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Type");
+                        expectedConfirm = true;
+                        watchDog = -1;                        
+                    }
                     break;
                 case End:
-                    retVal =udpMessage.recvUpdConfirm();
+                    retVal = udpMessage.recvUpdConfirm();
                     if (SUCCESS == retVal)
                     {
                         return watchDog;
@@ -449,8 +466,8 @@ int UdpClient::runUdpClient()
             int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
             if (elapsedTime > confirmationTimeout) 
             {   
-                udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
                 currentRetries++;
+                udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
             }
             elapsedTime = 0;
         }
@@ -458,7 +475,7 @@ int UdpClient::runUdpClient()
     }
     if (currentRetries >= retryCount) {
         // Attempts Overrun
-        fprintf(stderr,"ERR: Attemp Overrun -> runUdpClient()\n");
+        fprintf(stderr,"ERR: Attemp Overrun\n");
         return FAIL;
     }
 

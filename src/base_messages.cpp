@@ -83,8 +83,6 @@ int BaseMessages::checkLength()
         // Check Username
         if (msg.login.size() > LENGHT_USERNAME || (!areAllDigitsOrLettersOrDash(msg.login)))
         {
-            insertErrorMsgToContent("Username Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
     }
@@ -93,8 +91,6 @@ int BaseMessages::checkLength()
         // Check Channel ID
         if (msg.channelID.size() > LENGHT_CHANNEL_ID || (!areAllDigitsOrLettersOrDashOrDot(msg.channelID)))
         {
-            insertErrorMsgToContent("Channel ID Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
     }
@@ -103,37 +99,30 @@ int BaseMessages::checkLength()
         // Check Secret
         if (msg.secret.size() > LENGHT_SECRET || (!areAllDigitsOrLettersOrDash(msg.secret)))
         {
-            insertErrorMsgToContent("Secret Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
     }
-    if (msg.type == MSG || msg.type == COMMAND_AUTH || msg.type == COMMAND_JOIN || msg.type == ERROR)
+    if (msg.type == MSG || msg.type == COMMAND_AUTH || msg.type == COMMAND_JOIN || msg.type == ERROR || msg.type == COMMAND_RENAME)
     {
         // Check Display Name
         if (msg.displayName.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayName)))
         {
-            insertErrorMsgToContent("Display Name Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
     }
-    if (!msg.displayNameOutside.empty()) //FIXME: Should Findout Valid Condition
+    if (!msg.displayNameOutside.empty() || msg.type == REPLY || msg.type == MSG || msg.type == ERROR)
     {
         // Check Display Name From Outside (Another Client)
         if (msg.displayNameOutside.size() > LENGHT_DISPLAY_NAME || (!areAllPrintableCharacters(msg.displayNameOutside)))
         {
-            insertErrorMsgToContent("Display Name From Another User Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
+
     }
-    if (msg.type == MSG || msg.type == ERROR || msg.type == REPLY)
+    if (msg.type == MSG || msg.type == ERROR || msg.type == REPLY || msg.type == ERROR)
     {
         if (msg.content.size() > LENGHT_CONTENT || (!areAllPrintableCharactersOrSpace(msg.content)))
         {
-            insertErrorMsgToContent("Message Is Too Long Or Contains Non-Alphanumeric Characters");
-            basePrintInternalError(NON_VALID_PARAM);
             return NON_VALID_PARAM;
         }
 
@@ -195,19 +184,19 @@ int BaseMessages::checkMessage()
     std::string bufferStr = convertToString(msg.buffer);
 
     /*                  INPUT TYPE RECOGNITION LOGIC                                */
-    if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/auth")) 
+    if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/auth ")) 
     {
         // delete first 5 characters + 1 space
         msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
         inputType = INPUT_AUTH;
     }
-    else if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/join"))
+    else if (msg.buffer.size() >= 6 && compare(msg.buffer,"^/join "))
     {
         // delete first 5 characters + 1 space
         msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 6);
         inputType = INPUT_JOIN;
     }
-    else if (msg.buffer.size() >= 7 && compare(msg.buffer,"^/rename")) 
+    else if (msg.buffer.size() >= 7 && compare(msg.buffer,"^/rename ")) 
     {
         // delete first 7 characters + 1 space
         msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 8);
@@ -287,14 +276,18 @@ int BaseMessages::checkMessage()
     else if (inputType == INPUT_RENAME)
     {
         idx = 0;
-        msg.displayName.clear();
+        msg.type = COMMAND_RENAME;
         // Process New Display Name
+        if (msg.buffer.size() > LENGHT_DISPLAY_NAME)
+        {
+            return NON_VALID_PARAM;
+        }
+        msg.displayName.clear();
         while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r')  // '\n' should not be in content
         {
             msg.displayName.push_back(msg.buffer[idx]);   
             idx++;
         }
-        msg.type = COMMAND_RENAME;
     }
     else 
     {
@@ -370,7 +363,7 @@ int BaseMessages::parseMessage()
         }
         // Check The Message And User Name Length
         retVal = checkLength();
-        msgType = MSG;
+        msg.type = MSG;
 
         return retVal;
     }
@@ -384,7 +377,7 @@ int BaseMessages::parseMessage()
             msg.content.push_back(msg.buffer[idx]);
             idx++;
         }
-        msgType = COMMAND_BYE;
+        msg.type = COMMAND_BYE;
         return SUCCESS;
     }
     return MSG_PARSE_FAILED;
@@ -394,20 +387,13 @@ void BaseMessages::printMessage()
 {
     std::string content(msg.content.begin(), msg.content.end());
     std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
-    if (MSG == msgType)
+    if (MSG == msg.type) //TODO
     {
         if (!displayNameOutside.empty() && !content.empty())
         {
             fprintf(stdout,"%s: %s\n", displayNameOutside.c_str(), content.c_str());
         }
 
-    }
-    else if (COMMAND_BYE == msgType)
-    {
-        if (!content.empty())
-        {
-            fprintf(stdout,"%s\n", content.c_str());
-        }
     }
 }
 

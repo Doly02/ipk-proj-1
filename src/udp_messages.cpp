@@ -157,7 +157,8 @@ void UdpMessages::deserializeMessage(const std::vector<char>& serializedMsg)
 {
     if (serializedMsg.size() < 3)
     {
-        throw std::runtime_error("WARNING: Invalid Message Length"); //FIXME:
+        msg.type = UNKNOWN_MSG_TYPE;
+        return;
     }
 
     // Store Packet Into The UDP Message Struct
@@ -176,7 +177,8 @@ void UdpMessages::deserializeMessage(const std::vector<char>& serializedMsg)
         case REPLY:
             if (serializedMsg.size() < offset + 3)
             {
-                throw std::runtime_error("Invalid Message Length"); //FIXME:
+                msg.type = UNKNOWN_MSG_TYPE;
+                return;
             }
             result = serializedMsg[offset++];
             refMessageID = static_cast<uint16_t>(serializedMsg[offset+1]) | (static_cast<uint16_t>(serializedMsg[offset]) << 8);
@@ -330,7 +332,6 @@ void UdpMessages::sendUdpConfirm(int sock, const struct sockaddr_in& server)
 
 void UdpMessages::sendUdpError(int sock, const struct sockaddr_in& server, const std::string& errorMsg)
 {
-    //incrementUdpMsgId();
     msg.type = ERROR;
     msg.content.assign(errorMsg.begin(), errorMsg.end());
     std::vector<uint8_t> serialized = serializeMessage();
@@ -343,7 +344,6 @@ void UdpMessages::sendUdpError(int sock, const struct sockaddr_in& server, const
 
 void UdpMessages::sendByeMessage(int sock,const struct sockaddr_in& server)
 {
-    //incrementUdpMsgId();
     msg.type = COMMAND_BYE;
     std::vector<uint8_t> serialized = serializeMessage();
     ssize_t bytesTx = sendto(sock, serialized.data(), serialized.size(), 0, (struct sockaddr *)&server, sizeof(server));

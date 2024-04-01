@@ -263,11 +263,15 @@ int TcpMessages::handleAuthReply()
     }
 
     /*  ERROR MESSAGE HANDLING  */
-    else if (compare(msg.buffer,"^ERR FROM Server IS "))
+    else if (compare(msg.buffer,"^MSG FROM "))
     {
-        msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + errorLenght.length());
-        //bufferAsStr = std::string(msg.buffer.begin(), msg.buffer.end());
-        //std::cerr << bufferAsStr << std::endl; /// FIXME
+        int retVal = SUCCESS;
+        retVal = parseMessage();
+        if (SUCCESS == retVal)
+        {
+            printMessage();
+            return JUST_A_MESSAGE;
+        }
         return AUTH_FAILED;
     }
     return AUTH_FAILED;

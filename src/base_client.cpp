@@ -19,6 +19,7 @@
 /*                  Libraries                   */
 /************************************************/
 #include "../include/base_client.hpp"
+#include "../include/macros.hpp"
 /************************************************/
 /*                  Constants                   */
 /************************************************/
@@ -51,7 +52,8 @@ Client::Client(const std::string& addr, int port, uint prot)
 
     if (NOT_CONNECTED == sock)
     {
-        std::cerr << "Not Possible To Create Socket: " << strerror(errno) << std::endl;
+        fprintf(stderr,"ERR: Not Possible To Create Socket\n");
+        exit(FAIL);
     }
 
     // Set Server's Address Information
@@ -61,14 +63,16 @@ Client::Client(const std::string& addr, int port, uint prot)
 
     if (inet_pton(AF_INET, _serverAddress.c_str(), &server.sin_addr) <= 0)
     {
-        throw std::runtime_error("Invalid address/ Address not supported");
+        fprintf(stderr,"ERR: Invalid address/ Address not supported\n");
+        exit(FAIL);
     }
 
     if (TCP == _protocol)
     {
         if (connect(sock, (struct sockaddr *)&server, sizeof(server)) < 0)
         {
-            throw std::runtime_error("Socket creation failed");
+            fprintf(stderr,"ERR: Socket Creation Failed\n");
+            exit(FAIL);
         }            
     }
 
@@ -85,7 +89,6 @@ Client::~Client()
     if (sock != NOT_CONNECTED)
     {
         close(sock);
-        std::cout << "Client destructor called -> Sock Closed" << std::endl;
     }
 }
 

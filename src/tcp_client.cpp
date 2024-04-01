@@ -86,6 +86,7 @@ void TcpClient::checkAuthentication()
 
         if (fds[SOCKET].revents & POLLIN)
         {
+            printf("RECEIVED\n");
             memset(buf,0,sizeof(buf));
             int bytesRx = recv(sock,buf,BUFSIZE-1,0);
             if (0 < bytesRx)
@@ -156,6 +157,8 @@ int TcpClient::runTcpClient()
                     fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
                 }
             }
+            else if (NON_VALID_PARAM == retVal)
+                fprintf(stderr,"ERR: Non Valid Parameter/s Of Message\n");
 
         }
 
@@ -179,7 +182,9 @@ int TcpClient::runTcpClient()
                 else                                                        // Else Send The Message To The Server
                 {
                     retVal = tcpMessage.checkMessage();
-                    if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
+                    if (NON_VALID_PARAM == retVal)
+                        fprintf(stderr,"Non Valid Parameters\n");
+                    else if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
                     {
                         tcpMessage.sendJoinMessage(sock);
                         state = RecvReply;
@@ -212,6 +217,7 @@ int TcpClient::runTcpClient()
                 fprintf(stderr,"ERR: Server Disconnected\n");
                 exit(FAIL); 
             }
+            printf("RECEIVED\n");
             tcpMessage.readAndStoreContent(buf);
             tcpMessage.checkIfErrorOrBye(sock);
             switch (state)
@@ -231,6 +237,7 @@ int TcpClient::runTcpClient()
                     break;
                 case Open:
                     retVal = tcpMessage.parseMessage();
+                    printf("Ret Val %d\n",retVal);
                     if (SUCCESS == retVal)
                     {
                         tcpMessage.printMessage();

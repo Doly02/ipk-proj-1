@@ -27,6 +27,8 @@ static constexpr int AUTHENTICATION_BYE     = 74;   //!< Indicates That User Sen
 static constexpr int ALREADY_PROCESSED_MSG  = 2;   //!< Indicates That Message Was Already Processed
 static constexpr int UNEXPECTED_MESSAGE     = 3;    //!< Indicates That Command Is Invalid
 
+static constexpr int JUST_A_MESSAGE         = 50;   //!< Indicates That Received Message Is Just A Normal Message
+
 static constexpr int FAIL                   = -1;   //!< Indicates That Operation FAILED During Run-Time
 static constexpr int JOIN_FAILED            = -2;   //!< Indicates That An Error Occurred During The Processing of The Join Command
 static constexpr int MSG_FAILED             = -3;   //!< Indicates That An Error Occurred During The Processing of The Standard Message
@@ -42,7 +44,7 @@ static constexpr int LENGHT_CHANNEL_ID      = 20;
 static constexpr int LENGHT_USERNAME        = 20;
 static constexpr int LENGHT_SECRET          = 128;
 static constexpr int LENGHT_CONTENT         = 1400;
-static constexpr int LENGHT_DISPLAY_NAME    = 128;
+static constexpr int LENGHT_DISPLAY_NAME    = 20;
 
 
 static constexpr int STDIN                  = 0;
