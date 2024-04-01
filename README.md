@@ -18,8 +18,8 @@ The goal of first project for computer communications and networks project is to
   - [UDP Client](#udp-client)
     - [Introduction to UDP communication](#introduction-to-udp-communication)
     - [UDP programming](#udp-programming)
+  - [Implementation Details](#implementation-details)
 - [UML Diagrams](#uml-diagrams)
-- [Implementation Details](#implementation-details)
 - [Testing](#testing)
 - [Resources](#resources)
 
@@ -119,7 +119,7 @@ Everything Else As The Previous Commands Are Interpreted As Regular Message.
 **Note:** Be aware that there are limitations for `{ChannelID}`, `{DisplayName}`, `{MessageContent}`, and similar fields. For instance, packets should not exceed the default Ethernet MTU of 1500 octets as defined by [RFC 894](https://tools.ietf.org/html/rfc894). Exceeding this limit could result in packet fragmentation, potentially affecting communication efficiency and reliability.
 
 ### Unblocking communication with poll()
-In programming, when implementing chat client is better to use unblocking communication with poll() rather than busy-waiting for data on the socket. Client can fluently check activity on stadart input and socket using poll(), which is a more efficient and elegant solution. The benefits of poll() are that it allows the program to efficiently check multiple sockets for activity simultaneously without wasting CPU time. An alternative to the poll() function is the select() function, which is also commonly used for checking multiple sockets for activity, but may have some limitations in terms of scalability and performance.[3]
+In programming, when implementing chat client is better to use unblocking communication with poll() rather than busy-waiting for data on the socket. Client can fluently check activity on standard input and socket using poll(), which is a more efficient and elegant solution. The benefits of poll() are that it allows the program to efficiently check multiple sockets for activity simultaneously without wasting CPU time. An alternative to the poll() function is the select() function, which is also commonly used for checking multiple sockets for activity, but may have some limitations in terms of scalability and performance.[3]
 
 ### TCP client
 
@@ -161,6 +161,11 @@ After encoding the input string into the modified string (according to protocol)
 Before receiving the response are both strings cleaned, so it's possible to use them for processing the response.
 After receiving a server response the status is checked and the payload is decoded. Depending on its value, either a response or error is printed. And the socket is closed (function `close`).[2]
 
+### Implementation details
+The `ipk24chat-client` program is written using an object-oriented approach in c++. The communication between client and server is based on the state machine, described [here](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201#user-content-specification). The `poll()` function is used to provide non-blocking logic. The TCP client also uses the `send()` and `receive()` functions and has a simpler state machine because communication based on the TCP protocol is more secure and reliable. The UDP client also uses the `sendto()` and `recvfrom()` functions. For the UDP client, it was also necessary to implement logic for message contol and also dynamic port change, because the server moves the communication with the client to a different port after the authentication message. [10] [11] [12] [13]
+
+**Note:** The program flow can be observed in program flow diagram.
+
 ## UML diagrams 
 
 ### Program flow diagram 
@@ -178,11 +183,6 @@ Use case diagram showing individual classes interacting to resolve communication
   <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram" width="450"/><br>
   <em>usa case diagram</em>
 </p>
-
-### Implementation details
-The IPK24 program is written using an object-oriented approach in c++. The communication between client and server is based on the state machine, described [here](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201#user-content-specification). The `poll()` function is used to provide non-blocking logic. The TCP client also uses the `send()` and `receive()` functions and has a simpler state machine because communication based on the TCP protocol is more secure and reliable. The UDP client also uses the `sendto()` and `recvfrom()` functions. For the UDP client, it was also necessary to implement logic for message contol and also dynamic port change, because the server moves the communication with the client to a different port after the authentication message. [10] [11] [12] [13]
-
-**Note:** The program flow can be observed in program flow diagram.
 
 ## Testing
 This section is dedicated to testing the project, so what was tested?
