@@ -37,7 +37,6 @@
 
 BaseMessages::BaseMessages() : msgType(UNKNOWN_MSG_TYPE) {
     // Initialize Attributes
-    msg.shouldReply = false;
 }
 /**
  * @brief Constructor of TcpMessages Class 
@@ -70,7 +69,6 @@ void BaseMessages::cleanMessage()
     //msg.displayName.clear();
     msg.channelID.clear();
     msg.displayNameOutside.clear();
-    msg.shouldReply = false;
 }
 /**
  * @brief Check If The Message Components Are Valid (ID, Display Name, Content, Secret Length)

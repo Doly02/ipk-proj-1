@@ -61,7 +61,6 @@ public:
         std::vector<char> channelID;
         std::vector<char> displayNameOutside;
         std::vector<char> buffer;
-        bool shouldReply;
     };
 
     MessageType_t msgType;

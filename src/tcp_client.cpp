@@ -47,6 +47,7 @@ void TcpClient::tcpHandleInterrupt(int signal)
 
 void TcpClient::checkAuthentication() 
 {
+    bool sendAuthMessage = false;
     int retVal = 0;
 
     while (!authConfirmed) 
@@ -54,7 +55,7 @@ void TcpClient::checkAuthentication()
         retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
         if (FAIL == retVal)
         {
-            // TODO Nejaka hlaska 
+            fprintf(stderr,"ERR: poll() Failed\n");
             exit(FAIL);
         }
 
@@ -65,9 +66,14 @@ void TcpClient::checkAuthentication()
 
                 tcpMessage.readAndStoreContent(buf);
                 retVal = tcpMessage.checkMessage();
-                if (SUCCESS == retVal && TcpMessages::COMMAND_AUTH == tcpMessage.msg.type)
+                if (SUCCESS == retVal && TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && !sendAuthMessage)
                 {
                     tcpMessage.sendAuthMessage(sock);
+                    sendAuthMessage = true;
+                }
+                else if (SUCCESS == retVal && TcpMessages::COMMAND_AUTH == tcpMessage.msg.type && sendAuthMessage)
+                {
+                    fprintf(stderr,"ERR: Authentication Message Already Send To Server, Wait For The Reply\n");
                 }
                 else if (NON_VALID_PARAM == retVal)
                 {
@@ -93,6 +99,10 @@ void TcpClient::checkAuthentication()
                 {
                     authConfirmed = true;
                     break;
+                }
+                if (AUTH_FAILED == retVal)
+                {
+                    sendAuthMessage = false;
                 }     
             }
             else
@@ -111,6 +121,7 @@ void TcpClient::checkAuthentication()
 int TcpClient::runTcpClient()
 {
     /* Variables */
+    bool expectReply = false;
     int retVal = 0;
     ClientState state = Authentication;
     checkAuthentication();
@@ -118,19 +129,14 @@ int TcpClient::runTcpClient()
 
     while (true)
     {
-        retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
-        if (FAIL == retVal)
+        // Process Message From Queue 
+        if (!messageQueue.empty() && !expectReply)
         {
-            // Nejaka hlaska 
-            exit(FAIL);
-        }
-
-        if (fds[STDIN].revents & POLLIN)
-        {
-            if (NULL!= fgets(buf,BUFSIZE,stdin))
+            TcpMessages frontMessage = messageQueue.front();
+            messageQueue.pop();
+            retVal = frontMessage.checkMessage();
+            if (SUCCESS == retVal)
             {
-                tcpMessage.readAndStoreContent(buf);
-                retVal = tcpMessage.checkMessage();
                 if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
                 {
                     tcpMessage.sendJoinMessage(sock);
@@ -148,6 +154,50 @@ int TcpClient::runTcpClient()
                 else if (BaseMessages::COMMAND_AUTH == tcpMessage.msg.type)
                 {
                     fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
+                }
+            }
+
+        }
+
+        retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
+        if (FAIL == retVal)
+        {
+            // Nejaka hlaska 
+            exit(FAIL);
+        }
+
+        if (fds[STDIN].revents & POLLIN)
+        {
+            if (NULL!= fgets(buf,BUFSIZE,stdin))
+            {
+                tcpMessage.readAndStoreContent(buf);
+                if (expectReply || !messageQueue.empty())                   // If We Wait For REPLY Message, Store The Message Into Queue, Message Will Be Send Later
+                {
+                        TcpMessages toQueueMessage = tcpMessage;
+                        messageQueue.push(toQueueMessage);
+                }
+                else                                                        // Else Send The Message To The Server
+                {
+                    retVal = tcpMessage.checkMessage();
+                    if (BaseMessages::COMMAND_JOIN == tcpMessage.msg.type)
+                    {
+                        tcpMessage.sendJoinMessage(sock);
+                        state = RecvReply;
+                        expectReply = true;                                 // Block The Sending Messages From STDIN
+                    }                
+                    else if (BaseMessages::MSG == tcpMessage.msg.type)
+                    {
+                        tcpMessage.sentUsersMessage(sock);
+                        state = Open;
+                    }
+                    else if (BaseMessages::COMMAND_HELP == tcpMessage.msg.type)
+                    {
+                        tcpMessage.printHelp();
+                    }
+                    else if (BaseMessages::COMMAND_AUTH == tcpMessage.msg.type)
+                    {
+                        fprintf(stderr,"ERR: Authentication Already Processed - Not Possible Again\n");
+                    }
                 }
             }
             memset(buf,0,sizeof(buf));
@@ -174,7 +224,10 @@ int TcpClient::runTcpClient()
                         state = Error;
                     }
                     if (BaseMessages::REPLY == tcpMessage.msg.type)
+                    {
                         state = Open;
+                        expectReply = false;                            // Enable To Send Message From STDIN Or From Queue (In Case If Queue Is Not Empty)
+                    }
                     break;
                 case Open:
                     retVal = tcpMessage.parseMessage();
@@ -183,10 +236,14 @@ int TcpClient::runTcpClient()
                         tcpMessage.printMessage();
                         state = Open;
                     }
-                    if (NON_VALID_PARAM == retVal)
+                    else if (NON_VALID_PARAM == retVal)
                     {
                         tcpMessage.insertErrorMsgToContent("Non Valid Parameters");
                         tcpMessage.sendErrorMessage(sock,BaseMessages::UNKNOWN_MSG_TYPE);
+                        state = Error;
+                    }
+                    else if (MSG_PARSE_FAILED == retVal)
+                    {
                         state = Error;
                     }
                     break;

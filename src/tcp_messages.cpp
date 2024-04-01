@@ -38,7 +38,6 @@ void TcpMessages::sendAuthMessage(int client_socket)
     if (bytesTx < 0) {
         std::perror("ERROR: sendto");
     }
-    msg.shouldReply = true;
 }
 
 
@@ -67,10 +66,11 @@ int TcpMessages::checkJoinReply()
 
             std::string replyContent(msg.buffer.begin(), msg.buffer.end());
             fprintf(stdout,"Success: %s\n", replyContent.c_str());
+            msg.type = REPLY;
             return SUCCESS;
         }
     }
-    if (compare(msg.buffer,"^REPLY NOK IS"))
+    if (compare(msg.buffer,"^REPLY NOK IS "))
     {
         if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
         {
@@ -79,6 +79,7 @@ int TcpMessages::checkJoinReply()
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokPrefix.length());
             std::string replyContent(msg.buffer.begin(), msg.buffer.end());
             fprintf(stdout,"Failure: %s\n", replyContent.c_str());
+            msg.type = REPLY;
             return SUCCESS;
         }
     }
@@ -89,6 +90,7 @@ int TcpMessages::checkJoinReply()
         {
             parseMessage();
             printMessage();
+            msg.type = MSG;
             return SUCCESS;
         }
     }
@@ -110,7 +112,6 @@ void TcpMessages::sendJoinMessage(int client_socket)
     if (bytesTx < 0) {
         std::perror("ERROR: sendto");
     }
-    msg.shouldReply = true;
 }
 
 /**
@@ -184,6 +185,7 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
             msg.content.push_back(msg.buffer[idx]);   
             idx++;
         }
+        msg.type = ERROR;
         /* SEND BYE */
         sentByeMessage(clientSocket);
         /* PRINT ERROR MESSAGE */
