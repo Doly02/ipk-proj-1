@@ -133,7 +133,7 @@ For TCP connection, we its needed first to establish the socket and then the con
 
 <p align="center">
   <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
-  <em>Ilustration of TCP communication</em>
+  <em>Ilustration of TCP communication [2]</em>
 </p>
 
 The string which is sent is cleared before receiving the message from the server. If the "BYE" message wasn't sent the program will send it anyway and inform the user via error sign, that he forgot to send "BYE". Before closing the socket, the program shuts down the communication in both directions, function `shutdown` and parameter `2` (enum value for shutting down writing and reading). In Windows systems both closing and shutting down are done by `closesocket` After this procedure the socket can be closed (function `close`) and the interaction ends. [1] [2]
