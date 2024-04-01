@@ -55,12 +55,41 @@ class Client
             End,
             Error
         };
-        
+        /**
+         * @brief Constructor of TcpClient Class 
+         * @param addr Server's Address 
+         * @param port Server's Port
+         * @param protocol Protocol Used For Communication
+         *
+         * Constructor Initialize Client With Server's Address And Port.
+         * Default State of Socket Is Set To NOT_CONNECTED.
+         */
         Client(const std::string& addr, int port, uint protocol);
+        /**
+         * @brief Destructor of TcpClient Class 
+         * 
+         * Constructor Of Client With Server's Address And Port.
+         * Default State of Socket Is Set To NOT_CONNECTED.
+         */
         virtual ~Client();
-
+        /**
+         * @brief Updates Server Address
+         * @param newAddress New Address of The Server
+         * 
+         * Updates Server's Address To New Address.
+        */
         void updateServerAddress(const std::string& newAddress);
+        /**
+         * @brief Determine If The Client Is Connected To The Server
+         * @return True If The Client Is Connected, False Otherwise
+         */
         bool isConnected();
+        /**
+         * @brief Returns Server's Address
+         * @return Server's Address Information
+         * 
+         * Returns Server's Address Information.
+        */
         const struct sockaddr_in& getServerAddr() const;
 
 };
