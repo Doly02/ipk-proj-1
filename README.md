@@ -122,7 +122,7 @@ In programming, when implementing chat client is better to use unblocking commun
 TCP is a reliable and connection-oriented protocol that operates at the transport layer of the TCP/IP protocol suite (T, 2016). It provides reliable, ordered, and error-checked delivery of data packets over an IP network.[5] TCP works by establishing a reliable and ordered connection between two devices, typically a client and a server. During the connection establishment phase, a three-way handshake process is used, where the client and server exchange SYN (synchronize) and ACK (acknowledge) packets to confirm the connection.[4] Once the connection is established, TCP segments the data into small packets and adds sequence numbers to each packet.[8]
 
 
-#### UDP Programming
+#### TCP Programming
 For TCP connection, we its needed first to establish the socket and then the connection. The important parameter of `socket` function is `SOCK_STREAM`, which specifies TCP socket. Just after creating the socket, the three-way handshake is conducted. The handshake prepares a connection socket on the server side dedicated to the client. All this takes place on the server side and transport layer, which makes it invisible to the client. After this procedure `connect` function is called and the data exchange can start. In textual communication, we don't need any special string for encoding and decoding the message. During the communication is tracked whether "HELLO" and "BYE" messages were sent. [1] [2]
 
 <p align="center">
@@ -144,7 +144,7 @@ The string which is sent is cleared before receiving the message from the server
 UPD protocol provides a connectionless and unreliable communication service, meaning that it does not establish a dedicated connection between the sender and receiver and does not guarantee the delivery of data packets. Instead, UDP sends data packets, called datagrams, without any acknowledgment or error checking. These datagrams are transmitted independently and can arrive out of order, be duplicated, or even be lost during transmission. The lack of built-in reliability mechanisms in UDP allows fast, low-latency communication, making it ideal for that can tolerate lost packets, such as streaming audio or video, where speed is more crucial than perfect accuracy.[1] [6] [7]
 
 #### UDP Programming
-Also for establishing the UDP socket, there is a important parameter of `socket` function - `SOCK_DGRAM`, which specifies UDP socket. Additionally, to send data using UDP, the `sendto` function is used, which allows the client to specify the destination IP address and port number and for receiveing data, the `recvfrom` function is used, which provides the source IP address and port number of the incoming datagram. After the successful establishment of communication, the program processed the input relays from stdin and received messages from the server. Each received message must be confirmed to the CONFIRM server by a message that the message was successfully received and each sent message must be confirmed again by the server. The program also checks the length of received messages from the user and from the server, because the protocol has its limitations defined by the IPK24-protocol. If this limit is exceeded the program sends an ERR message and the program is terminated correctly.
+For establishing the UDP socket, there is a important parameter of `socket` function - `SOCK_DGRAM`, which specifies UDP socket. Additionally, to send data using UDP, the `sendto` function is used, which allows the client to specify the destination IP address and port number and for receiveing data, the `recvfrom` function is used, which provides the source IP address and port number of the incoming datagram. After the successful establishment of communication, the program processed the input relays from stdin and received messages from the server. Each received message must be confirmed to the CONFIRM server by a message that the message was successfully received and each sent message must be confirmed again by the server. The program also checks the length of received messages from the user and from the server, because the protocol has its limitations defined by the IPK24-protocol. If this limit is exceeded the program sends an ERR message and the program is terminated correctly.
 
 <p align="center">
   <img src="doc/pics/udp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
@@ -162,7 +162,7 @@ Diagram showing the program flow.
 
 <p align="center">
   <img src="doc/pics/program_flow_diagram.png" alt="Program Flow Diagram" width="450"/><br>
-  <em>Ilustration of TCP Communication</em>
+  <em>program flow diagram</em>
 </p>
 
 ### Use Case Diagram 
@@ -170,7 +170,7 @@ Use case diagram showing individual classes interacting to resolve communication
 
 <p align="center">
   <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram" width="450"/><br>
-  <em>Ilustration of TCP Communication</em>
+  <em>usa case diagram</em>
 </p>
 
 ## Testing
