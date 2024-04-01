@@ -219,6 +219,9 @@ Testing of the UDP client was conducted on a local chat server to ensure the cor
 
 **Note:** Note that for the first part of the testing there is also an evaluation script that can be provided.
 
+### Tested Enviroment 
+Testing was processed on Ubuntu 22.04, Reference Ubuntu Virtual Machine And Ubuntu with Nix Enviroment. 
+
 ### Bilateral communication with reference server
 Due to the complexity of simulating situations on the reference server using test scripts (because of the interaction with other users contents), only the manual tests with scenarios were tested on the reference server. The test scenarios were described in chapter [Communication testing with fake server - NETCAT](#communication-testing-with-fake-server---netcat). The interaction in all scenarios went as expected i.e. as [specified](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/README.md). Also was used program [Wireshark](https://www.wireshark.org) with [lua plugin](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201/resources) when client was communicate with server to proof right use of `IPK24 protocol`.
 
