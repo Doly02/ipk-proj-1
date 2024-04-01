@@ -230,7 +230,7 @@ Program was also tested on student tests created by [Tomáš Hobza](https://www.
 **Note:** Note that these student tests are not official and do not prove the correctness of the application.
 
 ### Tested Enviroment 
-Testing was processed on Ubuntu 22.04, Reference Ubuntu Virtual Machine And Ubuntu with Nix Enviroment. 
+Testing was processed on Ubuntu 22.04, Reference Ubuntu Virtual Machine And Ubuntu with Nix Enviroment. Settings of Ubuntu VM and Nix Enviroment is described [here](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master).
 
 ## Resources 
 [1] RFC791: Information Sciences Institute, University of Southern California. "Internet Protocol" [online]. September 1981. [cited 2024-03-26]. DOI: 10.17487/RFC791. Available at [https://www.ietf.org/rfc/rfc793.txt](https://www.ietf.org/rfc/rfc793.txt).
