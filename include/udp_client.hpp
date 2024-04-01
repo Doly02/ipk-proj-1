@@ -21,7 +21,6 @@
 #include <csignal>  // For Signal Handling
 #include <unistd.h>         // For close
 #include <chrono>
-#include <queue>
 #include "base_client.hpp"
 #include "udp_messages.hpp"
 /*************************************************/

@@ -66,7 +66,7 @@ int TcpMessages::checkJoinReply()
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkPrefix.length());
 
             std::string replyContent(msg.buffer.begin(), msg.buffer.end());
-            printf("Success: %s\n", replyContent.c_str());
+            fprintf(stdout,"Success: %s\n", replyContent.c_str());
             return SUCCESS;
         }
     }
@@ -78,7 +78,7 @@ int TcpMessages::checkJoinReply()
             msg.buffer.pop_back(); // Removes '\r'
             msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokPrefix.length());
             std::string replyContent(msg.buffer.begin(), msg.buffer.end());
-            printf("Failure: %s\n", replyContent.c_str());
+            fprintf(stdout,"Failure: %s\n", replyContent.c_str());
             return SUCCESS;
         }
     }
@@ -246,7 +246,7 @@ int TcpMessages::handleAuthReply()
             {
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkLenght.length());
                 std::string authContent(msg.buffer.begin(), msg.buffer.end());
-                printf("Success: %s\n", authContent.c_str());
+                fprintf(stdout,"Success: %s\n", authContent.c_str());
                 return SUCCESS;
 
             }
@@ -254,7 +254,7 @@ int TcpMessages::handleAuthReply()
             {
                 msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokLenght.length());
                 std::string authContent(msg.buffer.begin(), msg.buffer.end());
-                printf("Failure: %s\n", authContent.c_str());
+                fprintf(stdout,"Failure: %s\n", authContent.c_str());
                 return AUTH_FAILED;
             } 
         }

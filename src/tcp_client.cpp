@@ -71,7 +71,7 @@ void TcpClient::checkAuthentication()
                 }
                 else if (NON_VALID_PARAM == retVal)
                 {
-                    printf("ERR: Invalid Parameter/s In The Message\n");
+                    fprintf(stderr,"ERR: Invalid Parameter/s In The Message\n");
                 }
 
             }
@@ -191,7 +191,6 @@ int TcpClient::runTcpClient()
                     }
                     break;
                 case End:
-                    printf("End State\n");
                     exit(0);
                 case Error:
                     tcpMessage.sentByeMessage(sock);

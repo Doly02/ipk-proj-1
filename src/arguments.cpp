@@ -41,23 +41,23 @@ arguments::arguments(int argc, char* argv[])
 */
 void arguments::printHelp()
 {
-    printf("Usage: ./client -t <Protocol> -s <HostName/IP> -p <Port> -d <Timeout> -r <MaxRetransmits> \n");
-    printf("-help, help message, can not be combined with other arguments\n");
-    printf("-t [tcp, udp] Mandatory Argument Specifying Transport Protocol Used For Connection\n");
-    printf("-s, Mandatory Argument Specifying Host Name or IP Address\n");
-    printf("-p, Optional Argument Specifying Server Port                            (Default Value: 4567)\n");
-    printf("-d, Optional Argument Specifying UDP Confirmation Timeout               (Default Value: 250)\n");
-    printf("-r, Optional Argument Specifying Maximum Number of UDP Retransmits      (Default Value: 3)\n");
-    printf("Order of the arguments can be changed\n");
+    fprintf(stdout,"Usage: ./ipk24chat-client -t <Protocol> -s <HostName/IP> -p <Port> -d <Timeout> -r <MaxRetransmits> \n");
+    fprintf(stdout,"-help, help message, can not be combined with other arguments\n");
+    fprintf(stdout,"-t [tcp, udp] Mandatory Argument Specifying Transport Protocol Used For Connection\n");
+    fprintf(stdout,"-s, Mandatory Argument Specifying Host Name or IP Address\n");
+    fprintf(stdout,"-p, Optional Argument Specifying Server Port                            (Default Value: 4567)\n");
+    fprintf(stdout,"-d, Optional Argument Specifying UDP Confirmation Timeout               (Default Value: 250)\n");
+    fprintf(stdout,"-r, Optional Argument Specifying Maximum Number of UDP Retransmits      (Default Value: 3)\n");
+    fprintf(stdout,"Order of the arguments can be changed\n");
 
-    printf("Example: ./client -t tcp -s localhost -p 1234\n\n");
-    printf("Error Codes:\n");
-    printf("0 - Success\n");                //TODO:
-    printf("1 - Invalid Arguments\n");      //TODO:
-    printf("2 - Connection Error\n");       //TODO:
+    fprintf(stdout,"Example: ./ipk24chat-client -t tcp -s localhost -p 1234\n\n");
+    fprintf(stdout,"Return Codes:\n");
+    fprintf(stdout,"0 - Success\n");                //TODO:
+    fprintf(stdout,"Other Then 0 - ERRORS (Look In To macros.hpp To See Exact Meaning of Return Value\n");      //TODO:
+    fprintf(stdout,"\n");       //TODO:
 
-    printf("Author: Tomas Dolak\n");
-    printf("Thank You For Using My Application\n");
+    fprintf(stdout,"Author: Tomas Dolak\n");
+    fprintf(stdout,"Thank You For Using My Application\n");
 }
 
 
@@ -141,7 +141,6 @@ void arguments::resolveHostName() {
             char ipStr[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, host->h_addr_list[0], ipStr, sizeof(ipStr));
             ipAddress = ipStr;
-            printf("IP Address: %s\n", ipAddress.c_str());
         }
 }
 

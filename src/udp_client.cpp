@@ -295,7 +295,7 @@ int UdpClient::runUdpClient()
                 retVal = udpMessage.checkMessage();
 
                 if (SUCCESS != retVal)
-                    printf("ERR: Invalid Parameters\n");
+                    fprintf(stderr,"ERR: Invalid Parameters\n");
 
                 if (UdpMessages::COMMAND_HELP == udpMessage.msg.type)
                     udpMessage.printHelp();
@@ -435,7 +435,6 @@ int UdpClient::runUdpClient()
             int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
             if (elapsedTime > confirmationTimeout) 
             {   
-                printf("Elapsed Time");
                 udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
                 currentRetries++;
             }

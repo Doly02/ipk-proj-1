@@ -25,6 +25,7 @@
 #include <cstring>
 #include <poll.h>
 #include <iostream>
+#include <queue>
 #include <sys/select.h>
 #include <sys/socket.h>
 #include <fcntl.h>
@@ -54,8 +55,7 @@ class Client
             End,
             Error
         };
-
-
+        
         Client(const std::string& addr, int port, uint protocol);
         virtual ~Client();
 

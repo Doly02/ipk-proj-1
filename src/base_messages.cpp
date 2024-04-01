@@ -441,13 +441,13 @@ void BaseMessages::basePrintInternalError(int retVal)
 
 void BaseMessages::printHelp()
 {
-    printf("Commands:\n");
-    printf("----------------------------------------------\n");
-    printf("AUTHENTICATION CMD:  /auth [username] [password] [displayname]\n");
-    printf("JOIN CMD:            /join [channel]\n");
-    printf("RENAME CMD:          /rename [displayname]\n");
-    printf("HELP CMD:            /help\n");
-    printf("To Exit The Program Correctly, Type CTRL + C\n");
+    fprintf(stdout,"Commands:\n");
+    fprintf(stdout,"----------------------------------------------\n");
+    fprintf(stdout,"AUTHENTICATION CMD:  /auth [username] [password] [displayname]\n");
+    fprintf(stdout,"JOIN CMD:            /join [channel]\n");
+    fprintf(stdout,"RENAME CMD:          /rename [displayname]\n");
+    fprintf(stdout,"HELP CMD:            /help\n");
+    fprintf(stdout,"To Exit The Program Correctly, Type CTRL + C\n");
 }
 
 

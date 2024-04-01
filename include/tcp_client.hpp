@@ -41,6 +41,7 @@ private:
         
 
     public:
+        std::queue<TcpMessages> messageQueue;
         
         TcpClient(std::string addr, int port, uint protocol);
         virtual ~TcpClient();
