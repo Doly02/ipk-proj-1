@@ -447,7 +447,7 @@ void BaseMessages::printHelp()
     printf("JOIN CMD:            /join [channel]\n");
     printf("RENAME CMD:          /rename [displayname]\n");
     printf("HELP CMD:            /help\n");
-    printf("To Exit The Program Correctly, Type 'BYE' And Press ENTER\n");
+    printf("To Exit The Program Correctly, Type CTRL + C\n");
 }
 
 
