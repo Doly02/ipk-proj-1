@@ -86,7 +86,6 @@ void TcpClient::checkAuthentication()
 
         if (fds[SOCKET].revents & POLLIN)
         {
-            printf("RECEIVED\n");
             memset(buf,0,sizeof(buf));
             int bytesRx = recv(sock,buf,BUFSIZE-1,0);
             if (0 < bytesRx)
@@ -217,7 +216,6 @@ int TcpClient::runTcpClient()
                 fprintf(stderr,"ERR: Server Disconnected\n");
                 exit(FAIL); 
             }
-            printf("RECEIVED\n");
             tcpMessage.readAndStoreContent(buf);
             tcpMessage.checkIfErrorOrBye(sock);
             switch (state)
@@ -237,7 +235,6 @@ int TcpClient::runTcpClient()
                     break;
                 case Open:
                     retVal = tcpMessage.parseMessage();
-                    printf("Ret Val %d\n",retVal);
                     if (SUCCESS == retVal)
                     {
                         tcpMessage.printMessage();

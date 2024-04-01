@@ -364,7 +364,6 @@ int BaseMessages::parseMessage()
         // Check The Message And User Name Length
         retVal = checkLength();
         msg.type = MSG;
-
         return retVal;
     }
     else if (compare(msg.buffer, "^BYE\r\n"))
