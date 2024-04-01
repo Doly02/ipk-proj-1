@@ -6,22 +6,22 @@
 The goal of first project for computer communications and networks project is to implement a client for chat server[ using IPK24-CHAT protocol ](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201/README.md) which can communicate with any server using  `IPK24-CHAT` protocol.
 
 ## Table of contents
--   [Requirements](#requirements)
--   [Installation](#installation)
--   [Project organization](#project-organization)
--   [Implementation](#implementation)
-  -   [Arguments](#arguments)
-  -   [Users Possiblities](#users-possibilities)
-  -   [TCP Client](#tcp-client)
-    -   [Introduction to TCP communication](#introduction-to-tcp-communication)
-    -   [TCP programming](#tcp-programming)
-  -   [UDP Client](#udp-client)
-    -   [Introduction to UDP communication](#introduction-to-udp-communication)
-    -   [UDP programming](#udp-programming)
--   [UML Diagrams](#uml-diagrams)
--   [Implementation Details](#implementation-details)
--   [Testing](#testing)
--   [Resources](#resources)
+- [Requirements](#requirements)
+- [Installation](#installation)
+- [Project organization](#project-organization)
+- [Implementation](#implementation)
+  - [Arguments](#arguments)
+  - [Users Possiblities](#users-possibilities)
+  - [TCP Client](#tcp-client)
+    - [Introduction to TCP communication](#introduction-to-tcp-communication)
+    - [TCP programming](#tcp-programming)
+  - [UDP Client](#udp-client)
+    - [Introduction to UDP communication](#introduction-to-udp-communication)
+    - [UDP programming](#udp-programming)
+- [UML Diagrams](#uml-diagrams)
+- [Implementation Details](#implementation-details)
+- [Testing](#testing)
+- [Resources](#resources)
 
 ## Requirements
 To build and run `ipk24chat-client`, you will need the following:
