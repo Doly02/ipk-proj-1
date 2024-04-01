@@ -56,17 +56,16 @@ int TcpMessages::checkJoinReply()
     const std::string replyNokPrefix = "REPLY OK IS "; 
     
     /* Reply Join OK */
-    if (compare(msg.buffer,"^REPLY OK IS"))
+    if (compare(msg.buffer,"^REPLY OK IS "))
     {
         if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
         {
-            msg.buffer.pop_back(); // Removes '\n'
-            msg.buffer.pop_back(); // Removes '\r'
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyOkPrefix.length());
-
-            std::string replyContent(msg.buffer.begin(), msg.buffer.end());
+            StoreDisplayNameAndContent();  
+            std::string replyContent(msg.content.begin(), msg.content.end());
             fprintf(stdout,"Success: %s\n", replyContent.c_str());
             msg.type = REPLY;
+            msg.displayNameOutside.clear();
+            msg.content.clear();
             return SUCCESS;
         }
     }
@@ -74,11 +73,11 @@ int TcpMessages::checkJoinReply()
     {
         if (msg.buffer.size() >= 2 && msg.buffer[msg.buffer.size() - 2] == '\r' && msg.buffer[msg.buffer.size() - 1] == '\n') 
         {
-            msg.buffer.pop_back(); // Removes '\n'
-            msg.buffer.pop_back(); // Removes '\r'
-            msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + replyNokPrefix.length());
-            std::string replyContent(msg.buffer.begin(), msg.buffer.end());
+            StoreDisplayNameAndContent();  
+            std::string replyContent(msg.content.begin(), msg.content.end());
             fprintf(stdout,"Failure: %s\n", replyContent.c_str());
+            msg.displayNameOutside.clear();
+            msg.content.clear();
             msg.type = REPLY;
             return SUCCESS;
         }
@@ -124,7 +123,7 @@ void TcpMessages::sendJoinMessage(int client_socket)
 */
 void TcpMessages::sentByeMessage(int clientSocket)
 {
-    std::string msgToSend = "BYE\r\n"; //TODO:  "\r\n" WARNING!
+    std::string msgToSend = "BYE\r\n"; 
     ssize_t bytesTx = send(clientSocket, msgToSend.c_str(), msgToSend.length(), 0);
     if (bytesTx < 0)
         perror("ERROR in sendto");
@@ -153,6 +152,8 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
 
     /* HAS TO BE CLEANED -> WILL BE MODIFIED */
     msg.content.clear(); 
+    msg.displayNameOutside.clear();
+
     if (msg.buffer.size() >= 9 && compare(msg.buffer, "^ERR FROM "))
     {
         // Erase "ERR FROM " 
@@ -195,7 +196,7 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
     }
     else if (msg.buffer.size() < 6 && compare(msg.buffer, "^BYE\r\n"))
     {
-        // FIXME Should Optimalize
+        
         while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
         {
             msg.content.push_back(msg.buffer[idx]);   
@@ -275,4 +276,40 @@ int TcpMessages::handleAuthReply()
         return AUTH_FAILED;
     }
     return AUTH_FAILED;
+}
+
+void TcpMessages::StoreDisplayNameAndContent()
+{
+    size_t idx = 0;
+    std::regex msgIsRegex("^IS");
+    // Erase "ERR/MSG FROM " 
+    msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + 9);
+
+    // Get Display Name
+    while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
+    {
+        std::string currentSubStr(msg.buffer.begin() + idx, msg.buffer.end());
+        if (std::regex_search(currentSubStr, msgIsRegex)) {
+            break; // Exit the loop if "IN" is found at the beginning of the current substring
+        }
+        msg.displayNameOutside.push_back(msg.buffer[idx]);
+        idx++;
+    }
+
+    // Check and Remove the Last Character if Needed (It's a Space)
+    if (!msg.displayNameOutside.empty()) 
+    {
+        msg.displayNameOutside.pop_back();
+    }
+    /* Process The Content */
+    int isPlusSpace = 3;                                                    // 1. Get Rid of "IS "
+    msg.buffer.erase(msg.buffer.begin(), msg.buffer.begin() + idx + isPlusSpace);
+
+    /* Get Content */
+    idx = 0;
+    while (idx < msg.buffer.size() && msg.buffer[idx] != '\n' && msg.buffer[idx] != '\r') 
+    {
+        msg.content.push_back(msg.buffer[idx]);   
+        idx++;
+    }
 }

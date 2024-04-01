@@ -153,7 +153,7 @@ void BaseMessages::readAndStoreContent(const char* buffer)
             msg.buffer.push_back(buffer[i]);
         }
     }
-    msg.buffer.push_back('\r'); //TODO: Check If It's Needed
+    msg.buffer.push_back('\r'); 
     msg.buffer.push_back('\n'); 
 }
 
@@ -386,7 +386,7 @@ void BaseMessages::printMessage()
 {
     std::string content(msg.content.begin(), msg.content.end());
     std::string displayNameOutside(msg.displayNameOutside.begin(), msg.displayNameOutside.end());
-    if (MSG == msg.type) //TODO
+    if (MSG == msg.type) 
     {
         if (!displayNameOutside.empty() && !content.empty())
         {
@@ -430,7 +430,13 @@ void BaseMessages::printHelp()
     fprintf(stdout,"JOIN CMD:            /join [channel]\n");
     fprintf(stdout,"RENAME CMD:          /rename [displayname]\n");
     fprintf(stdout,"HELP CMD:            /help\n");
+    fprintf(stdout,"----------------------------------------------\n");
+    fprintf(stdout,"[username]: User's Username To Get In To Chat\n");
+    fprintf(stdout,"[password]: User's Password To Get In To Chat\n");
+    fprintf(stdout,"[displayName]: User's DisplayName Optional\n");
+    fprintf(stdout,"[channel]: Channel To Join\n");
     fprintf(stdout,"To Exit The Program Correctly, Type CTRL + C\n");
+    fprintf(stdout,"----------------------------------------------\n");
 }
 
 

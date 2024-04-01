@@ -107,7 +107,7 @@ void TcpClient::checkAuthentication()
             }
             else
             {
-                // TODO Message
+                
                 exit(AUTH_FAILED);
             }
             memset(buf,0,sizeof(buf));

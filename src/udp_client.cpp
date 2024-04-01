@@ -56,7 +56,7 @@ void UdpClient::udpHandleInterrupt(int signal)
             if (-1 == bytesRx) 
             {
                 // Chyba při příjmu dat
-                fprintf(stderr,"ERR: recvfrom() failed\n"); // FIXME
+                fprintf(stderr,"ERR: recvfrom() failed\n"); 
                 exit(EXIT_FAILURE);
             }
             newServerAddr = si_other; 
@@ -96,7 +96,7 @@ int UdpClient::processAuthetification()
         retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
         if (FAIL == retVal)
         {
-            // TODO Nejaka hlaska 
+            fprintf(stderr,"ERR: poll() Failed\n"); 
             exit(FAIL);
         }
 
@@ -300,7 +300,7 @@ int UdpClient::runUdpClient()
         retVal = poll(fds,NUM_FILE_DESCRIPTORS,UNLIMITED_TIMEOUT);
         if (FAIL == retVal)
         {
-            // TODO Nejaka hlaska 
+            fprintf(stderr,"ERR: poll() Failed\n");
             exit(FAIL);
         }
         // Capture Activity on STDIN
@@ -392,7 +392,7 @@ int UdpClient::runUdpClient()
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                         }
-                        else        // TODO Unexpected Message?
+                        else        
                         {
                             state = Error;
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
@@ -466,8 +466,8 @@ int UdpClient::runUdpClient()
             int elapsedTime = std::chrono::duration_cast<std::chrono::milliseconds>(stopWatch - startWatch).count();
             if (elapsedTime > confirmationTimeout) 
             {   
-                currentRetries++;
                 udpBackUpMessage.sendUdpMessage(sock,newServerAddr);
+                currentRetries++;
             }
             elapsedTime = 0;
         }

@@ -214,13 +214,12 @@ Netcat was used to confirm the correctness of the communication based on the `IP
     7. Server in UDP variant sends error message instead of CONFIRM message
     8. Server in UDP variant sends error message instead of REPLY message
 
+No problem occured in final testing of `ipk24chat-client` program with NETCAT. The client behaviour to scenarios is described [here](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201) by the client FSM and reference outputs.
+
 ### Bilateral communication with personal local UDP server
 Testing of the UDP client was conducted on a local chat server to ensure the correct implementation of basic and more complex functionalities. The primary focus was on the clients' ability to handle various communication scenarios that are typical in client-server interactions. The tests were divided into two categories, the first one used file inputs and outputs (input and output files are available in the `/tests/com-tests` folder), the second one was a simulation of a wedge and predefined server responses, no deficiencies were shown when testing both variants. 
 
 **Note:** Note that for the first part of the testing there is also an evaluation script that can be provided.
-
-### Tested Enviroment 
-Testing was processed on Ubuntu 22.04, Reference Ubuntu Virtual Machine And Ubuntu with Nix Enviroment. 
 
 ### Bilateral communication with reference server
 Due to the complexity of simulating situations on the reference server using test scripts (because of the interaction with other users contents), only the manual tests with scenarios were tested on the reference server. The test scenarios were described in chapter [Communication testing with fake server - NETCAT](#communication-testing-with-fake-server---netcat). The interaction in all scenarios went as expected i.e. as [specified](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/README.md). Also was used program [Wireshark](https://www.wireshark.org) with [lua plugin](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201/resources) when client was communicate with server to proof right use of `IPK24 protocol`.
@@ -229,6 +228,9 @@ Due to the complexity of simulating situations on the reference server using tes
 Program was also tested on student tests created by [Tomáš Hobza](https://www.vut.cz/lide/tomas-hobza-250583), if you would like to test program on your own, you can do as well ,[link on tests](https://git.fit.vutbr.cz/xhobza03/ipk-client-test-server). When application was tested by student developed tests, basic `TCP` and `UDP` communication was demonstrated, but coordination ability was also shown to be impaired in the `UDP` variant.
 
 **Note:** Note that these student tests are not official and do not prove the correctness of the application.
+
+### Tested Enviroment 
+Testing was processed on Ubuntu 22.04, Reference Ubuntu Virtual Machine And Ubuntu with Nix Enviroment. 
 
 ## Resources 
 [1] RFC791: Information Sciences Institute, University of Southern California. "Internet Protocol" [online]. September 1981. [cited 2024-03-26]. DOI: 10.17487/RFC791. Available at [https://www.ietf.org/rfc/rfc793.txt](https://www.ietf.org/rfc/rfc793.txt).

@@ -52,9 +52,9 @@ void arguments::printHelp()
 
     fprintf(stdout,"Example: ./ipk24chat-client -t tcp -s localhost -p 1234\n\n");
     fprintf(stdout,"Return Codes:\n");
-    fprintf(stdout,"0 - Success\n");                //TODO:
-    fprintf(stdout,"Other Then 0 - ERRORS (Look In To macros.hpp To See Exact Meaning of Return Value\n");      //TODO:
-    fprintf(stdout,"\n");       //TODO:
+    fprintf(stdout,"0 - Success\n");                
+    fprintf(stdout,"Other Then 0 - ERRORS (Look In To macros.hpp To See Exact Meaning of Return Value\n");      
+    fprintf(stdout,"\n");      
 
     fprintf(stdout,"Author: Tomas Dolak\n");
     fprintf(stdout,"Thank You For Using My Application\n");
@@ -135,7 +135,7 @@ void arguments::resolveHostName() {
             if (nullptr == host)
             {
                 std::cerr << "Host Not Found" << std::endl;
-                exit(1);    //TODO: Error Code CHECK!
+                exit(1);    
             }
             // Convert the First IP Address to String
             char ipStr[INET_ADDRSTRLEN];

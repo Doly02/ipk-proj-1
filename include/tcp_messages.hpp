@@ -88,6 +88,8 @@ class TcpMessages : public BaseMessages
          * @return 0 If The Reply Is OK, -1 If The Reply Is Not OK, -2 If Error Occurs 
         */        
         int handleAuthReply();
+
+        void StoreDisplayNameAndContent();
 };
 
 #endif // TCP_MESSAGES_HPP
