@@ -161,7 +161,7 @@ After receiving a server response the status is checked and the payload is decod
 Diagram showing the program flow.
 
 <p align="center">
-  <img src="doc/pics/program_flow_diagram.svg" alt="Ilustration of TCP Communication" width="450"/><br>
+  <img src="doc/pics/program_flow_diagram.png" alt="Program Flow Diagram" width="450"/><br>
   <em>Ilustration of TCP Communication</em>
 </p>
 
@@ -169,7 +169,7 @@ Diagram showing the program flow.
 Use case diagram showing individual classes interacting to resolve communication and what they can do in the system.
 
 <p align="center">
-  <img src="doc/pics/use_case_diagram.svg" alt="Ilustration of TCP Communication" width="450"/><br>
+  <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram" width="450"/><br>
   <em>Ilustration of TCP Communication</em>
 </p>
 
