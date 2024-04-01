@@ -66,22 +66,88 @@ public:
     MessageType_t msgType;
     Message_t msg;
 
-    BaseMessages();
-    BaseMessages(MessageType_t type, Message_t content);
-    ~BaseMessages();
 
+    BaseMessages();
+    /**
+     * @brief Constructor of TcpMessages Class 
+     * @param type Type of The Message
+     * @param content Content of The Message
+     *
+     * Constructor Initialize Message With Type And Content.
+     */
+    BaseMessages(MessageType_t type, Message_t content);
+    /**
+     * @brief Destructor of TcpMessages Class 
+     * 
+     * Destructor of TcpMessages Class.
+     */ 
+    ~BaseMessages();
+    /**
+     * @brief Inserts Error Message To The Content
+     * @param inputString Error Message
+     * 
+     * Inserts Error Message To The Content Of The Message.
+    */
     void insertErrorMsgToContent(const std::string& inputString);
+    /**
+     * @brief Creates Message
+    */    
     void cleanMessage();
+    /**
+     * @brief Check If The Message Components Are Valid (ID, Display Name, Content, Secret Length)
+     * 
+     * @return SUCCESS If The Message Is Valid, Otherwise Returns NON_VALID_PARAM
+     */    
     int checkLength();
+    /**
+     * @brief Store String Into Vector Buffer
+     * @param buffer String To Be Stored
+     * 
+     * Store String Into Vector Buffer.
+    */    
     void readAndStoreContent(const char* buffer);
+    /**
+     * @brief Store Incomming Bytes Into Vector Buffer
+     * @param buffer Character Buffer
+     * @param bytesRx Number of Bytes To Be Stored
+     * 
+     * Store String Into Vector Buffer.
+    */    
     void readAndStoreBytes(const char* buffer, size_t bytesRx);
+    /**
+     * @brief Check If The Message Is Valid
+     * @return 0 If The Message Is Valid, -1 Otherwise
+     * 
+     * Check If The Message Is Valid.
+    */    
     int checkMessage();
+    /**
+     * @brief Parse Message
+     * @return 0 If The Message Is Valid, -1 Otherwise
+     * 
+     * Parse Message.
+    */    
     int parseMessage();
+    /**
+     * @brief Prints Message to The Standard Output
+    */    
     void printMessage();
+    /**
+     * @brief Prints Servers Reply to The Standard Output
+    */    
     void PrintServerOkReply();
+  
     void PrintServerNokReply();
+    /**
+     * @brief Prints External Error Message to The Standard Output
+    */      
     void basePrintExternalError();
+    /**
+     * @brief Prints Internal Error Message to The Standard Output
+     * @param retVal Return Code
+    */    
     void basePrintInternalError(int retVal);
+    
     void printHelp();
 };
 

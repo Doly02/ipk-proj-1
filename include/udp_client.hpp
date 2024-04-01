@@ -38,9 +38,23 @@ public:
 
     UdpClient(const std::string& addr, int port, int retryCnt, int confirmTimeOut);
     virtual ~UdpClient();
-
+    /**
+     * @brief Handle Interrupt Signal
+     * 
+     * @param signal Signal Number
+     */
     void udpHandleInterrupt(int signal);
+    /**
+     * @brief Process Authetification
+     * 
+     * @return int 
+     */
     int processAuthetification();
+    /**
+     * @brief Process UDP Client
+     * 
+     * @return int 
+     */
     int runUdpClient();
 
 private:

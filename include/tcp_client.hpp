@@ -45,9 +45,21 @@ private:
         
         TcpClient(std::string addr, int port, uint protocol);
         virtual ~TcpClient();
-
+        /**
+         * @brief Handle Interrupt Signal
+         * 
+         * @param signal 
+         */
         void tcpHandleInterrupt(int signal);
+        /**
+         * @brief Process Authentication
+         */        
         void checkAuthentication();
+        /**
+         * @brief Runs Tcp Client
+         * 
+         * @return int 
+         */       
         int runTcpClient();
 };
 
