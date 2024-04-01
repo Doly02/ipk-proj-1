@@ -175,16 +175,16 @@ The `ipk24chat-client` program is written using an object-oriented approach in c
 Diagram showing the program flow.
 
 <p align="center">
-  <img src="doc/pics/program_flow_diagram.png" alt="Program Flow Diagram" width="450"/><br>
-  <em>program flow diagram</em>
+  <img src="doc/pics/program_flow_diagram.png" alt="Program Flow Diagram of ipk24chat-client" width="450"/><br>
+  <em>Program Flow Diagram of ipk24chat-client</em>
 </p>
 
 ### Use case diagram 
 Use case diagram showing individual classes interacting to resolve communication and what they can do in the system.
 
 <p align="center">
-  <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram" width="450"/><br>
-  <em>usa case diagram</em>
+  <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram of ipk24chat-client" width="450"/><br>
+  <em>Use Case Diagram of ipk24chat-client</em>
 </p>
 
 ## Testing
