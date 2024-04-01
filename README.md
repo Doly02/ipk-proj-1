@@ -8,13 +8,14 @@ The goal of first project for computer communications and networks project is to
 ## Table of contents
 -   [Requirements](#Requirements)
 -   [Installation](#Installation)
--   [Project organization](#Project-Organization)
+-   [Project organization](#Project-organization)
 - [Implementation](#Implementation)
 -   [Arguments](#Arguments)
 -   [Users Possiblities](#Users-possibilities)
--   [TCP Client](#TCP-Client)
--   [UDP Client](#Udp-Client)
--  [Implementation Details](#Implementation-details)
+-   [TCP Client](#TCP-client)
+-   [UDP Client](#Udp-client)
+-  [UML Diagrams](#UML-diagrams)
+-  [Testing](#Testing)
 -   [Resources](#Resources)
 
 ## Requirements
@@ -26,10 +27,10 @@ To build and run `ipk24chat-client`, you will need the following:
 ### Libraries
 - **Google Test (gtest)**: Required for compiling and running the unit tests. Ensure you have Google Test installed on your system as it uses `-lgtest -lgtest_main -pthread` flags for linking.
 
-### Build Tools
+### Build tools
 - **Make**: This project uses a `Makefile` for easy building and testing. Ensure you have Make installed on your system.
 
-### Operating System
+### Operating system
 - The Makefile and C++ code were designed with Unix-like environments in mind (Linux, MacOS). While it may be possible to compile and run the project on Windows, using a Unix-like environment (or WSL for Windows users) is recommended.
 
 ### Debugging (Optional)
@@ -44,7 +45,7 @@ To build and run `ipk24chat-client`, you will need the following:
 
 Please refer to the Makefile for additional targets and commands.
 
-## Project Organization 
+## Project organization 
 ```
 ipk-proj-1/
 │
@@ -84,25 +85,25 @@ Arguments that are checked and verified:
 
 ### User's possibilities 
 
-#### Authentication Command 
+#### Authentication command 
 Authenticates the client. 
 ```
 /auth {Username} {Secret} {DisplayName}
 ```
 
-#### Join Command
+#### Join command
 Joins Client To Join Specific Channel.
 ```
 /join {ChannelID}
 ```
 
-#### Rename Command 
+#### Rename command 
 Sets Different Local Display Name. 
 ```
 /rename {DisplayName}
 ```
 
-#### Command Print Help
+#### Command print help
 Prints Help Statement.
 ```
 /help
@@ -112,38 +113,38 @@ Everything Else As The Previous Commands Are Interpreted As Regular Message.
 
 **Note:** Be aware that there are limitations for `{ChannelID}`, `{DisplayName}`, `{MessageContent}`, and similar fields. For instance, packets should not exceed the default Ethernet MTU of 1500 octets as defined by [RFC 894](https://tools.ietf.org/html/rfc894). Exceeding this limit could result in packet fragmentation, potentially affecting communication efficiency and reliability.
 
-### Unblocking Communication With poll()
+### Unblocking communication with poll()
 In programming, when implementing chat client is better to use unblocking communication with poll() rather than busy-waiting for data on the socket. Client can fluently check activity on stadart input and socket using poll(), which is a more efficient and elegant solution. The benefits of poll() are that it allows the program to efficiently check multiple sockets for activity simultaneously without wasting CPU time. An alternative to the poll() function is the select() function, which is also commonly used for checking multiple sockets for activity, but may have some limitations in terms of scalability and performance.[3]
 
-### TCP Client
+### TCP client
 
-#### Introduction To TCP Communication
+#### Introduction to TCP communication
 
 TCP is a reliable and connection-oriented protocol that operates at the transport layer of the TCP/IP protocol suite (T, 2016). It provides reliable, ordered, and error-checked delivery of data packets over an IP network.[5] TCP works by establishing a reliable and ordered connection between two devices, typically a client and a server. During the connection establishment phase, a three-way handshake process is used, where the client and server exchange SYN (synchronize) and ACK (acknowledge) packets to confirm the connection.[4] Once the connection is established, TCP segments the data into small packets and adds sequence numbers to each packet.[8]
 
 
-#### TCP Programming
+#### TCP programming
 For TCP connection, we its needed first to establish the socket and then the connection. The important parameter of `socket` function is `SOCK_STREAM`, which specifies TCP socket. Just after creating the socket, the three-way handshake is conducted. The handshake prepares a connection socket on the server side dedicated to the client. All this takes place on the server side and transport layer, which makes it invisible to the client. After this procedure `connect` function is called and the data exchange can start. In textual communication, we don't need any special string for encoding and decoding the message. During the communication is tracked whether "HELLO" and "BYE" messages were sent. [1] [2]
 
 <p align="center">
   <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
-  <em>Ilustration of TCP Communication</em>
+  <em>Ilustration of TCP communication</em>
 </p>
 
 The string which is sent is cleared before receiving the message from the server. If the "BYE" message wasn't sent the program will send it anyway and inform the user via error sign, that he forgot to send "BYE". Before closing the socket, the program shuts down the communication in both directions, function `shutdown` and parameter `2` (enum value for shutting down writing and reading). In Windows systems both closing and shutting down are done by `closesocket` After this procedure the socket can be closed (function `close`) and the interaction ends. [1] [2]
 
 <p align="center">
   <img src="doc/pics/tcp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
-  <em>Ilustration of Client-Server Communication Using TCP [2]</em>
+  <em>Ilustration of client-server communication using TCP [2]</em>
 </p>
 
-### UDP Client
+### UDP client
 
-#### Introduction To UDP Communication
+#### Introduction to UDP communication
 
 UPD protocol provides a connectionless and unreliable communication service, meaning that it does not establish a dedicated connection between the sender and receiver and does not guarantee the delivery of data packets. Instead, UDP sends data packets, called datagrams, without any acknowledgment or error checking. These datagrams are transmitted independently and can arrive out of order, be duplicated, or even be lost during transmission. The lack of built-in reliability mechanisms in UDP allows fast, low-latency communication, making it ideal for that can tolerate lost packets, such as streaming audio or video, where speed is more crucial than perfect accuracy.[1] [6] [7]
 
-#### UDP Programming
+#### UDP programming
 For establishing the UDP socket, there is a important parameter of `socket` function - `SOCK_DGRAM`, which specifies UDP socket. Additionally, to send data using UDP, the `sendto` function is used, which allows the client to specify the destination IP address and port number and for receiveing data, the `recvfrom` function is used, which provides the source IP address and port number of the incoming datagram. After the successful establishment of communication, the program processed the input relays from stdin and received messages from the server. Each received message must be confirmed to the CONFIRM server by a message that the message was successfully received and each sent message must be confirmed again by the server. The program also checks the length of received messages from the user and from the server, because the protocol has its limitations defined by the IPK24-protocol. If this limit is exceeded the program sends an ERR message and the program is terminated correctly.
 
 <p align="center">
@@ -155,9 +156,9 @@ After encoding the input string into the modified string (according to protocol)
 Before receiving the response are both strings cleaned, so it's possible to use them for processing the response.
 After receiving a server response the status is checked and the payload is decoded. Depending on its value, either a response or error is printed. And the socket is closed (function `close`).[2]
 
-## UML Diagrams 
+## UML diagrams 
 
-### Program Flow Diagram 
+### Program flow diagram 
 Diagram showing the program flow.
 
 <p align="center">
@@ -165,13 +166,18 @@ Diagram showing the program flow.
   <em>program flow diagram</em>
 </p>
 
-### Use Case Diagram 
+### Use case diagram 
 Use case diagram showing individual classes interacting to resolve communication and what they can do in the system.
 
 <p align="center">
   <img src="doc/pics/use_case_diagram.png" alt="Use Case Diagram" width="450"/><br>
   <em>usa case diagram</em>
 </p>
+
+### Implementation details
+The IPK24 program is written using an object-oriented approach in c++. The communication between client and server is based on the state machine, described [here](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201#user-content-specification). The `poll()` function is used to provide non-blocking logic. The TCP client also uses the `send()` and `receive()` functions and has a simpler state machine because communication based on the TCP protocol is more secure and reliable. The UDP client also uses the `sendto()` and `recvfrom()` functions. For the UDP client, it was also necessary to implement logic for message contol and also dynamic port change, because the server moves the communication with the client to a different port after the authentication message. [10] [11] [12] [13]
+
+**Note:** The program flow can be observed in program flow diagram.
 
 ## Testing
 This section is dedicated to testing the project, so what was tested?
@@ -187,7 +193,7 @@ The aim of the unit test was to guarantee the correctness and expected behavior 
 **Note:** Not all methods were tasted by unit test, just the critical ones!
 
 ### Communication testing with fake server - NETCAT
-Netcat, often referred to as the "Swiss Army Knife of networking tools", is a computer tool used for networking. It allows reading from and writing to TCP or UDP network connections using the command line.
+Netcat, often referred to as the "Swiss Army Knife of networking tools", is a computer tool used for networking. It allows reading from and writing to TCP or UDP network connections using the command line.[9]
 
 Netcat was used to confirm the correctness of the communication based on the `IPK24 protocol`. Both TCP and UDP were tested for a variety of key situations that can occur in reality during client-server communication. Such as:
 
@@ -205,14 +211,13 @@ Testing of the UDP client was conducted on a local chat server to ensure the cor
 
 **Note:** Note that for the first part of the testing there is also an evaluation script that can be provided.
 
-#### Bilateral communication with reference server
+### Bilateral communication with reference server
 Due to the complexity of simulating situations on the reference server using test scripts (because of the interaction with other users contents), only the manual tests with scenarios were tested on the reference server. The test scenarios were described in chapter [Communication testing with fake server - NETCAT](#communication-testing-with-fake-server---netcat). The interaction in all scenarios went as expected i.e. as [specified](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/README.md). Also was used program [Wireshark](https://www.wireshark.org) with [lua plugin](https://git.fit.vutbr.cz/NESFIT/IPK-Projects-2024/src/branch/master/Project%201/resources) when client was communicate with server to proof right use of `IPK24 protocol`.
 
-#### Student tests
+### Student tests
 Program was also tested on student tests created by [Tomáš Hobza](https://www.vut.cz/lide/tomas-hobza-250583), if you would like to test program on your own, you can do as well [link](https://git.fit.vutbr.cz/xhobza03/ipk-client-test-server). When application was tested by student developed tests, basic `TCP` and `UDP` communication was demonstrated, but coordination ability was also shown to be impaired in the `UDP` variant.
 
 **Note:** Note that these student tests are not official and do not prove the correctness of the application.
-
 
 ## Resources 
 [1] [RFC791]: Information Sciences Institute, University of Southern California. "Internet Protocol" [online]. September 1981. [cited 2024-03-26]. DOI: 10.17487/RFC791. Available at [https://www.ietf.org/rfc/rfc793.txt](https://www.ietf.org/rfc/rfc793.txt).
@@ -230,3 +235,13 @@ Program was also tested on student tests created by [Tomáš Hobza](https://www.
 [7] Marek Majkowski: "Everything you ever wanted to know about UDP sockets but were afraid to ask, part 1" [online]. 25.11.2021. [cited 2024-03-26]. Available at [https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1](https://blog.cloudflare.com/everything-you-ever-wanted-to-know-about-udp-sockets-but-were-afraid-to-ask-part-1).
 
 [8] Andrew T. Campbell: "Socket Programming" [online]. December 2023. Available at [https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html](https://www.cs.dartmouth.edu/~campbell/cs60/socketprogramming.html).
+
+[9] "https://cs.wikipedia.org/wiki/Netcat" [online]. [cited 2024-04-01]. Available at [https://cs.wikipedia.org/wiki/Netcat](https://cs.wikipedia.org/wiki/Netcat)
+
+[10] recvfrom(2) - Linux man page [online].[cited 2024-04-01]. Available at [https://linux.die.net/man/2/recvfrom](https://linux.die.net/man/2/recvfrom)
+
+[11] sendto(2) - Linux man page [online].[cited 2024-04-01]. Available at [https://linux.die.net/man/2/sendto](https://linux.die.net/man/2/sendto)
+
+[12] send(3) - Linux man page [online].[cited 2024-04-01]. Available at [https://linux.die.net/man/3/send](https://linux.die.net/man/3/send)
+
+[13] recv(2) - Linux man page [online].[cited 2024-04-01]. Available at [https://linux.die.net/man/2/recv](https://linux.die.net/man/2/recv)
