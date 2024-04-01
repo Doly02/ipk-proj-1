@@ -3,7 +3,6 @@
 *.d
 
 /misc
-/tests
 # Compiled Object files
 *.slo
 *.lo
