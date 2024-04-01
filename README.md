@@ -86,7 +86,7 @@ Arguments that are checked and verified:
 | `-r`     | `3`             | 0 to 255                   | Maximum number of UDP retransmissions                       |
 | `-h`     |                 |                            | Prints program help output and exits                        |
 
-**Note:** The arguments `-t`, `-s` are mandatory. Arguments `-p`, `-d`, `-r` have default values, so they are optional. Using `-h` immediately terminates the program with a help statement, regardless of the other arguments provided. If the count of arguments or the count of identifiers (-h,-m,-p, -help) are invalid the program will send error message to standard error output.
+**Note:** The arguments `-t`, `-s` are mandatory. Arguments `-p`, `-d`, `-r` have default values, so they are optional. Using `-h` immediately terminates the program with a help statement, regardless of the other arguments provided. If the count of arguments or the count of identifiers are invalid the program will send error message to standard error output.
 
 ### User's possibilities 
 
