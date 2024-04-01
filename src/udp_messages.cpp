@@ -259,7 +259,7 @@ int UdpMessages::recvUpdIncomingReply()
             receivedMessageIDs.insert(messageID);
             lastReceivedMessageID = messageID;
             PrintServerNokReply();
-            return SUCCESS;
+            return FAIL;
         }
     }
     return UNEXPECTED_MESSAGE; 

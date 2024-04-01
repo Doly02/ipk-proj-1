@@ -60,7 +60,7 @@ void UdpClient::udpHandleInterrupt(int signal)
         retVal = udpMessage.recvUpdConfirm();
         if (SUCCESS != retVal)
         {
-            udpMessage.insertErrorMsgToContent("ERR: CONFIRMATION RECEIVED\n");
+            udpMessage.insertErrorMsgToContent("ERR: CONFIRMATION NOT RECEIVED\n");
             udpMessage.basePrintInternalError(retVal);
             exit(retVal);
         }
@@ -131,6 +131,7 @@ int UdpClient::processAuthetification()
             buf[BUFSIZE - 1] = '\0'; 
             udpMessage.readAndStoreBytes(buf,bytesRx);
             BaseMessages::MessageType_t type = (BaseMessages::MessageType_t)buf[0];
+            printf("Received type = %d\n",type);
             switch(state)
             {
                 case Authentication:
@@ -151,6 +152,11 @@ int UdpClient::processAuthetification()
                             udpMessage.sendUdpConfirm(sock,newServerAddr);
                             udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                             return SUCCESS;
+                        }
+                        else if (FAIL == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again                          
                         }
                     }
                     else if (BaseMessages::COMMAND_BYE == type)
@@ -180,6 +186,7 @@ int UdpClient::processAuthetification()
                         else
                         {
                             state = Error;
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
                             udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
                             measureTime = true;
                             watchDog = -1;
@@ -371,9 +378,15 @@ int UdpClient::runUdpClient()
                             udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
                             break;
                         }
+                        else if (FAIL == retVal)
+                        {
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
+                            udpBackUpMessage = udpMessage;                          // Store Message For Case When Sending Again
+                        }
                         else        // TODO Unexpected Message?
                         {
                             state = Error;
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
                             udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
                             expectedConfirm = true;
                             watchDog = -1;
@@ -393,6 +406,7 @@ int UdpClient::runUdpClient()
                         else
                         {
                             state = Error;
+                            udpMessage.sendUdpConfirm(sock,newServerAddr);
                             udpMessage.sendUdpError(sock,newServerAddr,"Invalid Messsage Params");
                             expectedConfirm = true;
                             watchDog = -1;
