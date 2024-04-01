@@ -199,7 +199,6 @@ int TcpMessages::checkIfErrorOrBye(int clientSocket)
             msg.content.push_back(msg.buffer[idx]);   
             idx++;
         }
-        printf("BYE\n");
         exit(SUCCESS);
     }
     return SUCCESS;
