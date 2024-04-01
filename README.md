@@ -133,14 +133,14 @@ For TCP connection, we its needed first to establish the socket and then the con
 
 <p align="center">
   <img src="doc/pics/tcp_communication.png" alt="Ilustration of TCP Communication" width="600"/><br>
-  <em>Ilustration of TCP communication (Figure 2.28 from James F. Kurose, Keith W. Ross: *Computer Networking: A Top Down Approach* (Eighth Edition))</em>
+  <em>Ilustration of TCP communication (Figure 2.28 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition)</em>
 </p>
 
 The string which is sent is cleared before receiving the message from the server. If the "BYE" message wasn't sent the program will send it anyway and inform the user via error sign, that he forgot to send "BYE". Before closing the socket, the program shuts down the communication in both directions, function `shutdown` and parameter `2` (enum value for shutting down writing and reading). In Windows systems both closing and shutting down are done by `closesocket` After this procedure the socket can be closed (function `close`) and the interaction ends. [1] [2]
 
 <p align="center">
   <img src="doc/pics/tcp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
-  <em>Ilustration of client-server communication using TCP (Figure 2.29 from James F. Kurose, Keith W. Ross: *Computer Networking: A Top Down Approach* (Eighth Edition))</em>
+  <em>Ilustration of client-server communication using TCP (Figure 2.29 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition)</em>
 </p>
 
 ### UDP client
@@ -154,7 +154,7 @@ For establishing the UDP socket, there is a important parameter of `socket` func
 
 <p align="center">
   <img src="doc/pics/udp_example_client-server-application.png" alt="Ilustration of TCP Communication" width="450"/><br>
-  <em>Ilustration of Client-Server Communication Using UDP (Figure 2.27 from James F. Kurose, Keith W. Ross: *Computer Networking: A Top Down Approach* (Eighth Edition))</em>
+  <em>Ilustration of Client-Server Communication Using UDP (Figure 2.27 from James F. Kurose, Keith W. Ross: Computer Networking: A Top Down Approach, Eighth Edition)</em>
 </p>
 
 After encoding the input string into the modified string (according to protocol), the message can be sent. In UDP communication before sending the data, the destination address must be attached to the packet. The Internet will route the data in the packet according to the address attached to it. 
